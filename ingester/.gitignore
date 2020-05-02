@@ -4,17 +4,15 @@
 *.dll
 *.so
 *.dylib
-*.log
 *~
 *#
 .#*
-# ingester test outputs
-example-output
 tmp-delete-me
-ingester/draft
-ingester/example-output
-ingester/tmp-delete-me
-
+example-output
+draft
+test-later-stages
+*.tmp
+*.log
 # Test binary, built with `go test -c`
 *.test
 
