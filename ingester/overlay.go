@@ -61,6 +61,17 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 	for _, inPath := range inPaths {
 
+		if !g.IsPDF(inPath) { //ignore the done files
+			continue
+		}
+
+		if getDone(inPath) {
+			logger.Info().
+				Str("file", inPath).
+				Msg("Skipping because already done")
+			continue
+		}
+
 		count, err := CountPages(inPath)
 
 		if err != nil {
@@ -137,15 +148,26 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 		newtask := pool.NewTask(func() error {
 			pc, err := g.OverlayOnePDF(ot, logger)
-			logger.Info().
-				Str("file", ot.InputPath).
-				Str("destination", ot.OutputPath).
-				Int("page-count", pc).
-				Msg(fmt.Sprintf("Finished processing (%s) into (%s)which had <%d> pages", ot.InputPath, ot.OutputPath, pc))
+			if err == nil {
+				setDone(ot.InputPath, logger)
+				logger.Info().
+					Str("file", ot.InputPath).
+					Str("destination", ot.OutputPath).
+					Int("page-count", pc).
+					Msg(fmt.Sprintf("Finished processing (%s) into (%s)which had <%d> pages", ot.InputPath, ot.OutputPath, pc))
 
-			oc.Msg.Send(fmt.Sprintf("Finished processing (%s) into (%s)which had <%d> pages", ot.InputPath, ot.OutputPath, pc))
-			oc.Msg.Send(fmt.Sprintf("pages(%d)", pc))
-			return err
+				oc.Msg.Send(fmt.Sprintf("Finished processing (%s) into (%s)which had <%d> pages", ot.InputPath, ot.OutputPath, pc))
+				oc.Msg.Send(fmt.Sprintf("pages(%d)", pc))
+				return nil
+			} else {
+				logger.Error().
+					Str("file", ot.InputPath).
+					Str("destination", ot.OutputPath).
+					Int("page-count", pc).
+					Str("error", err.Error()).
+					Msg(fmt.Sprintf("Error processing (%s) into (%s)which had <%d> pages", ot.InputPath, ot.OutputPath, pc))
+				return err
+			}
 		})
 		tasks = append(tasks, newtask)
 	}
