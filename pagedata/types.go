@@ -5,6 +5,9 @@ const (
 	IsRegion  = "region"
 	IsCover   = "cover"
 	IsMontage = "montage"
+
+	IsAnonymous = "anonymous"
+	IsIdentity  = "identity"
 )
 
 // Used in triaging files at ingest/staging
@@ -31,7 +34,8 @@ type PageData struct {
 type PageDetail struct {
 	Is       string        `json:"is"` //page, region
 	Own      FileDetail    `json:"own"`
-	Host     FileDetail    `json:"host"`
+	Original FileDetail    `json:"original"`
+	Current  FileDetail    `json:"current"`
 	Item     ItemDetail    `json:"item"`
 	Process  ProcessDetail `json:"process"`
 	UUID     string        `json:"UUID"` //for mapping the previous page datas later
@@ -41,7 +45,7 @@ type PageDetail struct {
 }
 
 type FileDetail struct {
-	Name   string `json:"name"`
+	Path   string `json:"path"`
 	UUID   string `json:"UUID"`
 	Number int    `json:"number"`
 	Of     int    `json:"of"`
@@ -57,6 +61,7 @@ type ItemDetail struct {
 }
 
 type ProcessDetail struct {
+	Name     string  `json:"name"`
 	UUID     string  `json:"UUID"` // process batch UUID
 	UnixTime int64   `json:"unixTime"`
 	For      string  `json:"for"`

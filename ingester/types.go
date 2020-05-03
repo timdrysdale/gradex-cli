@@ -2,6 +2,7 @@ package ingester
 
 import (
 	"github.com/timdrysdale/chmsg"
+	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/pdfpagedata"
 )
 
@@ -14,7 +15,7 @@ type PDFSummary struct {
 type FlattenTask struct {
 	InputPath   string
 	PageCount   int
-	Data        pdfpagedata.PageData
+	PageDataMap map[int]pagedata.PageData
 	OutputPath  string
 	PreparedFor string
 	ToDo        string
