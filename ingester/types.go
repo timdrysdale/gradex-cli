@@ -3,7 +3,6 @@ package ingester
 import (
 	"github.com/timdrysdale/chmsg"
 	"github.com/timdrysdale/gradex-cli/pagedata"
-	"github.com/timdrysdale/pdfpagedata"
 )
 
 type PDFSummary struct {
@@ -22,17 +21,18 @@ type FlattenTask struct {
 }
 
 type OverlayTask struct {
-	InputPath     string
-	PageCount     int
-	NewProcessing pdfpagedata.ProcessingDetails
-	NewQuestion   pdfpagedata.QuestionDetails
-	PageDataMap   map[int]pagedata.PageData
-	OutputPath    string
-	SpreadName    string
-	Template      string
-	Msg           *chmsg.Messager
-	PreparedFor   string
-	ToDo          string
+	InputPath string
+	PageCount int
+	//PreparedFor   string
+	//ToDo          string
+	//NewProcessing pdfpagedata.ProcessingDetails
+	//NewQuestion   pdfpagedata.QuestionDetails
+	ProcessDetail  pagedata.ProcessDetail
+	OldPageDataMap map[int]pagedata.PageData //this has the individual bits filled in?
+	OutputPath     string
+	SpreadName     string
+	Template       string
+	Msg            *chmsg.Messager
 }
 
 // Overlay command struct - for backwards compatability
@@ -42,17 +42,18 @@ type OverlayTask struct {
 //exactly match our internal representation
 
 type OverlayCommand struct {
-	FromPath          string
-	ToPath            string
-	ExamName          string
-	TemplatePath      string
-	SpreadName        string
-	ProcessingDetails pdfpagedata.ProcessingDetails
-	QuestionDetails   pdfpagedata.QuestionDetails
-	Msg               *chmsg.Messager
-	PathDecoration    string //this is the "-ma1" for marker1, "mo2" for moderator 2, "d" for done etc
-	PreparedFor       string
-	ToDo              string
+	FromPath      string
+	ToPath        string
+	ExamName      string
+	TemplatePath  string
+	SpreadName    string
+	ProcessDetail pagedata.ProcessDetail
+	//PreparedFor       string
+	//ToDo              string
+	//ProcessingDetails pdfpagedata.ProcessingDetails
+	//QuestionDetails   pdfpagedata.QuestionDetails
+	Msg            *chmsg.Messager
+	PathDecoration string //this is the "-ma1" for marker1, "mo2" for moderator 2, "d" for done etc
 }
 
 var (

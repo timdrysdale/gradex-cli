@@ -7,9 +7,20 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/timdrysdale/parselearn"
 )
+
+func safeUUID() string {
+	UUIDBytes, err := uuid.NewRandom()
+	uuidStr := UUIDBytes.String()
+	if err != nil {
+		uuidStr = fmt.Sprintf("%d", time.Now().UnixNano())
+	}
+	return uuidStr
+}
 
 func (g *Ingester) CleanFromIngest() error {
 

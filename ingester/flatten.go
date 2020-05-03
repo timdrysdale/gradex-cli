@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/anon"
+	"github.com/timdrysdale/gradex-cli/merge"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
 	"github.com/timdrysdale/parselearn"
@@ -117,23 +118,6 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 
 		// we'll use this same set of procDetails for flattens that we do in this batch
 		// that means we can use the uuid to map the processing in graphviz later, for example
-		var UUIDBytes uuid.UUID
-
-		uuids := []string{}
-
-		for i := 0; i < 2; i++ {
-			UUIDBytes, err := uuid.NewRandom()
-			uuid := UUIDBytes.String()
-			if err != nil {
-				uuid = fmt.Sprintf("%d", time.Now().UnixNano())
-			}
-			uuids = append(uuids, uuid)
-		}
-
-		originalFileUUID := uuids[0]
-		processUUID := uuids[1]
-
-		// need to make a map, one per page ....
 
 		pd := pagedata.PageDetail{}
 		pd.Is = pagedata.IsPage
@@ -144,12 +128,12 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 
 		pd.Original = pagedata.FileDetail{
 			Path: pdfPath,
-			UUID: originalFileUUID,
+			UUID: safeUUID(),
 			Of:   count,
 		}
 
 		pd.Process = pagedata.ProcessDetail{
-			UUID:     processUUID,
+			UUID:     safeUUID(),
 			UnixTime: time.Now().UnixNano(),
 			Name:     "flatten",
 			By:       "gradex-cli",
@@ -168,17 +152,9 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 
 		for page := 1; page <= count; page++ {
 
-			UUIDBytes, err = uuid.NewRandom()
-
-			pageUUID := UUIDBytes.String()
-
-			if err != nil {
-				pageUUID = fmt.Sprintf("%d", time.Now().UnixNano())
-			}
-
 			thisPd := pd
 
-			thisPd.UUID = pageUUID
+			thisPd.UUID = safeUUID()
 
 			thisPd.Original.Number = page
 
@@ -397,7 +373,7 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageDataMap map[i
 
 		mergePaths = append(mergePaths, pageFilename)
 	}
-	err = MergePDF(mergePaths, outputPath)
+	err = merge.PDF(mergePaths, outputPath)
 	if err != nil {
 		logger.Error().
 			Str("error", err.Error()).
