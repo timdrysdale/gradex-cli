@@ -34,8 +34,11 @@ LOOP:
 
 			switch {
 			case g.IsArchive(path):
-				passAgain = true
-				g.handleIngestArchive(path, &logger)
+				//passAgain = true
+				//g.handleIngestArchive(path, &logger)
+				logger.Error().
+					Str("file", path).
+					Msg("Please extract files from the zip manually")
 
 			case IsTXT(path):
 				g.handleTXT(path, &logger)
@@ -76,21 +79,30 @@ func (g *Ingester) handleIngestArchive(path string, logger *zerolog.Logger) {
 
 	if err != nil {
 
-		logger.Error().Str("file", path).Str("destination", g.Ingest()).Msg("Could not extract archive")
+		logger.Error().
+			Str("file", path).
+			Str("destination", g.Ingest()).
+			Str("error", err.Error()).
+			Msg("Could not extract archive")
 
 	} else {
 
-		logger.Info().Str("file", path).Str("destination", g.Ingest()).Msg("Archive extracted")
+		logger.Info().Str("file", path).
+			Str("destination", g.Ingest()).
+			Msg("Archive extracted")
 
 		err = os.Remove(path)
 
 		if err != nil {
 
-			logger.Error().Str("file", path).Msg("After extraction, could not delete archive")
+			logger.Error().Str("file", path).
+				Str("error", err.Error()).
+				Msg("After extraction, could not delete archive")
 
 		} else {
 
-			logger.Info().Str("file", path).Msg("After extraction, archive deleted")
+			logger.Info().Str("file", path).
+				Msg("After extraction, archive deleted")
 
 		}
 	}
