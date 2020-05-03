@@ -1,9 +1,9 @@
 package parsesvg
 
 import (
-	"github.com/timdrysdale/geo"
+	"github.com/timdrysdale/gradex-cli/comment"
+	"github.com/timdrysdale/gradex-cli/geo"
 	"github.com/timdrysdale/gradex-cli/pagedata"
-	"github.com/timdrysdale/pdfcomment"
 )
 
 type SpreadContents struct {
@@ -11,7 +11,7 @@ type SpreadContents struct {
 	SpreadName                string
 	PreviousImagePath         string
 	PrefillImagePaths         map[string]string
-	Comments                  pdfcomment.Comments
+	Comments                  comment.Comments
 	PageNumber                int
 	PdfOutputPath             string
 	Exam                      string

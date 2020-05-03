@@ -3,18 +3,18 @@ package parsesvg
 import (
 	"testing"
 
-	"github.com/timdrysdale/pdfcomment"
+	"github.com/timdrysdale/gradex-cli/comment"
 )
 
 func TestRenderImagePrefillBackwardsCompatibility(t *testing.T) {
 
-	var comments = make(map[int][]pdfcomment.Comment)
+	var comments = make(map[int][]comment.Comment)
 
-	comments[0] = []pdfcomment.Comment{c00}
+	comments[0] = []comment.Comment{c00}
 
-	comments[1] = []pdfcomment.Comment{c10, c11}
+	comments[1] = []comment.Comment{c10, c11}
 
-	comments[2] = []pdfcomment.Comment{c20, c21}
+	comments[2] = []comment.Comment{c20, c21}
 
 	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
 
@@ -43,13 +43,13 @@ func TestRenderImagePrefillBackwardsCompatibility(t *testing.T) {
 }
 func TestRenderImagePrefillNoPreviousImage(t *testing.T) {
 
-	var comments = make(map[int][]pdfcomment.Comment)
+	var comments = make(map[int][]comment.Comment)
 
-	comments[0] = []pdfcomment.Comment{c00}
+	comments[0] = []comment.Comment{c00}
 
-	comments[1] = []pdfcomment.Comment{c10, c11}
+	comments[1] = []comment.Comment{c10, c11}
 
-	comments[2] = []pdfcomment.Comment{c20, c21}
+	comments[2] = []comment.Comment{c20, c21}
 
 	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
 
@@ -79,13 +79,13 @@ func TestRenderImagePrefillNoPreviousImage(t *testing.T) {
 
 func TestRenderImagePrefillReplaceImage(t *testing.T) {
 
-	var comments = make(map[int][]pdfcomment.Comment)
+	var comments = make(map[int][]comment.Comment)
 
-	comments[0] = []pdfcomment.Comment{c00}
+	comments[0] = []comment.Comment{c00}
 
-	comments[1] = []pdfcomment.Comment{c10, c11}
+	comments[1] = []comment.Comment{c10, c11}
 
-	comments[2] = []pdfcomment.Comment{c20, c21}
+	comments[2] = []comment.Comment{c20, c21}
 
 	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
 

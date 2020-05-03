@@ -1,5 +1,6 @@
 package report
 
+/*
 // things that did not sit in pagedata, which is not specifically tied to marking questions
 // but also supports question annotation and scan checking
 
@@ -92,3 +93,4 @@ type ScanResult struct {
 //	FilesizeMB         float64 `csv:"FilesizeMB"`
 //	NumberOfFiles      int     `csv:"NumberOfFiles"`
 //}
+*/
