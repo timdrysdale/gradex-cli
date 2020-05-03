@@ -2,15 +2,16 @@ package pagedata
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/mattetti/filebuffer"
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/unipdf/v3/annotator"
 	"github.com/timdrysdale/unipdf/v3/creator"
 	"github.com/timdrysdale/unipdf/v3/model"
 	pdf "github.com/timdrysdale/unipdf/v3/model"
@@ -106,22 +107,16 @@ func TestWriteRead(t *testing.T) {
 
 }
 
-/*
 func TestMarshalling(t *testing.T) {
 
 	pd := PageData{
-		Exam: ExamDetails{
-			CourseCode: "ENGI12123",
-			Diet:       "2020-Summer",
-			UUID:       "69197384-fd15-42ac-ac16-82dbe4d52dd0",
+		Current: PageDetail{
+			Is:   IsPage,
+			UUID: "69197384-fd15-42ac-ac16-82dbe4d52dd0",
 		},
-		Author: AuthorDetails{
-			Anonymous: "B12345",
-			Identity:  "e4937a51-4a4a-45b8-bb79-1a841f2b0e78",
-		},
-		Page: PageDetails{
-			UUID:   "a94a71f5-b867-45f9-92f6-ddcc8c39bd9c",
-			Number: 15,
+		Previous: []PageDetail{
+			PageDetail{},
+			PageDetail{},
 		},
 	}
 
@@ -130,7 +125,7 @@ func TestMarshalling(t *testing.T) {
 	c.SetPageSize(creator.PageSizeA4)
 	c.NewPage()
 
-	MarshalPageData(c, &pd)
+	MarshalOneToCreator(c, &pd)
 
 	// write to memory instead of a file
 	var buf bytes.Buffer
@@ -165,15 +160,13 @@ func TestMarshalling(t *testing.T) {
 		t.Error(err)
 	}
 
-	pdout, err := UnmarshalPageData(page)
+	pdout, err := unmarshalPageDatasFromPage(page)
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	if !reflect.DeepEqual(pd, pdout[0]) {
-		t.Error("struct doesn't match")
-	}
+	assert.Equal(t, pd, pdout[0])
 
 }
 
@@ -196,10 +189,26 @@ func TestWriteOutputForAdobe(t *testing.T) {
 	p.SetPos(200, 10)
 	c.Draw(p)
 
-	text1a := strings.Repeat("X", 9999)
-	text1b := strings.Repeat("Y", 9999)
-	WritePageData(c, text1a)
-	WritePageData(c, text1b)
+	pd := PageData{
+		Current: PageDetail{
+			Is:   IsPage,
+			UUID: "69197384-fd15-42ac-ac16-82dbe4d52dd0",
+		},
+		Previous: []PageDetail{
+			PageDetail{
+				Is:   IsPage,
+				UUID: "69197384-fd15-42ac-ac16-82dbe4d52dd0",
+				Data: []Field{
+					Field{
+						Key:   "key",
+						Value: "value",
+					},
+				},
+			},
+		},
+	}
+
+	MarshalOneToCreator(c, &pd)
 
 	// write to memory
 	var buf bytes.Buffer
@@ -274,49 +283,41 @@ func TestWriteOutputForAdobe(t *testing.T) {
 // see if data off the page survives a form edit with Adobe....
 func TestAdobe(t *testing.T) {
 
-	text1a := strings.Repeat("X", 9999)
-	text1b := strings.Repeat("Y", 9999)
+	pd := PageData{
+		Current: PageDetail{
+			Is:   IsPage,
+			UUID: "69197384-fd15-42ac-ac16-82dbe4d52dd0",
+		},
+		Previous: []PageDetail{
+			PageDetail{
+				Is:   IsPage,
+				UUID: "69197384-fd15-42ac-ac16-82dbe4d52dd0",
+				Data: []Field{
+					Field{
+						Key:   "key",
+						Value: "value",
+					},
+				},
+			},
+		},
+	}
 
 	inputPath := "./test/adobe-page-data.pdf"
 	field, err := getPdfFieldData(inputPath, "viewer")
+
+	assert.NoError(t, err)
 
 	if strings.Compare(field, "type viewer name here") == 0 {
 		t.Error("Edit the form data in ./test/adode-page-data.txt and then run test again")
 	}
 
-	f, err := os.Open(inputPath)
-	if err != nil {
-		fmt.Println("Can't open pdf")
-		os.Exit(1)
-	}
+	pdMap, err := UnMarshalAllFromFile(inputPath)
 
-	pdfReader, err := pdf.NewPdfReader(f)
-	if err != nil {
-		fmt.Println("Can't read test pdf")
-		os.Exit(1)
-	}
-
-	page, err := pdfReader.GetPage(1)
-	if err != nil {
-		t.Error(err)
-	}
-
-	textp1, err := ReadPageData(page)
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	if len(textp1) == 2 {
-
-		assert.True(t, itemExists(textp1, text1a))
-		assert.True(t, itemExists(textp1, text1b))
-	} else {
-		t.Error("Wrong number of page data tokens")
-	}
+	assert.Equal(t, 1, len(pdMap))
+	assert.Equal(t, pd, pdMap[1])
 
 }
-*/
+
 func getPdfFieldData(inputPath, targetFieldName string) (string, error) {
 	f, err := os.Open(inputPath)
 	if err != nil {
@@ -380,14 +381,4 @@ func itemExists(sliceType interface{}, item interface{}) bool {
 	}
 
 	return false
-}
-func PrettyPrintStruct(layout interface{}) error {
-
-	json, err := json.MarshalIndent(layout, "", "\t")
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(string(json))
-	return nil
 }

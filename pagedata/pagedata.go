@@ -36,6 +36,17 @@ func TriageFile(inputPath string) (map[int]Summary, error) {
 
 }
 
+func PrettyPrintStruct(layout interface{}) error {
+
+	json, err := json.MarshalIndent(layout, "", "\t")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(string(json))
+	return nil
+}
+
 func UnMarshalAllFromFile(inputPath string) (map[int]PageData, error) {
 
 	pdMap := make(map[int]PageData)
