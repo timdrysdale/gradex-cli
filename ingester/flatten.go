@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/anon"
 	"github.com/timdrysdale/gradex-cli/merge"
@@ -308,9 +307,9 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageDataMap map[i
 	// gs starts indexing at 1
 	for imgIdx := 1; imgIdx <= numPages; imgIdx = imgIdx + 1 {
 
-		pageNumber := imgIdx - 1
+		pd := pageDataMap[imgIdx]
 
-		pd := pageDataMap[pageNumber]
+		pageNumber := imgIdx - 1
 
 		// construct image name
 		previousImagePath := fmt.Sprintf(jpegFileOption, imgIdx)
@@ -319,18 +318,9 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageDataMap map[i
 		//TODO select Layout to suit landscape or portrait
 		svgLayoutPath := g.FlattenLayoutSVG()
 
-		// complete the Own fileDetail
-		UUIDBytes, err := uuid.NewRandom()
-
-		UUID := UUIDBytes.String()
-
-		if err != nil {
-			UUID = fmt.Sprintf("%d", time.Now().UnixNano())
-		}
-
 		pd.Current.Own = pagedata.FileDetail{
 			Path:   pageFilename,
-			UUID:   UUID,
+			UUID:   safeUUID(),
 			Number: pageNumber,
 			Of:     numPages,
 		}

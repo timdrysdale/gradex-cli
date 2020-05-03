@@ -341,7 +341,7 @@ OUTER:
 		// we take the "current" pagedata loaded with the extracted field data,
 		// and tack it on the end of the list of previous PageDatas
 
-		thisPageData, ok := ot.OldPageDataMap[pageNumber]
+		thisPageData, ok := ot.OldPageDataMap[imgIdx] //on book number, start at 1
 		if !ok {
 			logger.Error().
 				Str("file", ot.InputPath).

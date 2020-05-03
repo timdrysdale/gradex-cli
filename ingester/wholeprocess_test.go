@@ -212,7 +212,7 @@ func TestAddBars(t *testing.T) {
 
 	pds, err := pagedata.UnMarshalAllFromFile(anonymousPdf[0])
 	assert.NoError(t, err)
-	pd := pds[1]
+	pd := pds[1] //book number 1 for page 1
 	assert.Equal(t, "Practice Exam Drop Box", pd.Current.Item.What)
 
 	CollectFilesFrom(g.AnonymousPapers(exam))
@@ -254,7 +254,7 @@ func TestAddBars(t *testing.T) {
 
 	pds, err = pagedata.UnMarshalAllFromFile(readyPdf[0])
 	assert.NoError(t, err)
-	pd = pds[0]
+	pd = pds[1] //book number, 1 for page 1
 	assert.Equal(t, pd.Current.Process.ToDo, "marking")
 
 	for _, file := range readyPdf[0:2] {
