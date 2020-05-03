@@ -26,7 +26,7 @@ type OverlayTask struct {
 	PageCount     int
 	NewProcessing pdfpagedata.ProcessingDetails
 	NewQuestion   pdfpagedata.QuestionDetails
-	PageDataMap   map[int][]pdfpagedata.PageData
+	PageDataMap   map[int]pagedata.PageData
 	OutputPath    string
 	SpreadName    string
 	Template      string

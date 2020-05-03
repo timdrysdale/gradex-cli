@@ -320,7 +320,7 @@ func RenderSpreadExtra(contents SpreadContents) error {
 		// TODO consider allowing a more templated mangling of the ID number
 		// For multi-student entries (although, OTH, there will be per-page ID data etc embedded too
 		// which may be more useful in this regard, rather than overloading the textfield id)
-		name := fmt.Sprintf("page-%03d-%s", pageNumber, tf.ID)
+		name := fmt.Sprintf("page-%03d-%s", pageNumber+1, tf.ID) //match physical page number
 
 		if spread.Dim.DynamicWidth {
 			tf.Rect.Corner.X = tf.Rect.Corner.X + spread.ExtraWidth

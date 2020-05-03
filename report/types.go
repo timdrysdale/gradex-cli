@@ -40,3 +40,55 @@ type ParameterDetails struct {
 	Value    string `json:"value"`
 	Sequence int    `json:"sequence"`
 }
+
+
+type cmdOptions struct {
+	pdfPassword string
+}
+
+type ScanResult struct {
+	ScanPerfect            bool   `csv:"ScanPerfect"`
+	ScanRotated            bool   `csv:"ScanRotated"`
+	ScanContrast           bool   `csv:"ScanContrast"`
+	ScanFaint              bool   `csv:"ScanFaint"`
+	ScanIncomplete         bool   `csv:"ScanIncomplete"`
+	ScanBroken             bool   `csv:"ScanBroken"`
+	ScanComment1           string `csv:"ScanComment1"`
+	ScanComment2           string `csv:"ScanComment2"`
+	HeadingPerfect         bool   `csv:"HeadingPerfect"`
+	HeadingVerbose         bool   `csv:"HeadingVerbose"`
+	HeadingNoLine          bool   `csv:"HeadingNoLine"`
+	HeadingNoQuestion      bool   `csv:"HeadingNoQuestion"`
+	HeadingNoExamNumber    bool   `csv:"HeadingNoExamNumber"`
+	HeadingAnonymityBroken bool   `csv:"HeadingAnonymityBroken"`
+	HeadingComment1        string `csv:"HeadingComment1"`
+	HeadingComment2        string `csv:"HeadingComment2"`
+	FilenamePerfect        bool   `csv:"FilenamePerfect"`
+	FilenameVerbose        bool   `csv:"FilenameVerbose"`
+	FilenameNoCourse       bool   `csv:"FilenameNoCourse"`
+	FilenameNoID           bool   `csv:"FilenameNoID"`
+	InputFile              string `csv:"InputFile"`
+	BatchFile              string `csv:"BatchFile"`
+	BatchPage              int    `csv:"BatchPage"`
+	Submission             parselearn.Submission
+}
+
+//type Submission struct {
+//	FirstName          string  `csv:"FirstName"`
+//	LastName           string  `csv:"LastName"`
+//	Matriculation      string  `csv:"Matriculation"`
+//	Assignment         string  `csv:"Assignment"`
+//	DateSubmitted      string  `csv:"DateSubmitted"`
+//	SubmissionField    string  `csv:"SubmissionField"`
+//	Comments           string  `csv:"Comments"`
+//	OriginalFilename   string  `csv:"OriginalFilename"`
+//	Filename           string  `csv:"Filename"`
+//	ExamNumber         string  `csv:"ExamNumber"`
+//	MatriculationError string  `csv:"MatriculationError"`
+//	ExamNumberError    string  `csv:"ExamNumberError"`
+//	FiletypeError      string  `csv:"FiletypeError"`
+//	FilenameError      string  `csv:"FilenameError"`
+//	NumberOfPages      string  `csv:"NumberOfPages"`
+//	FilesizeMB         float64 `csv:"FilesizeMB"`
+//	NumberOfFiles      int     `csv:"NumberOfFiles"`
+//}

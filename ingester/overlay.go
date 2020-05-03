@@ -9,7 +9,8 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog"
-	"github.com/timdrysdale/parsesvg"
+	"github.com/timdrysdale/gradex-cli/pagedata"
+	"github.com/timdrysdale/gradex-cli/parsesvg"
 	"github.com/timdrysdale/pdfcomment"
 	"github.com/timdrysdale/pdfpagedata"
 	"github.com/timdrysdale/pool"
@@ -83,7 +84,7 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 			continue
 		}
 
-		pageDataMap, err := pdfpagedata.GetPageDataFromFile(inPath)
+		pageDataMap, err := pagedata.UnMarshalAllFromFile(inPath)
 
 		if err != nil {
 			logger.Error().
@@ -94,22 +95,16 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 			continue
 		}
 
-		if pdfpagedata.GetLen(pageDataMap) < 1 {
+		if pagedata.GetLen(pageDataMap) < 1 {
 			oc.Msg.Send(fmt.Sprintf("Skipping (%s): no pagedata in file\n", inPath))
 			continue
 		}
 
-		// clean out any old versions of the pagedata....
-		err = pdfpagedata.PruneOldRevisions(&pageDataMap)
-		if err != nil {
-			logger.Error().
-				Str("file", inPath).
-				Str("error", err.Error()).
-				Msg(fmt.Sprintf("Skipping (%s): error pruning old pagedata revisions\n", inPath))
-
-			oc.Msg.Send(fmt.Sprintf("Skipping (%s): error pruning old pagedata revisions\n", inPath))
-			continue
-		}
+		// get all textfields from the file
+		fmt.Println("TODO overlay.go line104 extract textfields and add to pagedata!")
+		//for k, v := range pageDataMap {
+		//	pageDataMap[k].Previous = append(pageDataMap[k].Previous, pageDataMap[k].Current)
+		//}
 
 		// this is a file-level task, so we we will sort per-page updates
 		// to pageData at the child step
@@ -129,9 +124,9 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 		logger.Info().
 			Str("file", inPath).
 			Int("page-count", count).
-			Int("page-data-count", pdfpagedata.GetLen(pageDataMap)).
-			Msg(fmt.Sprintf("Preparing to process: file (%s) has <%d> pages and [%d] pageDatas\n", inPath, count, pdfpagedata.GetLen(pageDataMap)))
-		oc.Msg.Send(fmt.Sprintf("Preparing to process: file (%s) has <%d> pages and [%d] pageDatas\n", inPath, count, pdfpagedata.GetLen(pageDataMap)))
+			Int("page-data-count", pagedata.GetLen(pageDataMap)).
+			Msg(fmt.Sprintf("Preparing to process: file (%s) has <%d> pages and [%d] pageDatas\n", inPath, count, pagedata.GetLen(pageDataMap)))
+		oc.Msg.Send(fmt.Sprintf("Preparing to process: file (%s) has <%d> pages and [%d] pageDatas\n", inPath, count, pagedata.GetLen(pageDataMap)))
 
 	} // for loop through all files
 

@@ -9,8 +9,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/chmsg"
+	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradexpath"
-	"github.com/timdrysdale/pdfpagedata"
 )
 
 func CollectFilesFrom(path string) error {
@@ -210,10 +210,10 @@ func TestAddBars(t *testing.T) {
 
 	// check data extraction
 
-	pds, err := pdfpagedata.GetPageDataFromFile(anonymousPdf[0])
+	pds, err := pagedata.UnMarshalAllFromFile(anonymousPdf[0])
 	assert.NoError(t, err)
-	pd := pds[0]
-	assert.Equal(t, pd[0].Exam.CourseCode, "Practice Exam Drop Box")
+	pd := pds[1]
+	assert.Equal(t, "Practice Exam Drop Box", pd.Current.Item.What)
 
 	CollectFilesFrom(g.AnonymousPapers(exam))
 	assert.NoError(t, err)
@@ -252,10 +252,10 @@ func TestAddBars(t *testing.T) {
 
 	assert.True(t, CopyIsComplete(expectedMarker1Pdf, readyPdf))
 
-	pds, err = pdfpagedata.GetPageDataFromFile(readyPdf[0])
+	pds, err = pagedata.UnMarshalAllFromFile(readyPdf[0])
 	assert.NoError(t, err)
 	pd = pds[0]
-	assert.Equal(t, pd[0].Questions[0].Name, "marking")
+	assert.Equal(t, pd.Current.Process.ToDo, "marking")
 
 	for _, file := range readyPdf[0:2] {
 		destination := filepath.Join(g.ModerateActive(exam), filepath.Base(file))
