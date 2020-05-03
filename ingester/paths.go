@@ -10,6 +10,27 @@ import (
 	"github.com/timdrysdale/copy"
 )
 
+//>>>>>>>>>>>>>>>> EXPORT PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+func (g *Ingester) ExportMarking(exam, marker string) string {
+	return filepath.Join(g.Export(), exam, markerReady, marker)
+}
+
+func (g *Ingester) ExportModerating(exam, moderator string) string {
+	return filepath.Join(g.Export(), exam, moderatorReady, moderator)
+}
+
+func (g *Ingester) ExportChecking(exam, checker string) string {
+	return filepath.Join(g.Export(), exam, checkerReady, checker)
+}
+func (g *Ingester) ExportReMarking(exam, marker string) string {
+	return filepath.Join(g.Export(), exam, remarkerReady, marker)
+}
+
+func (g *Ingester) ExportReChecking(exam, checker string) string {
+	return filepath.Join(g.Export(), exam, recheckerReady, checker)
+}
+
 //>>>>>>>>>>>>>>>> GENERAL PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 func (g *Ingester) MarkedCombined(exam string) string {
