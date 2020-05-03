@@ -39,6 +39,17 @@ func Copy(source, destination string) error {
 
 func (g *Ingester) CopyToDir(source, destinationDir string) error {
 
+	err := g.EnsureDirAll(destinationDir)
+
+	if err != nil {
+		g.logger.Error().
+			Str("source", source).
+			Str("destinationDir", destinationDir).
+			Str("error", err.Error()).
+			Msg("could not ensureDirAll for CopyRoDir")
+		return err
+	}
+
 	destination := filepath.Join(destinationDir, filepath.Base(source))
 
 	return Copy(source, destination)

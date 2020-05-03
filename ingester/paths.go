@@ -13,22 +13,22 @@ import (
 //>>>>>>>>>>>>>>>> EXPORT PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 func (g *Ingester) ExportMarking(exam, marker string) string {
-	return filepath.Join(g.Export(), exam, markerReady, marker)
+	return filepath.Join(g.Export(), exam, markerReady, limit(marker, N))
 }
 
 func (g *Ingester) ExportModerating(exam, moderator string) string {
-	return filepath.Join(g.Export(), exam, moderatorReady, moderator)
+	return filepath.Join(g.Export(), exam, moderatorReady, limit(moderator, N))
 }
 
 func (g *Ingester) ExportChecking(exam, checker string) string {
-	return filepath.Join(g.Export(), exam, checkerReady, checker)
+	return filepath.Join(g.Export(), exam, checkerReady, limit(checker, N))
 }
 func (g *Ingester) ExportReMarking(exam, marker string) string {
-	return filepath.Join(g.Export(), exam, remarkerReady, marker)
+	return filepath.Join(g.Export(), exam, remarkerReady, limit(marker, N))
 }
 
 func (g *Ingester) ExportReChecking(exam, checker string) string {
-	return filepath.Join(g.Export(), exam, recheckerReady, checker)
+	return filepath.Join(g.Export(), exam, recheckerReady, limit(checker, N))
 }
 
 //>>>>>>>>>>>>>>>> GENERAL PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

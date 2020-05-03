@@ -115,6 +115,9 @@ func main() {
 
 	CollectFilesFrom(g.MarkerReady(exam, marker))
 
+	fmt.Println("export for Marking")
+	g.ExportForMarking(exam, marker, &logger)
+
 }
 
 /*	assert.NoError(t, err)

@@ -9,7 +9,14 @@ import (
 
 func (g *Ingester) ExportForMarking(exam, marker string, logger *zerolog.Logger) {
 
-	files, err := GetFileList(g.MarkerReady(exam, marker))
+	source := g.MarkerReady(exam, marker)
+
+	logger.Info().
+		Str("process", "export").
+		Str("source", source).
+		Msg("Exporting Marking")
+
+	files, err := GetFileList(source)
 
 	if err != nil {
 
@@ -31,8 +38,28 @@ func (g *Ingester) ExportForMarking(exam, marker string, logger *zerolog.Logger)
 			continue
 		}
 
+		destination = g.ExportMarking(exam, marker)
+
 		err := g.CopyToDir(file, destination)
-		if err != nil {
+		if err == nil {
+
+			destination = g.MarkerSent(exam, marker)
+
+			err = g.MoveToDir(file, destination)
+
+			if err != nil {
+				logger.Error().
+					Str("process", "export").
+					Str("course", exam).
+					Str("marker", marker).
+					Str("file", file).
+					Str("destination", destination).
+					Str("error", err.Error()).
+					Msg("could not copy file to MarkerSent")
+
+			}
+
+		} else {
 			numErrors++
 			logger.Error().
 				Str("process", "export").
@@ -44,6 +71,7 @@ func (g *Ingester) ExportForMarking(exam, marker string, logger *zerolog.Logger)
 				Msg("could not copy file to export it")
 
 		}
+
 	}
 	if numErrors == 0 {
 		logger.Info().
@@ -81,8 +109,26 @@ func (g *Ingester) ExportForModerating(exam, moderator string, logger *zerolog.L
 			continue
 		}
 
+		destination = g.ExportModerating(exam, moderator)
+
 		err := g.CopyToDir(file, destination)
-		if err != nil {
+		if err == nil {
+
+			destination = g.ModeratorSent(exam, moderator)
+			err = g.MoveToDir(file, destination)
+			if err != nil {
+				logger.Error().
+					Str("process", "export").
+					Str("course", exam).
+					Str("moderator", moderator).
+					Str("file", file).
+					Str("destination", destination).
+					Str("error", err.Error()).
+					Msg("could not copy file to ModeratorSent")
+
+			}
+
+		} else {
 			numErrors++
 			logger.Error().
 				Str("process", "export").
@@ -129,9 +175,25 @@ func (g *Ingester) ExportForChecking(exam, checker string, logger *zerolog.Logge
 		if !g.IsPDF(file) {
 			continue
 		}
-
+		destination = g.ExportChecking(exam, checker)
 		err := g.CopyToDir(file, destination)
-		if err != nil {
+		if err == nil {
+
+			destination = g.CheckerSent(exam, checker)
+			err = g.MoveToDir(file, destination)
+			if err != nil {
+				logger.Error().
+					Str("process", "export").
+					Str("course", exam).
+					Str("checker", checker).
+					Str("file", file).
+					Str("destination", destination).
+					Str("error", err.Error()).
+					Msg("could not copy file to CheckerSent")
+
+			}
+
+		} else {
 			numErrors++
 			logger.Error().
 				Str("process", "export").
@@ -177,9 +239,25 @@ func (g *Ingester) ExportForReMarking(exam, marker string, logger *zerolog.Logge
 		if !g.IsPDF(file) {
 			continue
 		}
-
+		destination = g.ExportReMarking(exam, marker)
 		err := g.CopyToDir(file, destination)
-		if err != nil {
+		if err == nil {
+			destination = g.ReMarkerSent(exam, marker)
+
+			err = g.MoveToDir(file, destination)
+			if err != nil {
+				logger.Error().
+					Str("process", "export").
+					Str("course", exam).
+					Str("marker", marker).
+					Str("file", file).
+					Str("destination", destination).
+					Str("error", err.Error()).
+					Msg("could not copy file to ReMarkerSent")
+
+			}
+
+		} else {
 			numErrors++
 			logger.Error().
 				Str("course", exam).
@@ -223,11 +301,29 @@ func (g *Ingester) ExportForReChecking(exam, checker string, logger *zerolog.Log
 		if !g.IsPDF(file) {
 			continue
 		}
+		destination = g.ExportReChecking(exam, checker)
 
 		err := g.CopyToDir(file, destination)
-		if err != nil {
+		if err == nil {
+
+			destination = g.CheckerSent(exam, checker)
+			err = g.MoveToDir(file, destination)
+			if err != nil {
+				logger.Error().
+					Str("process", "export").
+					Str("course", exam).
+					Str("checker", checker).
+					Str("file", file).
+					Str("destination", destination).
+					Str("error", err.Error()).
+					Msg("could not copy file to CheckerSent")
+
+			}
+
+		} else {
 			numErrors++
 			logger.Error().
+				Str("process", "export").
 				Str("course", exam).
 				Str("checker", checker).
 				Str("file", file).
@@ -237,6 +333,7 @@ func (g *Ingester) ExportForReChecking(exam, checker string, logger *zerolog.Log
 
 		}
 	}
+
 	if numErrors == 0 {
 		logger.Info().
 			Str("course", exam).
