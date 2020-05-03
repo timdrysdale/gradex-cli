@@ -8,6 +8,7 @@
 *~
 *#
 .#*
+*.html
 # ingester test outputs
 example-output
 tmp-delete-me

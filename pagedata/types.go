@@ -1,110 +1,82 @@
 package pagedata
 
+const (
+	IsPage    = "page"
+	IsRegion  = "region"
+	IsCover   = "cover"
+	IsMontage = "montage"
+)
+
+// Used in triaging files at ingest/staging
+type Summary struct {
+	Is   string //page, region, cover-page etc
+	What string //item
+	For  string //proc
+	ToDo string //proc
+}
+
+// >>>>>>>>>>>>>>>>>>>>> Actual page data >>>>>>>>>>>>>>>>>>>>>>>>
+
+// use an array so that we can decide later that keys to do the mapping of history on
+// e.g. we will smash together ALL markers' work, and key on ToDo-Marker-Revision etc.
+
 type PageData struct {
-	Exam        ExamDetails         `json:"exam"`
-	Author      AuthorDetails       `json:"author"`
-	Page        PageDetails         `json:"page"`
-	Contact     ContactDetails      `json:"contact"`
-	Submission  SubmissionDetails   `json:"submission"`
-	Questions   []QuestionDetails   `json:"questions"`
-	Processing  []ProcessingDetails `json:"processing"`
-	Custom      []CustomDetails     `json:"custom"`
-	Revision    int                 `json:"revision"`
-	PreparedFor string              `json:"preparedfor"`
-	ToDo        string              `json:"todo"`
+	Current  PageDetail   `json:"current"`
+	Previous []PageDetail `json:"previous"`
 }
 
-// don't use this in anonymous pages
-type SubmissionDetails struct {
-	FilePrefix       string `json:"filePrefix"`
-	OriginalFilename string `json:"originalFilename"`
-	OriginalFormat   string `json:"originalFormat"`
-	NewFilename      string `json:"newFilename"`
-	NewFormat        string `json:"newFormat"`
+// use custom data for group authorship, if individual authorship must be tracked here
+// else use a group id e.g. group-<uuid> which has the individual authors recorded
+// elsewhere, along with the original submission.
+type PageDetail struct {
+	Is       string        `json:"is"` //page, region
+	Own      FileDetail    `json:"own"`
+	Host     FileDetail    `json:"host"`
+	Item     ItemDetail    `json:"item"`
+	Process  ProcessDetail `json:"process"`
+	UUID     string        `json:"UUID"` //for mapping the previous page datas later
+	Follows  string        `json:"follows"`
+	Revision int           `json:"revision"` //if we want to rewrite history ....
+	Data     []Field       `json:"data"`
 }
 
-type ExamDetails struct {
-	CourseCode string `json:"courseCode"`
-	Diet       string `json:"diet"`
-	Date       string `json:"date"`
-	UUID       string `json:"UUID"`
+type FileDetail struct {
+	Name   string `json:"name"`
+	UUID   string `json:"UUID"`
+	Number int    `json:"number"`
+	Of     int    `json:"of"`
 }
 
-type AuthorDetails struct {
-	Anonymous string `json:"Anonymous"`
-	Identity  string `json:"Identity"`
-}
-
-type PageDetails struct {
-	UUID     string `json:"UUID"`
-	Number   int    `json:"number"`
-	Of       int    `json:"of"`
-	Filename string `json:"filename"`
-}
-
-type ContactDetails struct {
-	Name    string `json:"name"`
+//whotype exam number:EN matriculation number:UUN etc
+type ItemDetail struct {
+	What    string `json:"what"`
+	When    string `json:"when"`
+	Who     string `json:"who"`
 	UUID    string `json:"UUID"`
-	Email   string `json:"email"`
-	Address string `json:"address"`
+	WhoType string `json:"whoType"`
 }
 
-// use section for (a), (b) and number for (i)
-type QuestionDetails struct {
-	UUID           string            `json:"UUID"`
-	Name           string            `json:"name"` //what to call it in a dropbox etc
-	Section        string            `json:"section"`
-	Number         int               `json:"number"` //No Harry Potter Platform 9&3/4 questions
-	Parts          []QuestionDetails `json:"parts"`
-	MarksAvailable float64           `json:"marksAvailable"`
-	MarksAwarded   float64           `json:"marksAwarded"`
-	Marking        []MarkingAction   `json:"markers"`
-	Moderating     []MarkingAction   `json:"moderators"`
-	Checking       []MarkingAction   `json:"checkers"`
-	Sequence       int               `json:"sequence"`
-	UnixTime       int64             `json:"unixTime"`
-	Previous       string            `json:"previous"`
+type ProcessDetail struct {
+	UUID     string  `json:"UUID"` // process batch UUID
+	UnixTime int64   `json:"unixTime"`
+	For      string  `json:"for"`
+	ToDo     string  `json:"toDo"`
+	By       string  `json:"by"`
+	Data     []Field `json:"data"`
 }
 
-type MarkingAction struct {
-	Actor    string         `json:"actor"`
-	Contact  ContactDetails `json:"contact"`
-	Mark     MarkDetails    `json:"mark"`
-	Done     bool           `json:"done"`
-	UnixTime int64          `json:"unixTime"`
-	Custom   CustomDetails  `json:"custom"`
-}
-
-type MarkDetails struct {
-	Given     float64 `json:"given"`
-	Available float64 `json:"available"`
-	Comment   float64 `json:"comment"`
-}
-
-type CustomDetails struct {
-	Key   string `json:"name"`
-	Value string `json:"value"`
-}
-
-type ProcessingDetails struct {
-	UUID       string             `json:"UUID"`
-	Previous   string             `json:"previous"`
-	UnixTime   int64              `json:"unixTime"`
-	Name       string             `json:"name"`
-	Parameters []ParameterDetails `json:"parameters"`
-	By         ContactDetails     `json:"by"`
-	Sequence   int                `json:"sequence"`
-}
-
-type ParameterDetails struct {
-	Name     string `json:"name"`
-	Value    string `json:"value"`
-	Sequence int    `json:"sequence"`
+type Field struct { //for clarity in code, and brevity in pagedata
+	Key   string `json:"k"`
+	Value string `json:"v"`
 }
 
 const (
-	StartTag       = "<gradex-pagedata>"
-	EndTag         = "</gradex-pagedata>"
-	StartTagOffset = len(StartTag)
-	EndTagOffset   = len(EndTag)
+	StartTag        = "<gradex-pagedata>"
+	EndTag          = "</gradex-pagedata>"
+	StartTagOffset  = len(StartTag)
+	EndTagOffset    = len(EndTag)
+	StartHash       = "<hash>"
+	EndHash         = "</hash>"
+	StartHashOffset = len(StartHash)
+	EndHashOffset   = len(EndHash)
 )
