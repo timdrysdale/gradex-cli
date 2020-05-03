@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="57.360001mm"
+   height="57.360001mm"
+   viewBox="0 0 57.360001 57.360001"
+   version="1.1"
+   id="svg15136"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="prefill-square-01.svg"
+   inkscape:export-filename="/home/tim/tg/parsesvg/test/prefill-square.png"
+   inkscape:export-xdpi="175"
+   inkscape:export-ydpi="175">
+  <title
+     id="title16945">prefill-square</title>
+  <defs
+     id="defs15130" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4"
+     inkscape:cx="-24.285714"
+     inkscape:cy="-20"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer2"
+     showgrid="false"
+     inkscape:window-width="1850"
+     inkscape:window-height="1136"
+     inkscape:window-x="70"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:snap-object-midpoints="true"
+     inkscape:snap-center="true" />
+  <metadata
+     id="metadata15133">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>prefill-square</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="chrome"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-239.64)"
+     style="display:inline">
+    <rect
+       style="display:inline;opacity:0.98999999;fill:#45ff20;fill-opacity:1;stroke:none;stroke-width:0.13407822;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
+       id="rect9072-3"
+       width="57.360134"
+       height="57.360134"
+       x="-6.6757202e-05"
+       y="239.63994"
+       transform="translate(0,1.125e-6)" />
+    <rect
+       transform="translate(0,239.64)"
+       y="29.578751"
+       x="5.4806542"
+       height="19.276785"
+       width="47.247025"
+       id="rect15985"
+       style="opacity:0.98999999;fill:#ffffff;fill-opacity:1;stroke:#f70000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32.10277939px;line-height:1.25;font-family:comfortaa;-inkscape-font-specification:comfortaa;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="19.276785"
+       y="294.35416"
+       id="text15991"><tspan
+         sodipodi:role="line"
+         id="tspan15989"
+         x="19.276785"
+         y="294.35416"
+         style="font-size:4.23333311px;stroke-width:0.26458332">textfield</tspan></text>
+    <text
+       id="text15995"
+       y="243.70535"
+       x="19.276785"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:32.10277939px;line-height:1.25;font-family:comfortaa;-inkscape-font-specification:comfortaa;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       xml:space="preserve"><tspan
+         style="font-size:4.23333311px;stroke-width:0.26458332"
+         y="243.70535"
+         x="19.276785"
+         id="tspan15993"
+         sodipodi:role="line">textprefill</tspan></text>
+    <rect
+       style="display:inline;opacity:0.98999999;fill:#ffffff;fill-opacity:1;stroke:#df00f7;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
+       id="rect16000"
+       width="47.247025"
+       height="19.276785"
+       x="5.8586307"
+       y="5.5772624"
+       transform="translate(0,239.64)" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="textfields"
+     style="display:inline">
+    <rect
+       style="opacity:0.98999999;fill:#6f6fff;fill-opacity:1;stroke:none;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
+       id="rect15979"
+       width="47.247025"
+       height="19.276785"
+       x="5.4806542"
+       y="29.578751">
+      <title
+         id="title15997">bottom-box-01</title>
+    </rect>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="textprefills"
+     style="display:inline">
+    <rect
+       y="5.5772624"
+       x="5.8586307"
+       height="19.276785"
+       width="47.247025"
+       id="rect15981"
+       style="opacity:0.98999999;fill:#df00f7;fill-opacity:0.99215686;stroke:none;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1">
+      <desc
+         id="desc16951">{&quot;text&quot;:&quot;THIS IS A PREFILL TEXT AREA&quot;,&quot;textSize&quot;:20}</desc>
+      <title
+         id="title16003">top-box-01</title>
+    </rect>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="anchors"
+     style="display:inline">
+    <path
+       style="opacity:0.98999999;fill:#45ff20;fill-opacity:1;stroke:none;stroke-width:0.53661054;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
+       id="path15974"
+       sodipodi:type="arc"
+       sodipodi:cx="-6.6757202e-05"
+       sodipodi:cy="-6.052051e-05"
+       sodipodi:rx="7.9880419"
+       sodipodi:ry="7.9880419"
+       sodipodi:start="1.5935991"
+       sodipodi:end="1.5918851"
+       d="M -0.18220048,7.9859047 A 7.9880419,7.9880419 0 0 1 -7.9861093,-0.17877224 7.9880419,7.9880419 0 0 1 0.17522293,-7.9861789 7.9880419,7.9880419 0 0 1 7.986126,0.1718071 7.9880419,7.9880419 0 0 1 -0.16851227,7.9862051"
+       sodipodi:open="true" />
+  </g>
+</svg>

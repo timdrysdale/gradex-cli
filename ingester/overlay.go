@@ -9,9 +9,11 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog"
-	"github.com/timdrysdale/parsesvg"
+	"github.com/timdrysdale/gradex-cli/extract"
+	"github.com/timdrysdale/gradex-cli/merge"
+	"github.com/timdrysdale/gradex-cli/pagedata"
+	"github.com/timdrysdale/gradex-cli/parsesvg"
 	"github.com/timdrysdale/pdfcomment"
-	"github.com/timdrysdale/pdfpagedata"
 	"github.com/timdrysdale/pool"
 	pdf "github.com/timdrysdale/unipdf/v3/model"
 )
@@ -83,7 +85,7 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 			continue
 		}
 
-		pageDataMap, err := pdfpagedata.GetPageDataFromFile(inPath)
+		pageDataMap, err := pagedata.UnMarshalAllFromFile(inPath)
 
 		if err != nil {
 			logger.Error().
@@ -94,44 +96,75 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 			continue
 		}
 
-		if pdfpagedata.GetLen(pageDataMap) < 1 {
+		if pagedata.GetLen(pageDataMap) < 1 {
 			oc.Msg.Send(fmt.Sprintf("Skipping (%s): no pagedata in file\n", inPath))
 			continue
 		}
 
-		// clean out any old versions of the pagedata....
-		err = pdfpagedata.PruneOldRevisions(&pageDataMap)
-		if err != nil {
+		// get all textfields from the file
+
+		fieldsMapByPage, err := extract.ExtractTextFieldsFromPDF(inPath)
+
+		// TODO Capture optical check box values here - Fairly expensive process,
+		// so trigger if there are no marks in the whole doc?
+		// anyone marking half and half we will just end up flagging due to "surprise" missing data
+		logger.Warn().Msg("NOT CAPTURING OPTICAL CHECK BOX DATA AT THIS TIME!!")
+
+		if err == nil {
+
+			for page, fields := range fieldsMapByPage {
+				//https: //stackoverflow.com/questions/17438253/accessing-struct-fields-inside-a-map-value-without-copying
+				pd := pageDataMap[page]
+
+				var data []pagedata.Field
+
+				data = pd.Current.Data
+
+				for key, value := range fields {
+
+					data =
+						append(data,
+							pagedata.Field{
+								Key:   key,
+								Value: value,
+							})
+				}
+				pd.Current.Data = data
+				pageDataMap[page] = pd
+			}
+
+		} else {
+
 			logger.Error().
 				Str("file", inPath).
 				Str("error", err.Error()).
-				Msg(fmt.Sprintf("Skipping (%s): error pruning old pagedata revisions\n", inPath))
+				Msg("Expected text fields but couldn't get them")
 
-			oc.Msg.Send(fmt.Sprintf("Skipping (%s): error pruning old pagedata revisions\n", inPath))
-			continue
 		}
 
 		// this is a file-level task, so we we will sort per-page updates
 		// to pageData at the child step
 		overlayTasks = append(overlayTasks, OverlayTask{
-			InputPath:     inPath,
-			PageCount:     count,
-			PreparedFor:   oc.PreparedFor,
-			ToDo:          oc.ToDo,
-			NewProcessing: oc.ProcessingDetails, //do dynamic update when processing
-			NewQuestion:   oc.QuestionDetails,   //do dynamic update when processing
-			PageDataMap:   pageDataMap,
-			OutputPath:    g.OutputPath(oc.ToPath, inPath, oc.PathDecoration),
-			SpreadName:    oc.SpreadName,
-			Template:      oc.TemplatePath,
-			Msg:           oc.Msg,
+			InputPath: inPath,
+			PageCount: count,
+			// These now in SharedPD
+			//PreparedFor:   oc.PreparedFor,
+			//ToDo:          oc.ToDo,
+			//NewProcessing: oc.ProcessingDetails, //do dynamic update when processing
+			//NewQuestion:   oc.QuestionDetails,   //do dynamic update when processing
+			ProcessDetail:  oc.ProcessDetail,
+			OldPageDataMap: pageDataMap,
+			OutputPath:     g.OutputPath(oc.ToPath, inPath, oc.PathDecoration),
+			SpreadName:     oc.SpreadName,
+			Template:       oc.TemplatePath,
+			Msg:            oc.Msg,
 		})
 		logger.Info().
 			Str("file", inPath).
 			Int("page-count", count).
-			Int("page-data-count", pdfpagedata.GetLen(pageDataMap)).
-			Msg(fmt.Sprintf("Preparing to process: file (%s) has <%d> pages and [%d] pageDatas\n", inPath, count, pdfpagedata.GetLen(pageDataMap)))
-		oc.Msg.Send(fmt.Sprintf("Preparing to process: file (%s) has <%d> pages and [%d] pageDatas\n", inPath, count, pdfpagedata.GetLen(pageDataMap)))
+			Int("page-data-count", pagedata.GetLen(pageDataMap)).
+			Msg(fmt.Sprintf("Preparing to process: file (%s) has <%d> pages and [%d] pageDatas\n", inPath, count, pagedata.GetLen(pageDataMap)))
+		oc.Msg.Send(fmt.Sprintf("Preparing to process: file (%s) has <%d> pages and [%d] pageDatas\n", inPath, count, pagedata.GetLen(pageDataMap)))
 
 	} // for loop through all files
 
@@ -220,19 +253,13 @@ func (g *Ingester) OverlayOnePDF(ot OverlayTask, logger *zerolog.Logger) (int, e
 	// need page count to find the jpeg files again later
 	numPages, err := CountPages(ot.InputPath)
 
-	// render to images
-	// TODO - could get a panic here...
-
-	courseCode := ""
+	// find coursecode in these pages - assume belong SAME assignment. Not true of future bu-page mode
+	var courseCode string
 OUTER:
-	for _, v := range ot.PageDataMap {
-		if v != nil {
-			for _, pd := range v {
-				if pd.Exam.CourseCode != "" {
-					courseCode = pd.Exam.CourseCode
-					break OUTER
-				}
-			}
+	for _, v := range ot.OldPageDataMap {
+		if v.Current.Item.What != "" {
+			courseCode = v.Current.Item.What
+			break OUTER
 		}
 	}
 
@@ -243,6 +270,8 @@ OUTER:
 		ot.Msg.Send(fmt.Sprintf("Can't figure out the course code for file (%s) - not present in PageData?\n", ot.InputPath))
 		return 0, errors.New("Couldn't find a course code")
 	}
+
+	// render to images
 
 	jpegPath := g.PaperImages(courseCode) //ot.PageDataMap[0].Exam.CourseCode)
 
@@ -298,53 +327,64 @@ OUTER:
 		previousImagePath := fmt.Sprintf(jpegFileOption, imgIdx)
 		pageFilename := fmt.Sprintf(pageFileOption, imgIdx)
 
-		pageNumber := imgIdx - 1 //imgIdx starts 1 (books), pageNumber starts at 0 (computers!)
+		pageNumber := imgIdx - 1 //pageNumber starts at zero
 
-		if len(ot.PageDataMap[pageNumber]) < 1 {
+		//if len(ot.PageDataMap[imgIdx]) < 1 {
+		//	logger.Error().
+		//		Str("file", ot.InputPath).
+		//		Int("page-number", imgIdx).
+		//		Msg(fmt.Sprintf("Info: no existing page data for file (%s) on page <%d>\n", ot.InputPath, imgIdx))
+		//	ot.Msg.Send(fmt.Sprintf("Info: no existing page data for file (%s) on page <%d>\n", ot.InputPath, imgIdx))
+		//}
+
+		// FOR THIS PAGE INDIVIDUALLY
+		// we take the "current" pagedata loaded with the extracted field data,
+		// and tack it on the end of the list of previous PageDatas
+
+		thisPageData, ok := ot.OldPageDataMap[imgIdx] //on book number, start at 1
+		if !ok {
 			logger.Error().
 				Str("file", ot.InputPath).
-				Int("page-number", imgIdx).
-				Msg(fmt.Sprintf("Info: no existing page data for file (%s) on page <%d>\n", ot.InputPath, imgIdx))
-			ot.Msg.Send(fmt.Sprintf("Info: no existing page data for file (%s) on page <%d>\n", ot.InputPath, imgIdx))
+				Msg("No pagedata in file")
 		}
 
-		pageData := ot.PageDataMap[pageNumber][0]
+		oldThisPageDataCurrent := thisPageData.Current
 
-		lastProcess, err := pdfpagedata.SelectProcessByLast(pageData)
-		if err != nil {
-			ot.NewProcessing.Previous = "none"
-			ot.NewProcessing.Sequence = 0
-		} else {
-			ot.NewProcessing.Previous = lastProcess.UUID
-			ot.NewProcessing.Sequence = lastProcess.Sequence + 1
-		}
+		previousPageData := thisPageData.Previous
 
-		pageData.ToDo = ot.ToDo
-		pageData.PreparedFor = ot.PreparedFor
-		pageData.Processing = append(pageData.Processing, ot.NewProcessing)
+		previousPageData = append(previousPageData, oldThisPageDataCurrent)
 
-		lastQ, err := pdfpagedata.SelectQuestionByLast(pageData)
-		if err != nil {
-			ot.NewQuestion.Previous = "none"
-			ot.NewQuestion.Sequence = 0
-		} else {
-			ot.NewQuestion.Previous = lastQ.UUID
-			ot.NewQuestion.Sequence = lastQ.Sequence + 1
-		}
+		thisPageData.Previous = previousPageData
 
-		pageData.Questions = append(pageData.Questions, ot.NewQuestion)
+		// Now we CONSTRUCT the NEW current PageData
+		// copy over what we had, first:
+
+		newThisPageDataCurrent := oldThisPageDataCurrent
+
+		// now add in things we can only know now
+		// like page number, UUID etc.
+
+		newThisPageDataCurrent.UUID = safeUUID()
+
+		newThisPageDataCurrent.Follows = oldThisPageDataCurrent.UUID
+
+		newThisPageDataCurrent.Process = ot.ProcessDetail
+
+		// TODO - do we need to update Own? Host?
+
+		thisPageData.Current = newThisPageDataCurrent
 
 		headerPrefills := parsesvg.DocPrefills{}
 
 		headerPrefills[pageNumber] = make(map[string]string)
 
-		headerPrefills[pageNumber]["page-number"] = fmt.Sprintf("%d/%d", pageNumber+1, numPages)
+		headerPrefills[pageNumber]["page-number"] = fmt.Sprintf("%d/%d", pageNumber+1, numPages) //add one we so we get a display pagenumber that starts at one
 
-		headerPrefills[pageNumber]["author"] = pageData.Author.Anonymous
+		headerPrefills[pageNumber]["author"] = thisPageData.Current.Item.Who
 
-		headerPrefills[pageNumber]["date"] = pageData.Exam.Date
+		headerPrefills[pageNumber]["date"] = thisPageData.Current.Item.When
 
-		headerPrefills[pageNumber]["title"] = pageData.Exam.CourseCode
+		headerPrefills[pageNumber]["title"] = thisPageData.Current.Item.What
 
 		contents := parsesvg.SpreadContents{
 			SvgLayoutPath:         ot.Template,
@@ -353,7 +393,7 @@ OUTER:
 			PageNumber:            pageNumber,
 			PdfOutputPath:         pageFilename,
 			Comments:              comments,
-			PageData:              pageData,
+			PageData:              thisPageData,
 			TemplatePathsRelative: true,
 			Prefills:              headerPrefills,
 		}
@@ -373,7 +413,7 @@ OUTER:
 
 		mergePaths = append(mergePaths, pageFilename)
 	}
-	err = MergePDF(mergePaths, ot.OutputPath)
+	err = merge.PDF(mergePaths, ot.OutputPath)
 	if err != nil {
 		logger.Error().
 			Str("file", ot.InputPath).
