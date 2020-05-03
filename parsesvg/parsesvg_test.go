@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/mattetti/filebuffer"
-	"github.com/timdrysdale/geo"
+	"github.com/timdrysdale/gradex-cli/geo"
 	"github.com/timdrysdale/unipdf/v3/annotator"
 	"github.com/timdrysdale/unipdf/v3/creator"
 	"github.com/timdrysdale/unipdf/v3/model"

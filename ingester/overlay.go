@@ -9,11 +9,11 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog"
+	"github.com/timdrysdale/gradex-cli/comment"
 	"github.com/timdrysdale/gradex-cli/extract"
 	"github.com/timdrysdale/gradex-cli/merge"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
-	"github.com/timdrysdale/pdfcomment"
 	"github.com/timdrysdale/pool"
 	pdf "github.com/timdrysdale/unipdf/v3/model"
 )
@@ -299,7 +299,7 @@ OUTER:
 		return 0, err
 	}
 
-	comments, err := pdfcomment.GetComments(pdfReader)
+	comments, err := comment.GetComments(pdfReader)
 
 	f.Close()
 

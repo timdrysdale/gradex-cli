@@ -9,7 +9,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/timdrysdale/geo"
+	"github.com/timdrysdale/gradex-cli/geo"
 )
 
 func DefineLayoutFromSVG(input []byte) (*Layout, error) {

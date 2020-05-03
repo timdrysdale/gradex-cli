@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/timdrysdale/geo"
+	"github.com/timdrysdale/gradex-cli/comment"
+	"github.com/timdrysdale/gradex-cli/geo"
 	"github.com/timdrysdale/gradex-cli/pagedata"
-	"github.com/timdrysdale/pdfcomment"
 	"github.com/timdrysdale/unipdf/v3/annotator"
 	"github.com/timdrysdale/unipdf/v3/creator"
 	"github.com/timdrysdale/unipdf/v3/model"
@@ -287,7 +287,7 @@ func RenderSpreadExtra(contents SpreadContents) error {
 	y := c.Height() - ((0.3 + numComments) * rowHeight)
 	for i, cmt := range comments.GetByPage(pageNumber) {
 
-		pdfcomment.DrawComment(c, cmt, strconv.Itoa(i), x, y)
+		comment.DrawComment(c, cmt, strconv.Itoa(i), x, y)
 		y = y + rowHeight
 	}
 

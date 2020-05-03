@@ -11,11 +11,11 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/anon"
+	"github.com/timdrysdale/gradex-cli/comment"
 	"github.com/timdrysdale/gradex-cli/merge"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
 	"github.com/timdrysdale/parselearn"
-	"github.com/timdrysdale/pdfcomment"
 	"github.com/timdrysdale/pool"
 	pdf "github.com/timdrysdale/unipdf/v3/model"
 )
@@ -282,7 +282,7 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageDataMap map[i
 		return 0, err
 	}
 
-	comments, err := pdfcomment.GetComments(pdfReader)
+	comments, err := comment.GetComments(pdfReader)
 
 	f.Close()
 

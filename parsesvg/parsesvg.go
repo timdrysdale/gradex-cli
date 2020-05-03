@@ -11,7 +11,7 @@ import (
 
 	"strings"
 
-	"github.com/timdrysdale/geo"
+	"github.com/timdrysdale/gradex-cli/geo"
 )
 
 func ParseSvg(input []byte) *Csvg__svg {
