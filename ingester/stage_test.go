@@ -16,7 +16,10 @@ import (
 // we are testing against the same "expected"
 // directory, so archive contents must match the
 // current working test folder contents
-func TestStageArchive(t *testing.T) {
+func testStageArchive(t *testing.T) {
+
+	// archives are disabled
+
 	verbose := true
 
 	mch := make(chan chmsg.MessageInfo)

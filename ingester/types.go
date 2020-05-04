@@ -2,7 +2,7 @@ package ingester
 
 import (
 	"github.com/timdrysdale/chmsg"
-	"github.com/timdrysdale/pdfpagedata"
+	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
 type PDFSummary struct {
@@ -14,24 +14,25 @@ type PDFSummary struct {
 type FlattenTask struct {
 	InputPath   string
 	PageCount   int
-	Data        pdfpagedata.PageData
+	PageDataMap map[int]pagedata.PageData
 	OutputPath  string
 	PreparedFor string
 	ToDo        string
 }
 
 type OverlayTask struct {
-	InputPath     string
-	PageCount     int
-	NewProcessing pdfpagedata.ProcessingDetails
-	NewQuestion   pdfpagedata.QuestionDetails
-	PageDataMap   map[int][]pdfpagedata.PageData
-	OutputPath    string
-	SpreadName    string
-	Template      string
-	Msg           *chmsg.Messager
-	PreparedFor   string
-	ToDo          string
+	InputPath string
+	PageCount int
+	//PreparedFor   string
+	//ToDo          string
+	//NewProcessing pdfpagedata.ProcessingDetails
+	//NewQuestion   pdfpagedata.QuestionDetails
+	ProcessDetail  pagedata.ProcessDetail
+	OldPageDataMap map[int]pagedata.PageData //this has the individual bits filled in?
+	OutputPath     string
+	SpreadName     string
+	Template       string
+	Msg            *chmsg.Messager
 }
 
 // Overlay command struct - for backwards compatability
@@ -41,17 +42,18 @@ type OverlayTask struct {
 //exactly match our internal representation
 
 type OverlayCommand struct {
-	FromPath          string
-	ToPath            string
-	ExamName          string
-	TemplatePath      string
-	SpreadName        string
-	ProcessingDetails pdfpagedata.ProcessingDetails
-	QuestionDetails   pdfpagedata.QuestionDetails
-	Msg               *chmsg.Messager
-	PathDecoration    string //this is the "-ma1" for marker1, "mo2" for moderator 2, "d" for done etc
-	PreparedFor       string
-	ToDo              string
+	FromPath      string
+	ToPath        string
+	ExamName      string
+	TemplatePath  string
+	SpreadName    string
+	ProcessDetail pagedata.ProcessDetail
+	//PreparedFor       string
+	//ToDo              string
+	//ProcessingDetails pdfpagedata.ProcessingDetails
+	//QuestionDetails   pdfpagedata.QuestionDetails
+	Msg            *chmsg.Messager
+	PathDecoration string //this is the "-ma1" for marker1, "mo2" for moderator 2, "d" for done etc
 }
 
 var (
@@ -88,6 +90,21 @@ var (
 		checkedMerged,
 		checkedPruned,
 		checkedReady,
+
+		remarkerReady,
+		remarkerSent,
+		remarkerBack,
+		remarkedCombined,
+		remarkedMerged,
+		remarkedPruned,
+		remarkedReady,
+		recheckerReady,
+		recheckerSent,
+		recheckerBack,
+		recheckedCombined,
+		recheckedMerged,
+		recheckedPruned,
+		recheckedReady,
 		reports,
 	}
 )
@@ -98,48 +115,52 @@ const (
 	tempImages = "03-temporary-images"
 	tempPages  = "04-temporary-pages"
 
-	markedCombined   = "23-marked-combined"
-	markedMerged     = "24-marked-merged"
-	markedPruned     = "25-marked-pruned" //whatever gets trimmed goes here for potential audit
-	markedReady      = "26-marked-ready"
-	moderateActive   = "30-moderate-active"
-	moderateInActive = "31-moderate-inactive"
+	acceptedReceipts = "02-accepted-receipts"
+	acceptedPapers   = "03-accepted-papers"
+	anonPapers       = "05-anonymous-papers"
 
+	markerReady          = "20-marker-ready"
+	markerSent           = "21-marker-sent"
+	markerBack           = "22-marker-back"
+	markedCombined       = "23-marked-combined"
+	markedMerged         = "24-marked-merged"
+	markedPruned         = "25-marked-pruned" //whatever gets trimmed goes here for potential audit
+	markedReady          = "26-marked-ready"
+	moderateActive       = "30-moderate-active"
+	moderateInActive     = "31-moderate-inactive"
+	moderatorReady       = "32-moderator-ready"
+	moderatorSent        = "33-moderator-sent"
+	moderatorBack        = "34-moderator-back"
 	moderateInActiveBack = "35-moderate-inactive-back"
 	moderatedCombined    = "36-moderated-combined"
 	moderatedMerged      = "37-moderated-merged"
 	moderatedPruned      = "38-moderated-pruned"
 	moderatedReady       = "39-moderated-ready"
 
+	checkerReady    = "40-checker-ready"
+	checkerSent     = "41-checker-sent"
+	checkerBack     = "42-checker-back"
 	checkedCombined = "43-checked-combined"
 	checkedMerged   = "44-checked-merged"
 	checkedPruned   = "45-checked-pruned"
 	checkedReady    = "46-checked-ready"
 	reports         = "99-reports"
 
-	acceptedReceipts = "02-accepted-receipts"
-	acceptedPapers   = "03-accepted-papers"
-	anonPapers       = "05-anonymous-papers"
+	remarkerReady    = "50-remarker-ready"
+	remarkerSent     = "51-remarker-sent"
+	remarkerBack     = "52-remarker-back"
+	remarkedCombined = "53-marked-combined"
+	remarkedMerged   = "54-marked-merged"
+	remarkedPruned   = "55-marked-pruned" //whatever gets trimmed goes here for potential audit
+	remarkedReady    = "56-marked-ready"
 
-	markerReady = "20-marker-ready"
-	markerSent  = "21-marker-sent"
-	markerBack  = "22-marker-back"
-
-	moderatorReady = "32-moderator-ready"
-	moderatorSent  = "33-moderator-sent"
-	moderatorBack  = "34-moderator-back"
-
-	checkerReady = "40-checker-ready"
-	checkerSent  = "41-checker-sent"
-	checkerBack  = "42-checker-back"
-
-	remarkerReady = "50-remarker-ready"
-	remarkerSent  = "51-remarker-sent"
-	remarkerBack  = "52-remarker-back"
-
-	recheckerReady = "60-rechecker-ready"
-	recheckerSent  = "61-rechecker-sent"
-	recheckerBack  = "62-rechecker-back"
+	recheckerReady    = "60-rechecker-ready"
+	recheckerSent     = "61-rechecker-sent"
+	recheckerBack     = "62-rechecker-back"
+	recheckedCombined = "63-rechecked-combined"
+	recheckedMerged   = "64-rechecked-merged"
+	recheckedPruned   = "65-rechecked-pruned"
+	recheckedReady    = "66-rechecked-ready"
 
 	N = 3
 )

@@ -26,7 +26,7 @@ func CollectFilesFrom(path string) error {
 	return err //only tracking last error for this out of convenience
 }
 
-func main() {
+func foo() {
 
 	verbose := true
 
@@ -114,6 +114,9 @@ func main() {
 	}
 
 	CollectFilesFrom(g.MarkerReady(exam, marker))
+
+	fmt.Println("export for Marking")
+	g.ExportForMarking(exam, marker, &logger)
 
 }
 

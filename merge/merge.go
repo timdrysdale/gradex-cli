@@ -1,4 +1,4 @@
-package ingester
+package merge
 
 import (
 	"fmt"
@@ -217,7 +217,7 @@ func mergeForms(form, form2 *pdf.PdfAcroForm, docNum int) (*pdf.PdfAcroForm, err
 	return form, nil
 }
 
-func MergePDF(inputPaths []string, outputPath string) error {
+func PDF(inputPaths []string, outputPath string) error {
 	pdfWriter := pdf.NewPdfWriter()
 
 	var forms *pdf.PdfAcroForm

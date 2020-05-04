@@ -9,12 +9,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog"
-	"github.com/timdrysdale/copy"
-	"github.com/timdrysdale/gradexpath"
+	"github.com/google/uuid"
 	"github.com/timdrysdale/parselearn"
-	pdf "github.com/timdrysdale/unipdf/v3/model"
 )
+
+func safeUUID() string {
+	UUIDBytes, err := uuid.NewRandom()
+	uuidStr := UUIDBytes.String()
+	if err != nil {
+		uuidStr = fmt.Sprintf("%d", time.Now().UnixNano())
+	}
+	return uuidStr
+}
 
 func (g *Ingester) CleanFromIngest() error {
 
@@ -71,38 +77,6 @@ func IsArchive(path string) bool {
 	return ItemExists(archiveExt, filepath.Ext(path))
 }
 
-// when we read the Learn receipt, we might get a suffix for a word doc etc
-// so find the pdf file in the target directory with the same base prefix name
-// but possibly variable capitalisation of the suffix (handmade file!)
-func GetPDFPath(filename, directory string) (string, error) {
-
-	// if the original receipt says the submission was not pdf
-	// we need to find a handmade PDF with possibly non-lower case suffix
-	// so search for matching basename
-	if !IsPDF(filename) {
-
-		possibleFiles, err := gradexpath.GetFileList(directory)
-		if err != nil {
-			return "", err
-		}
-
-	LOOP:
-		for _, file := range possibleFiles {
-			want := gradexpath.BareFile(filename)
-			got := gradexpath.BareFile(file)
-			equal := strings.Compare(want, got) == 0
-			if equal {
-				filename = file
-				break LOOP
-			}
-		}
-
-	} else { //assume the file is there
-		filename = filepath.Join(directory, filename)
-	}
-	return filename, nil
-}
-
 func GetShortLearnDate(sub parselearn.Submission) (string, error) {
 
 	if sub == (parselearn.Submission{}) {
@@ -152,23 +126,6 @@ func checkExamNumber(m string) (bool, error) {
 
 	}
 	return true, nil
-}
-
-func Copy(source, destination string) error {
-	// last param is buffer size ...
-	info, err := os.Stat(source)
-	if err != nil {
-		return err
-	}
-	if info.Size() > 1024*1024 {
-		return copy.Copy(source, destination, 32*1024)
-	} else {
-		return copy.Copy(source, destination, 1024*1024)
-	}
-}
-
-func BareFile(name string) string {
-	return strings.TrimSuffix(filepath.Base(name), filepath.Ext(name))
 }
 
 func EnsureDir(dirName string) error {
@@ -239,22 +196,6 @@ func GetFileList(dir string) ([]string, error) {
 
 }
 
-func CopyIsComplete(source, dest []string) bool {
-
-	sourceBase := BaseList(source)
-	destBase := BaseList(dest)
-
-	for _, item := range sourceBase {
-
-		if !ItemExists(destBase, item) {
-			return false
-		}
-	}
-
-	return true
-
-}
-
 func BaseList(paths []string) []string {
 
 	bases := []string{}
@@ -287,160 +228,4 @@ func ItemExists(sliceType interface{}, item interface{}) bool {
 func GetAnonymousFileName(course, anonymousIdentity string) string {
 
 	return course + "-" + anonymousIdentity + ".pdf"
-}
-
-func CountPages(inputPath string) (int, error) {
-
-	numPages := 0
-
-	f, err := os.Open(inputPath)
-	if err != nil {
-		return numPages, err
-	}
-
-	pdfReader, err := pdf.NewPdfReader(f)
-	if err != nil {
-		return numPages, err
-	}
-
-	defer f.Close()
-
-	isEncrypted, err := pdfReader.IsEncrypted()
-	if err != nil {
-		return numPages, err
-	}
-
-	if isEncrypted {
-		_, err = pdfReader.Decrypt([]byte(""))
-		if err != nil {
-			return numPages, err
-		}
-	}
-
-	numPages, err = pdfReader.GetNumPages()
-	if err != nil {
-		return numPages, err
-	}
-
-	return numPages, nil
-
-}
-
-// create or time from https://golangbyexample.com/touch-file-golang/
-func setDone(path string, logger *zerolog.Logger) {
-
-	doneFile := doneFilePath(path)
-
-	_, err := os.Stat(doneFile)
-	if os.IsNotExist(err) {
-		file, err := os.Create(doneFile)
-		if err != nil {
-			logger.Error().
-				Str("file", doneFile).
-				Str("error", err.Error()).
-				Msg("Could not write done file")
-		}
-		defer file.Close()
-	} else {
-		currentTime := time.Now().Local()
-		err = os.Chtimes(doneFile, currentTime, currentTime)
-		if err != nil {
-			logger.Error().
-				Str("file", doneFile).
-				Str("error", err.Error()).
-				Msg("Could not update time of done file")
-		}
-	}
-}
-
-func getDone(path string) bool {
-
-	donefile := doneFilePath(path)
-
-	_, err := os.Stat(donefile)
-
-	if err == nil {
-		return true //done file exists, is done
-	} else {
-		return false
-	}
-
-}
-
-func doneFilePath(path string) string {
-
-	base := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
-
-	return filepath.Join(filepath.Dir(path), "."+base+".done")
-}
-
-// if the source file is not newer, it's not an error
-// we just won't move it - anything left we deal with later
-// also, we delete "<file>.done" indicator
-func (g *Ingester) MoveIfNewerThanDestination(source, destination string, logger *zerolog.Logger) (bool, error) {
-
-	//check both exist
-	sourceInfo, err := os.Stat(source)
-
-	if err != nil {
-		return false, err
-	}
-
-	destinationInfo, err := os.Stat(destination)
-
-	// source newer by definition if destination does not exist
-	if os.IsNotExist(err) {
-		return true, os.Rename(source, destination)
-
-	}
-	if err != nil {
-		//TODO  what does this case represent? an error at destination?
-		return false, err
-	}
-
-	if sourceInfo.ModTime().After(destinationInfo.ModTime()) {
-
-		err = os.Rename(source, destination)
-
-		if err == nil {
-			doneFile := doneFilePath(destination)
-			_, err := os.Stat(doneFile)
-
-			if err == nil {
-
-				err = os.Remove(doneFile)
-
-				if err != nil {
-					logger.Error().
-						Str("file", doneFile).
-						Str("error", err.Error()).
-						Msg("Error removing done file")
-					return true, err
-				}
-
-			} // no done file to remove
-			return true, nil
-		} else {
-			return false, err
-		}
-	} else {
-		return false, nil //too old
-	}
-}
-
-//returns true if moved
-func (g *Ingester) MoveIfNewerThanDestinationInDir(source, destinationDir string, logger *zerolog.Logger) (bool, error) {
-
-	destination := filepath.Join(destinationDir, filepath.Base(source))
-
-	moved, err := g.MoveIfNewerThanDestination(source, destination, logger)
-
-	return moved, err
-}
-
-func (g *Ingester) MoveToDir(source, destinationDir string) error {
-
-	destination := filepath.Join(destinationDir, filepath.Base(source))
-
-	return os.Rename(source, destination)
 }

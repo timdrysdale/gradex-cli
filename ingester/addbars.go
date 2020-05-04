@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/timdrysdale/chmsg"
-	"github.com/timdrysdale/pdfpagedata"
+	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
 func (g *Ingester) AddMarkBar(exam string, marker string) error {
@@ -21,66 +20,38 @@ func (g *Ingester) AddMarkBar(exam string, marker string) error {
 
 	cm := chmsg.New(mc, g.msgCh, g.timeout)
 
-	var UUIDBytes uuid.UUID
-
-	UUIDBytes, err := uuid.NewRandom()
-	uuidStr := UUIDBytes.String()
-	if err != nil {
-		uuidStr = fmt.Sprintf("%d", time.Now().UnixNano())
-	}
-
-	procDetails := pdfpagedata.ProcessingDetails{
-		UUID:     uuidStr,
-		Previous: "", //dynamic
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
 		UnixTime: time.Now().UnixNano(),
 		Name:     "mark-bar",
-		By:       pdfpagedata.ContactDetails{Name: "ingester"},
-		Sequence: 0, //dynamic
-	}
-
-	UUIDBytes, err = uuid.NewRandom()
-	uuidStr = UUIDBytes.String()
-	if err != nil {
-		uuidStr = fmt.Sprintf("%d", time.Now().UnixNano())
-	}
-
-	markDetails := pdfpagedata.QuestionDetails{
-		UUID:     uuidStr,
-		Name:     "marking",
-		UnixTime: time.Now().UnixNano(),
-		Marking: []pdfpagedata.MarkingAction{
-			pdfpagedata.MarkingAction{
-				Actor: marker,
-			},
-		},
+		By:       "gradex-cli",
+		ToDo:     "marking",
+		For:      marker,
 	}
 
 	oc := OverlayCommand{
-		PreparedFor:       marker,
-		ToDo:              "marking",
-		FromPath:          g.AnonymousPapers(exam),
-		ToPath:            g.MarkerReady(exam, marker),
-		ExamName:          exam,
-		TemplatePath:      g.OverlayLayoutSVG(),
-		SpreadName:        "mark",
-		ProcessingDetails: procDetails,
-		QuestionDetails:   markDetails,
-		Msg:               cm,
-		PathDecoration:    g.MarkerABCDecoration(marker),
+		FromPath:       g.AnonymousPapers(exam),
+		ToPath:         g.MarkerReady(exam, marker),
+		ExamName:       exam,
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "mark",
+		ProcessDetail:  procDetail,
+		Msg:            cm,
+		PathDecoration: g.MarkerABCDecoration(marker),
 	}
 
-	err = g.OverlayPapers(oc, &logger)
+	err := g.OverlayPapers(oc, &logger)
 
 	if err == nil {
-		cm.Send(fmt.Sprintf("Finished Processing markbar UUID=%s\n", uuidStr))
+		cm.Send(fmt.Sprintf("Finished Processing markbar UUID=%s\n", procDetail.UUID))
 		logger.Info().
-			Str("UUID", uuidStr).
+			Str("UUID", procDetail.UUID).
 			Str("marker", marker).
 			Str("exam", exam).
 			Msg("Finished add-mark-bar")
 	} else {
 		logger.Error().
-			Str("UUID", uuidStr).
+			Str("UUID", procDetail.UUID).
 			Str("marker", marker).
 			Str("exam", exam).
 			Str("error", err.Error()).
@@ -101,66 +72,38 @@ func (g *Ingester) AddModerateActiveBar(exam string, moderator string) error {
 
 	cm := chmsg.New(mc, g.msgCh, g.timeout)
 
-	var UUIDBytes uuid.UUID
-
-	UUIDBytes, err := uuid.NewRandom()
-	uuidStr := UUIDBytes.String()
-	if err != nil {
-		uuidStr = fmt.Sprintf("%d", time.Now().UnixNano())
-	}
-
-	procDetails := pdfpagedata.ProcessingDetails{
-		UUID:     uuidStr,
-		Previous: "", //dynamic
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
 		UnixTime: time.Now().UnixNano(),
 		Name:     "moderate-active-bar",
-		By:       pdfpagedata.ContactDetails{Name: "ingester"},
-		Sequence: 0, //dynamic
-	}
-
-	UUIDBytes, err = uuid.NewRandom()
-	uuidStr = UUIDBytes.String()
-	if err != nil {
-		uuidStr = fmt.Sprintf("%d", time.Now().UnixNano())
-	}
-
-	markDetails := pdfpagedata.QuestionDetails{
-		UUID:     uuidStr,
-		Name:     "moderating",
-		UnixTime: time.Now().UnixNano(),
-		Moderating: []pdfpagedata.MarkingAction{
-			pdfpagedata.MarkingAction{
-				Actor: moderator,
-			},
-		},
+		By:       "gradex-cli",
+		ToDo:     "moderating",
+		For:      moderator,
 	}
 
 	oc := OverlayCommand{
-		PreparedFor:       moderator,
-		ToDo:              "moderating",
-		FromPath:          g.ModerateActive(exam),
-		ToPath:            g.ModeratorReady(exam, moderator),
-		ExamName:          exam,
-		TemplatePath:      g.OverlayLayoutSVG(),
-		SpreadName:        "moderate-active",
-		ProcessingDetails: procDetails,
-		QuestionDetails:   markDetails,
-		Msg:               cm,
-		PathDecoration:    g.ModeratorABCDecoration(moderator),
+		FromPath:       g.ModerateActive(exam),
+		ToPath:         g.ModeratorReady(exam, moderator),
+		ExamName:       exam,
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "moderate-active",
+		ProcessDetail:  procDetail,
+		Msg:            cm,
+		PathDecoration: g.ModeratorABCDecoration(moderator),
 	}
 
-	err = g.OverlayPapers(oc, &logger)
+	err := g.OverlayPapers(oc, &logger)
 
 	if err == nil {
-		cm.Send(fmt.Sprintf("Finished Processing add-moderate-active-bar UUID=%s\n", uuidStr))
+		cm.Send(fmt.Sprintf("Finished Processing add-moderate-active-bar UUID=%s\n", procDetail.UUID))
 		logger.Info().
-			Str("UUID", uuidStr).
+			Str("UUID", procDetail.UUID).
 			Str("moderator", moderator).
 			Str("exam", exam).
 			Msg("Finished add-moderate-active-bar")
 	} else {
 		logger.Error().
-			Str("UUID", uuidStr).
+			Str("UUID", procDetail.UUID).
 			Str("moderator", moderator).
 			Str("exam", exam).
 			Str("error", err.Error()).
@@ -182,65 +125,36 @@ func (g *Ingester) AddModerateInActiveBar(exam string) error {
 
 	cm := chmsg.New(mc, g.msgCh, g.timeout)
 
-	var UUIDBytes uuid.UUID
-
-	UUIDBytes, err := uuid.NewRandom()
-	uuidStr := UUIDBytes.String()
-	if err != nil {
-		uuidStr = fmt.Sprintf("%d", time.Now().UnixNano())
-	}
-
-	procDetails := pdfpagedata.ProcessingDetails{
-		UUID:     uuidStr,
-		Previous: "", //dynamic
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
 		UnixTime: time.Now().UnixNano(),
-		Name:     "moderate-inactive-bar",
-		By:       pdfpagedata.ContactDetails{Name: "ingester"},
-		Sequence: 0, //dynamic
-	}
-
-	UUIDBytes, err = uuid.NewRandom()
-	uuidStr = UUIDBytes.String()
-	if err != nil {
-		uuidStr = fmt.Sprintf("%d", time.Now().UnixNano())
-	}
-
-	markDetails := pdfpagedata.QuestionDetails{
-		UUID:     uuidStr,
-		Name:     "moderating",
-		UnixTime: time.Now().UnixNano(),
-		Moderating: []pdfpagedata.MarkingAction{
-			pdfpagedata.MarkingAction{
-				Actor: "none",
-			},
-		},
+		Name:     "moderate-active-bar",
+		By:       "gradex-cli",
+		ToDo:     "moderating",
+		For:      "X",
 	}
 
 	oc := OverlayCommand{
-		PreparedFor:       "",
-		ToDo:              "moderating",
-		FromPath:          g.ModerateInActive(exam),
-		ToPath:            g.ModeratedInActiveBack(exam),
-		ExamName:          exam,
-		TemplatePath:      g.OverlayLayoutSVG(),
-		SpreadName:        "moderate-inactive",
-		ProcessingDetails: procDetails,
-		QuestionDetails:   markDetails,
-		Msg:               cm,
-		PathDecoration:    g.ModeratorABCDecoration("X"),
+		FromPath:       g.ModerateInActive(exam),
+		ToPath:         g.ModeratedInActiveBack(exam),
+		ExamName:       exam,
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "moderate-inactive",
+		ProcessDetail:  procDetail,
+		Msg:            cm,
+		PathDecoration: g.ModeratorABCDecoration("X"),
 	}
-
-	err = g.OverlayPapers(oc, &logger)
+	err := g.OverlayPapers(oc, &logger)
 
 	if err == nil {
-		cm.Send(fmt.Sprintf("Finished Processing add-moderate-inactive-bar UUID=%s\n", uuidStr))
+		cm.Send(fmt.Sprintf("Finished Processing add-moderate-inactive-bar UUID=%s\n", procDetail.UUID))
 		logger.Info().
-			Str("UUID", uuidStr).
+			Str("UUID", procDetail.UUID).
 			Str("exam", exam).
 			Msg("Finished add-moderate-inactive-bar")
 	} else {
 		logger.Error().
-			Str("UUID", uuidStr).
+			Str("UUID", procDetail.UUID).
 			Str("exam", exam).
 			Str("error", err.Error()).
 			Msg("Error add-moderate-inactive-bar")
@@ -259,66 +173,38 @@ func (g *Ingester) AddCheckBar(exam string, checker string) error {
 
 	cm := chmsg.New(mc, g.msgCh, g.timeout)
 
-	var UUIDBytes uuid.UUID
-
-	UUIDBytes, err := uuid.NewRandom()
-	uuidStr := UUIDBytes.String()
-	if err != nil {
-		uuidStr = fmt.Sprintf("%d", time.Now().UnixNano())
-	}
-
-	procDetails := pdfpagedata.ProcessingDetails{
-		UUID:     uuidStr,
-		Previous: "", //dynamic
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
 		UnixTime: time.Now().UnixNano(),
 		Name:     "check-bar",
-		By:       pdfpagedata.ContactDetails{Name: "ingester"},
-		Sequence: 0, //dynamic
-	}
-
-	UUIDBytes, err = uuid.NewRandom()
-	uuidStr = UUIDBytes.String()
-	if err != nil {
-		uuidStr = fmt.Sprintf("%d", time.Now().UnixNano())
-	}
-
-	markDetails := pdfpagedata.QuestionDetails{
-		UUID:     uuidStr,
-		Name:     "checking",
-		UnixTime: time.Now().UnixNano(),
-		Checking: []pdfpagedata.MarkingAction{
-			pdfpagedata.MarkingAction{
-				Actor: checker,
-			},
-		},
+		By:       "gradex-cli",
+		ToDo:     "checking",
+		For:      checker,
 	}
 
 	oc := OverlayCommand{
-		PreparedFor:       checker,
-		ToDo:              "checking",
-		FromPath:          g.ModeratedReady(exam),
-		ToPath:            g.CheckerReady(exam, checker),
-		ExamName:          exam,
-		TemplatePath:      g.OverlayLayoutSVG(),
-		SpreadName:        "check",
-		ProcessingDetails: procDetails,
-		QuestionDetails:   markDetails,
-		Msg:               cm,
-		PathDecoration:    g.CheckerABCDecoration(checker),
+		FromPath:       g.ModeratedReady(exam),
+		ToPath:         g.CheckerReady(exam, checker),
+		ExamName:       exam,
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "check",
+		ProcessDetail:  procDetail,
+		Msg:            cm,
+		PathDecoration: g.CheckerABCDecoration(checker),
 	}
 
-	err = g.OverlayPapers(oc, &logger)
+	err := g.OverlayPapers(oc, &logger)
 
 	if err == nil {
-		cm.Send(fmt.Sprintf("Finished Processing add-check-bar UUID=%s\n", uuidStr))
+		cm.Send(fmt.Sprintf("Finished Processing add-check-bar UUID=%s\n", procDetail.UUID))
 		logger.Info().
-			Str("UUID", uuidStr).
+			Str("UUID", procDetail.UUID).
 			Str("checker", checker).
 			Str("exam", exam).
 			Msg("Finished add-check-bar")
 	} else {
 		logger.Error().
-			Str("UUID", uuidStr).
+			Str("UUID", procDetail.UUID).
 			Str("checker", checker).
 			Str("exam", exam).
 			Str("error", err.Error()).

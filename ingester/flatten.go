@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/anon"
+	"github.com/timdrysdale/gradex-cli/comment"
+	"github.com/timdrysdale/gradex-cli/merge"
+	"github.com/timdrysdale/gradex-cli/pagedata"
+	"github.com/timdrysdale/gradex-cli/parsesvg"
 	"github.com/timdrysdale/parselearn"
-	"github.com/timdrysdale/parsesvg"
-	"github.com/timdrysdale/pdfcomment"
-	"github.com/timdrysdale/pdfpagedata"
 	"github.com/timdrysdale/pool"
 	pdf "github.com/timdrysdale/unipdf/v3/model"
 )
@@ -25,24 +25,6 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 	logger := g.logger.With().Str("process", "flatten").Logger()
 
 	//assume someone hits a button to ask us to do this ...
-
-	// we'll use this same set of procDetails for flattens that we do in this batch
-	// that means we can use the uuid to map the processing in graphviz later, for example
-	var UUIDBytes uuid.UUID
-
-	UUIDBytes, err := uuid.NewRandom()
-	uuid := UUIDBytes.String()
-	if err != nil {
-		uuid = fmt.Sprintf("%d", time.Now().UnixNano())
-	}
-	procDetails := pdfpagedata.ProcessingDetails{
-		UUID:     uuid,
-		Previous: "none",
-		UnixTime: time.Now().UnixNano(),
-		Name:     "flatten",
-		By:       pdfpagedata.ContactDetails{Name: "ingester"},
-		Sequence: 0,
-	}
 
 	// load our identity database
 	identity, err := anon.New(g.IdentityCSV())
@@ -133,18 +115,54 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 			continue
 		}
 
-		pagedata := pdfpagedata.PageData{
-			ToDo:        "flattening",
-			PreparedFor: "ingester",
+		// we'll use this same set of procDetails for flattens that we do in this batch
+		// that means we can use the uuid to map the processing in graphviz later, for example
 
-			Exam: pdfpagedata.ExamDetails{
-				CourseCode: sub.Assignment,
-				Date:       shortDate,
-			},
-			Author: pdfpagedata.AuthorDetails{
-				Anonymous: anonymousIdentity,
-			},
-			Processing: []pdfpagedata.ProcessingDetails{procDetails},
+		pd := pagedata.PageDetail{}
+		pd.Is = pagedata.IsPage
+		pd.Follows = "" //first proces
+		pd.Revision = 0 //first revision
+
+		pd.Own = pagedata.FileDetail{} //depends on stage, fill in when we flatten
+
+		pd.Original = pagedata.FileDetail{
+			Path: pdfPath,
+			UUID: safeUUID(),
+			Of:   count,
+		}
+
+		pd.Process = pagedata.ProcessDetail{
+			UUID:     safeUUID(),
+			UnixTime: time.Now().UnixNano(),
+			Name:     "flatten",
+			By:       "gradex-cli",
+			For:      "ingester",
+			ToDo:     "prepare-for-marking",
+		}
+
+		pd.Item = pagedata.ItemDetail{
+			What:    sub.Assignment,
+			When:    shortDate,
+			Who:     anonymousIdentity,
+			WhoType: pagedata.IsAnonymous,
+		}
+
+		pdataMap := make(map[int]pagedata.PageData)
+
+		for page := 1; page <= count; page++ {
+
+			thisPd := pd
+
+			thisPd.UUID = safeUUID()
+
+			thisPd.Original.Number = page
+
+			thisPageData := pagedata.PageData{
+				Current: thisPd,
+			}
+
+			pdataMap[page] = thisPageData
+
 		}
 
 		renamedBase := g.GetAnonymousFileName(sub.Assignment, anonymousIdentity)
@@ -156,7 +174,7 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 			InputPath:   pdfPath,
 			OutputPath:  outputPath,
 			PageCount:   count,
-			Data:        pagedata})
+			PageDataMap: pdataMap})
 	}
 
 	// now process the files
@@ -170,10 +188,10 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 
 		inputPath := flattenTasks[i].InputPath
 		outputPath := flattenTasks[i].OutputPath
-		pd := flattenTasks[i].Data
+		pdataMap := flattenTasks[i].PageDataMap
 
 		newtask := pool.NewTask(func() error {
-			pc, err := g.FlattenOnePDF(inputPath, outputPath, pd, &logger)
+			pc, err := g.FlattenOnePDF(inputPath, outputPath, pdataMap, &logger)
 			pcChan <- pc
 			if err == nil {
 				setDone(inputPath, &logger) // so we don't have to do it again
@@ -201,21 +219,6 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 
 	closed := make(chan struct{})
 
-	//	h := thist.NewHist(nil, "Page count", "fixed", 10, false)
-	//
-	//	go func() {
-	//	LOOP:
-	//		for {
-	//			select {
-	//			case pc := <-pcChan:
-	//				h.Update(float64(pc))
-	//				fmt.Println(h.Draw())
-	//			case <-closed:
-	//				break LOOP
-	//			}
-	//		}
-	//	}()
-	//
 	p.Run()
 
 	var numErrors int
@@ -241,7 +244,7 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 
 }
 
-func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageData pdfpagedata.PageData, logger *zerolog.Logger) (int, error) {
+func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageDataMap map[int]pagedata.PageData, logger *zerolog.Logger) (int, error) {
 
 	if strings.ToLower(filepath.Ext(inputPath)) != ".pdf" {
 		logger.Error().
@@ -254,7 +257,8 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageData pdfpaged
 	numPages, err := CountPages(inputPath)
 
 	// render to images
-	jpegPath := g.AcceptedPaperImages(pageData.Exam.CourseCode)
+	what := pageDataMap[1].Current.Item.What
+	jpegPath := g.AcceptedPaperImages(what) //exam/coursecode
 
 	suffix := filepath.Ext(inputPath)
 	basename := strings.TrimSuffix(filepath.Base(inputPath), suffix)
@@ -278,7 +282,7 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageData pdfpaged
 		return 0, err
 	}
 
-	comments, err := pdfcomment.GetComments(pdfReader)
+	comments, err := comment.GetComments(pdfReader)
 
 	f.Close()
 
@@ -295,15 +299,17 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageData pdfpaged
 
 	// convert images to individual pdfs, with form overlay
 
-	pagePath := g.AcceptedPaperPages(pageData.Exam.CourseCode)
+	pagePath := g.AcceptedPaperPages(what)
 	pageFileOption := fmt.Sprintf("%s/%s%%04d.pdf", pagePath, basename)
 
 	mergePaths := []string{}
 
-	pageData.Page.Of = numPages
-
 	// gs starts indexing at 1
 	for imgIdx := 1; imgIdx <= numPages; imgIdx = imgIdx + 1 {
+
+		pd := pageDataMap[imgIdx]
+
+		pageNumber := imgIdx - 1
 
 		// construct image name
 		previousImagePath := fmt.Sprintf(jpegFileOption, imgIdx)
@@ -312,34 +318,25 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageData pdfpaged
 		//TODO select Layout to suit landscape or portrait
 		svgLayoutPath := g.FlattenLayoutSVG()
 
-		pageNumber := imgIdx - 1
-
-		pageData.Page.Number = pageNumber + 1
-		pageData.Page.Filename = filepath.Base(pageFilename)
-
-		var pageUUIDBytes uuid.UUID
-
-		pageUUIDBytes, err = uuid.NewRandom()
-
-		pageUUID := pageUUIDBytes.String()
-
-		if err != nil {
-			pageUUID = fmt.Sprintf("%d", time.Now().UnixNano())
+		pd.Current.Own = pagedata.FileDetail{
+			Path:   pageFilename,
+			UUID:   safeUUID(),
+			Number: imgIdx,
+			Of:     numPages,
 		}
-
-		pageData.Page.UUID = pageUUID
 
 		headerPrefills := parsesvg.DocPrefills{}
 
 		headerPrefills[pageNumber] = make(map[string]string)
 
-		headerPrefills[pageNumber]["page-number"] = fmt.Sprintf("%d/%d", pageNumber+1, numPages)
+		headerPrefills[pageNumber]["page-number"] = fmt.Sprintf("%d/%d", imgIdx, numPages)
 
-		headerPrefills[pageNumber]["author"] = pageData.Author.Anonymous
+		headerPrefills[pageNumber]["author"] = pageDataMap[imgIdx].Current.Item.Who
 
-		headerPrefills[pageNumber]["date"] = pageData.Exam.Date
+		headerPrefills[pageNumber]["date"] = pageDataMap[imgIdx].Current.Item.When
 
-		headerPrefills[pageNumber]["title"] = pageData.Exam.CourseCode
+		headerPrefills[pageNumber]["title"] = pageDataMap[imgIdx].Current.Item.What
+
 		if len(headerPrefills[pageNumber]["title"]) > 12 {
 			headerPrefills[pageNumber]["title"] = headerPrefills[pageNumber]["title"][0:13]
 		}
@@ -350,12 +347,12 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageData pdfpaged
 			PageNumber:            pageNumber,
 			PdfOutputPath:         pageFilename,
 			Comments:              comments,
-			PageData:              pageData,
+			PageData:              pd,
 			TemplatePathsRelative: true,
 			Prefills:              headerPrefills,
 		}
 
-		err := parsesvg.RenderSpreadExtra(contents)
+		err = parsesvg.RenderSpreadExtra(contents)
 		if err != nil {
 			logger.Error().
 				Str("error", err.Error()).
@@ -366,12 +363,23 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageData pdfpaged
 
 		mergePaths = append(mergePaths, pageFilename)
 	}
-	err = MergePDF(mergePaths, outputPath)
+	err = merge.PDF(mergePaths, outputPath)
 	if err != nil {
 		logger.Error().
 			Str("error", err.Error()).
 			Msg(fmt.Sprintf("Error merging for %s: %s", inputPath, err.Error()))
 		return 0, err
+	}
+	doneFile := doneFilePath(outputPath)
+	_, err = os.Stat(doneFile)
+	if err == nil {
+		err = os.Remove(doneFile)
+		if err != nil {
+			logger.Error().
+				Str("file", outputPath).
+				Str("error", err.Error()).
+				Msg("Could not delete stale Done File")
+		}
 	}
 
 	logger.Info().
