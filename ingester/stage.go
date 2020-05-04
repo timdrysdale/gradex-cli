@@ -7,7 +7,7 @@ import (
 
 	"github.com/mholt/archiver"
 	"github.com/rs/zerolog"
-	"github.com/timdrysdale/pdfpagedata"
+	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
 // wait for user to press an "do ingest button", then filewalk to get the paths
@@ -157,7 +157,7 @@ func (g *Ingester) handleIngestCSV(path string, logger *zerolog.Logger) {
 // just need the new mod time on the file
 func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 
-	t, err := pdfpagedata.TriagePdf(path)
+	ts, err := pagedata.TriageFile(path)
 
 	if err != nil {
 		// no page data so either a raw script, file from old gradex tool, or the pagedata has been corrupted
@@ -183,20 +183,24 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		return
 	}
 
-	logger.Info().
-		Dict("properties", zerolog.Dict().
-			Str("CourseCode", t.CourseCode).
-			Str("PreparedFor", t.PreparedFor).
-			Str("ToDo", t.ToDo),
-		).Msg("Identified a PDF with pagedata, for ingesting")
+	if len(ts) > 0 {
 
+		logger.Info().
+			Dict("properties", zerolog.Dict().
+				Str("Is", ts[1].Is).
+				Str("What", ts[1].What).
+				Str("For", ts[1].For).
+				Str("ToDo", ts[1].ToDo),
+			).Msg("Identified a PDF with pagedata, for ingesting")
+	}
+	t := ts[1]
 	switch t.ToDo {
 
 	case "flattening":
 
 		// these aren't usually exported, but we may be repopulating a new ingester or
 		// manually correcting something, so we consider our options
-		origin := g.AnonymousPapers(t.CourseCode)
+		origin := g.AnonymousPapers(t.What)
 		moved, err := g.MoveIfNewerThanDestinationInDir(path, origin, logger)
 		if err != nil {
 			g.logger.Error().Str("file", path).Str("destination", origin).Msg("Couldn't move flattened PDF into origin dir")
@@ -213,9 +217,9 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 
 	case "marking":
 		// these could be marked, or just being returned by DSA if prematurely exported
-		origin := g.MarkerSent(t.CourseCode, t.PreparedFor)
+		origin := g.MarkerSent(t.What, t.For)
 
-		preOrigin := g.MarkerReady(t.CourseCode, t.PreparedFor)
+		preOrigin := g.MarkerReady(t.What, t.For)
 
 		if g.IsSameAsSelfInDir(path, origin) {
 			// put the file back in Ready (we keep this incoming version _just_in_case_ it had mods
@@ -233,7 +237,7 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		} else {
 			// it's (probably) been marked at least partly, so see if it is newer
 			// than a version we might already have
-			destination := g.MarkerBack(t.CourseCode, t.PreparedFor)
+			destination := g.MarkerBack(t.What, t.For)
 
 			moved, err := g.MoveIfNewerThanDestinationInDir(path, destination, logger)
 
@@ -289,9 +293,9 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		}
 	case "moderating":
 
-		origin := g.ModeratorSent(t.CourseCode, t.PreparedFor)
+		origin := g.ModeratorSent(t.What, t.For)
 
-		preOrigin := g.ModeratorReady(t.CourseCode, t.PreparedFor)
+		preOrigin := g.ModeratorReady(t.What, t.For)
 
 		if g.IsSameAsSelfInDir(path, origin) {
 			// put the file back in Ready (we keep this incoming version _just_in_case_ it had mods
@@ -309,15 +313,15 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		} else {
 			// it's (probably) been marked at least partly, so see if it is newer
 			// than a version we might already have
-			destination := g.ModeratorBack(t.CourseCode, t.PreparedFor)
+			destination := g.ModeratorBack(t.What, t.For)
 			g.MoveIfNewerThanDestinationInDir(path, destination, logger)
 			return
 		}
 	case "checking":
 
-		origin := g.CheckerSent(t.CourseCode, t.PreparedFor)
+		origin := g.CheckerSent(t.What, t.For)
 
-		preOrigin := g.CheckerReady(t.CourseCode, t.PreparedFor)
+		preOrigin := g.CheckerReady(t.What, t.For)
 
 		if g.IsSameAsSelfInDir(path, origin) {
 			// put the file back in Ready (we keep this incoming version _just_in_case_ it had mods
@@ -335,7 +339,7 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		} else {
 			// it's (probably) been marked at least partly, so see if it is newer
 			// than a version we might already have
-			destination := g.CheckerBack(t.CourseCode, t.PreparedFor)
+			destination := g.CheckerBack(t.What, t.For)
 			g.MoveIfNewerThanDestinationInDir(path, destination, logger)
 			return
 		}
