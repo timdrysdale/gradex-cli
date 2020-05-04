@@ -26,7 +26,7 @@ func CollectFilesFrom(path string) error {
 	return err //only tracking last error for this out of convenience
 }
 
-func main() {
+func foo() {
 
 	verbose := true
 

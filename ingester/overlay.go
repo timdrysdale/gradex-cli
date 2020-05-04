@@ -423,6 +423,19 @@ OUTER:
 		ot.Msg.Send(fmt.Sprintf("Error merging processed pages for (%s) because %v\n", ot.InputPath, err))
 		return 0, err
 	}
+
+	doneFile := doneFilePath(ot.OutputPath)
+	_, err = os.Stat(doneFile)
+	if err == nil {
+		err = os.Remove(doneFile)
+		if err != nil {
+			logger.Error().
+				Str("file", ot.OutputPath).
+				Str("error", err.Error()).
+				Msg("Could not delete stale Done File")
+		}
+	}
+
 	logger.Info().
 		Str("file", ot.InputPath).
 		Int("page-count", ot.PageCount).
