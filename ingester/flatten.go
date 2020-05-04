@@ -321,7 +321,7 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageDataMap map[i
 		pd.Current.Own = pagedata.FileDetail{
 			Path:   pageFilename,
 			UUID:   safeUUID(),
-			Number: pageNumber,
+			Number: imgIdx,
 			Of:     numPages,
 		}
 
@@ -329,13 +329,13 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageDataMap map[i
 
 		headerPrefills[pageNumber] = make(map[string]string)
 
-		headerPrefills[pageNumber]["page-number"] = fmt.Sprintf("%d/%d", pageNumber+1, numPages)
+		headerPrefills[pageNumber]["page-number"] = fmt.Sprintf("%d/%d", imgIdx, numPages)
 
-		headerPrefills[pageNumber]["author"] = pageDataMap[pageNumber].Current.Item.Who
+		headerPrefills[pageNumber]["author"] = pageDataMap[imgIdx].Current.Item.Who
 
-		headerPrefills[pageNumber]["date"] = pageDataMap[pageNumber].Current.Item.When
+		headerPrefills[pageNumber]["date"] = pageDataMap[imgIdx].Current.Item.When
 
-		headerPrefills[pageNumber]["title"] = pageDataMap[pageNumber].Current.Item.What
+		headerPrefills[pageNumber]["title"] = pageDataMap[imgIdx].Current.Item.What
 
 		if len(headerPrefills[pageNumber]["title"]) > 12 {
 			headerPrefills[pageNumber]["title"] = headerPrefills[pageNumber]["title"][0:13]
@@ -369,6 +369,17 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageDataMap map[i
 			Str("error", err.Error()).
 			Msg(fmt.Sprintf("Error merging for %s: %s", inputPath, err.Error()))
 		return 0, err
+	}
+	doneFile := doneFilePath(outputPath)
+	_, err = os.Stat(doneFile)
+	if err == nil {
+		err = os.Remove(doneFile)
+		if err != nil {
+			logger.Error().
+				Str("file", outputPath).
+				Str("error", err.Error()).
+				Msg("Could not delete stale Done File")
+		}
 	}
 
 	logger.Info().
