@@ -15,8 +15,8 @@
    version="1.1"
    id="svg8"
    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-   sodipodi:docname="sidebar-312pt-moderate-inactive.svg"
-   inkscape:export-filename="/home/tim/tg/ingester/test-fs/etc/overlay/template/sidebar-312pt-moderate-flow-inactive.png"
+   sodipodi:docname="sidebar-312pt-moderate-flow-inactive.svg"
+   inkscape:export-filename="/home/tim/go/src/github.com/timdrysdale/parsesvg/test/sidebar-312pt-moderate-flow-inactive.png"
    inkscape:export-xdpi="299.15558"
    inkscape:export-ydpi="299.15558">
   <title
@@ -474,9 +474,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.565592"
-     inkscape:cx="-117.70548"
-     inkscape:cy="959.64937"
+     inkscape:zoom="0.78279599"
+     inkscape:cx="27.926329"
+     inkscape:cy="559.80062"
      inkscape:document-units="mm"
      inkscape:current-layer="layer2"
      showgrid="false"
