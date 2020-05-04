@@ -4061,11 +4061,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.565592"
-     inkscape:cx="1039.1689"
-     inkscape:cy="917.99062"
+     inkscape:zoom="0.55352036"
+     inkscape:cx="790.81663"
+     inkscape:cy="623.51184"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer6"
+     inkscape:current-layer="layer2"
      showgrid="false"
      inkscape:window-width="1850"
      inkscape:window-height="1136"
@@ -4234,7 +4234,7 @@
        id="path3871"
        style="display:inline;opacity:1;fill:#ed1a1f;fill-opacity:1;stroke:none;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1">
       <desc
-         id="desc3944">sidebar-312pt-mark-ladder</desc>
+         id="desc3944">sidebar-312pt-mark-ladder-flow-comment</desc>
       <title
          id="title3869">svg-mark-ladder</title>
     </path>
@@ -4271,23 +4271,6 @@
          id="desc17768">sidebar-312pt-moderate-inactive</desc>
       <title
          id="title17770">svg-moderate-inactive</title>
-    </path>
-    <path
-       style="display:inline;opacity:1;fill:#ed1a1f;fill-opacity:1;stroke:none;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
-       id="path20385"
-       sodipodi:type="arc"
-       sodipodi:cx="231.31073"
-       sodipodi:cy="0.087472938"
-       sodipodi:rx="3.9435091"
-       sodipodi:ry="3.9435091"
-       sodipodi:start="4.7394094"
-       sodipodi:end="4.7046179"
-       d="m 231.41727,-3.8545967 a 3.9435091,3.9435091 0 0 1 3.83631,4.01432072 3.9435091,3.9435091 0 0 1 -3.9808,3.87107538 3.9435091,3.9435091 0 0 1 -3.90556,-3.94698128 3.9435091,3.9435091 0 0 1 3.91286,-3.93973522"
-       sodipodi:open="true">
-      <desc
-         id="desc20381">sidebar-312pt-mark-flow-comment</desc>
-      <title
-         id="title20383">svg-mark-flow</title>
     </path>
     <path
        sodipodi:open="true"
