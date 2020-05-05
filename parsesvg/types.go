@@ -39,6 +39,13 @@ type TextPrefill struct {
 	Text       Paragraph
 }
 
+type ComboBox struct {
+	Rect       geo.Rect
+	ID         string
+	Properties string
+	Options    ComboOptions
+}
+
 // we read the properties from a JSON object in the Description field
 // and then apply when writing the text field - these are private fields
 // in the Paragraph struct in unipdf
@@ -58,12 +65,17 @@ type Paragraph struct {
 	ColorHex            string    `json:"colorHex"`
 }
 
+type ComboOptions struct {
+	Options []string `json:"options"`
+}
+
 type Ladder struct {
 	Anchor       geo.Point
 	Dim          geo.Dim
 	ID           string
 	TextFields   []TextField
 	TextPrefills []TextPrefill
+	ComboBoxes   []ComboBox
 }
 
 type Layout struct {

@@ -500,6 +500,114 @@ const textPrefillSVG = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
   </g>
 </svg>`
 
+const comboBoxSVG = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="100mm"
+   height="100mm"
+   viewBox="0 0 100 100"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="combobox.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.35"
+     inkscape:cx="-131.42857"
+     inkscape:cy="-22.857143"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer2"
+     showgrid="false"
+     inkscape:snap-page="true"
+     inkscape:snap-object-midpoints="true"
+     inkscape:window-width="1850"
+     inkscape:window-height="1136"
+     inkscape:window-x="70"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="anchors"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-197)">
+    <path
+       style="opacity:1;fill:#ff1010;fill-opacity:1;stroke:none;stroke-width:0.99999994;stroke-miterlimit:4;stroke-dasharray:0.99999999, 0.99999999;stroke-dashoffset:0;stroke-opacity:1"
+       id="path1045"
+       sodipodi:type="arc"
+       sodipodi:cx="0"
+       sodipodi:cy="197"
+       sodipodi:rx="9.8273811"
+       sodipodi:ry="9.8273811"
+       sodipodi:start="3.3679619"
+       sodipodi:end="3.3449061"
+       sodipodi:open="true"
+       d="m -9.5766621,194.79433 a 9.8273811,9.8273811 0 0 1 11.7270925,-7.38355 9.8273811,9.8273811 0 0 1 7.4510215,11.68434 9.8273811,9.8273811 0 0 1 -11.6411983,7.51825 9.8273811,9.8273811 0 0 1 -7.5852194,-11.59767" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="comboboxes">
+    <rect
+       style="opacity:1;fill:#ff1010;fill-opacity:1;stroke:none;stroke-width:0.99999994;stroke-miterlimit:4;stroke-dasharray:0.99999999, 0.99999998999999995;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect1048"
+       width="65.98214"
+       height="26.458332"
+       x="17.00893"
+       y="36.770836">
+      <desc
+         id="desc1053">{&quot;options&quot;:[&quot;A1&quot;,&quot;B1&quot;,&quot;B2&quot;,&quot;B3&quot;]}</desc>
+      <title
+         id="title1051">question</title>
+    </rect>
+  </g>
+</svg>`
+
+var expectedComboBox = &Ladder{
+	Anchor: geo.Point{X: 0, Y: 0},
+	Dim:    geo.Dim{Width: 283.46456692913387, Height: 283.46456692913387},
+	ID:     "",
+	ComboBoxes: []ComboBox{
+		ComboBox{
+			Rect: geo.Rect{
+				Corner: geo.Point{X: 17.00893, Y: 36.770836},
+				Dim:    geo.Dim{Width: 65.98214, Height: 26.458332},
+			},
+			ID:         "question",
+			Properties: "{\"options\":[\"A1\",\"B1\",\"B2\",\"B3\"]}",
+			Options: ComboOptions{
+				Options: []string{"A1", "B1", "B2", "B3"},
+			},
+		},
+	},
+}
+
 var expectedTextPrefill = &Ladder{
 	Anchor: geo.Point{X: 0, Y: 0},
 	Dim:    geo.Dim{Width: 141.73228346456693, Height: 141.73228346456693},
@@ -567,9 +675,24 @@ func TestTextPrefills(t *testing.T) {
 
 	if !reflect.DeepEqual(ladder, expectedTextPrefill) {
 		t.Errorf("Ladder does not match expected")
-		t.Errorf("Ladder does not match expected")
 		fmt.Println("----------EXPECTED------------------")
 		PrettyPrintStruct(expectedTextPrefill)
+		fmt.Println("----------GOT------------------")
+		PrettyPrintStruct(ladder)
+	}
+}
+
+func TestComboBox(t *testing.T) {
+
+	ladder, err := DefineLadderFromSVG([]byte(comboBoxSVG))
+	if err != nil {
+		t.Errorf("Error defining ladder %v", err)
+	}
+
+	if !reflect.DeepEqual(ladder, expectedComboBox) {
+		t.Errorf("Ladder does not match expected")
+		fmt.Println("----------EXPECTED------------------")
+		PrettyPrintStruct(expectedComboBox)
 		fmt.Println("----------GOT------------------")
 		PrettyPrintStruct(ladder)
 	}

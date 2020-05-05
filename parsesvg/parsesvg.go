@@ -264,12 +264,76 @@ func DefineLadderFromSVG(input []byte) (*Ladder, error) {
 
 	}
 
+	for _, g := range svg.Cg__svg {
+		gdx, gdy := getTranslate(g.Transform)
+		if g.AttrInkscapeSpacelabel == geo.ComboBoxesLayer {
+
+			for _, r := range g.Crect__svg {
+				cb := ComboBox{}
+				if r.Title != nil { //avoid seg fault, obvs
+					cb.ID = r.Title.String
+				}
+
+				if r.Desc != nil {
+					cb.Properties = r.Desc.String
+				}
+				w, err := strconv.ParseFloat(r.Width, 64)
+				if err != nil {
+					return nil, err
+				}
+				h, err := strconv.ParseFloat(r.Height, 64)
+				if err != nil {
+					return nil, err
+				}
+
+				cb.Rect.Dim.Width = w
+				cb.Rect.Dim.Height = h
+				cb.Rect.Dim.DynamicWidth = false
+
+				x, err := strconv.ParseFloat(r.Rx, 64)
+				if err != nil {
+					return nil, err
+				}
+				y, err := strconv.ParseFloat(r.Ry, 64)
+				if err != nil {
+					return nil, err
+				}
+				rdx, rdy := getTranslate(r.Transform)
+				cb.Rect.Corner.X = x + rdx + gdx
+				cb.Rect.Corner.Y = y + rdy + gdy
+
+				err = UnmarshalComboBox(&cb)
+				if err != nil {
+					return nil, err
+				}
+				ladder.ComboBoxes = append(ladder.ComboBoxes, cb)
+			}
+		}
+
+	}
+
 	err = ApplyDocumentUnits(&svg, ladder)
 	if err != nil {
 		return nil, err
 	}
 
 	return ladder, nil
+}
+
+func UnmarshalComboBox(cb *ComboBox) error {
+
+	options := ComboOptions{}
+
+	if len(cb.Properties) > 0 {
+		err := json.Unmarshal([]byte(cb.Properties), &options)
+		if err != nil {
+			return err
+		}
+
+		cb.Options = options
+	}
+	return nil
+
 }
 
 func UnmarshalTextPrefill(tp *TextPrefill) error {
