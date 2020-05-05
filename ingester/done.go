@@ -100,7 +100,7 @@ func getDoneFor(path, who string) bool {
 }
 
 func doneFilePathFor(path, who string) string {
-
+	who = strings.TrimPrefix(who, "-")
 	base := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 
 	return filepath.Join(filepath.Dir(path), "."+who+"."+base+".done")
