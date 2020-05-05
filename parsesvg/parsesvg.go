@@ -264,12 +264,76 @@ func DefineLadderFromSVG(input []byte) (*Ladder, error) {
 
 	}
 
+	for _, g := range svg.Cg__svg {
+		gdx, gdy := getTranslate(g.Transform)
+		if g.AttrInkscapeSpacelabel == geo.ComboBoxesLayer {
+
+			for _, r := range g.Crect__svg {
+				cb := ComboBox{}
+				if r.Title != nil { //avoid seg fault, obvs
+					cb.ID = r.Title.String
+				}
+
+				if r.Desc != nil {
+					cb.Properties = r.Desc.String
+				}
+				w, err := strconv.ParseFloat(r.Width, 64)
+				if err != nil {
+					return nil, err
+				}
+				h, err := strconv.ParseFloat(r.Height, 64)
+				if err != nil {
+					return nil, err
+				}
+
+				cb.Rect.Dim.Width = w
+				cb.Rect.Dim.Height = h
+				cb.Rect.Dim.DynamicWidth = false
+
+				x, err := strconv.ParseFloat(r.Rx, 64)
+				if err != nil {
+					return nil, err
+				}
+				y, err := strconv.ParseFloat(r.Ry, 64)
+				if err != nil {
+					return nil, err
+				}
+				rdx, rdy := getTranslate(r.Transform)
+				cb.Rect.Corner.X = x + rdx + gdx
+				cb.Rect.Corner.Y = y + rdy + gdy
+
+				err = UnmarshalComboBox(&cb)
+				if err != nil {
+					return nil, err
+				}
+				ladder.ComboBoxes = append(ladder.ComboBoxes, cb)
+			}
+		}
+
+	}
+
 	err = ApplyDocumentUnits(&svg, ladder)
 	if err != nil {
 		return nil, err
 	}
 
 	return ladder, nil
+}
+
+func UnmarshalComboBox(cb *ComboBox) error {
+
+	options := ComboOptions{}
+
+	if len(cb.Properties) > 0 {
+		err := json.Unmarshal([]byte(cb.Properties), &options)
+		if err != nil {
+			return err
+		}
+
+		cb.Options = options
+	}
+	return nil
+
 }
 
 func UnmarshalTextPrefill(tp *TextPrefill) error {
@@ -332,6 +396,14 @@ func ApplyDocumentUnits(svg *Csvg__svg, ladder *Ladder) error {
 		ladder.TextPrefills[idx] = tp
 	}
 
+	for idx, cb := range ladder.ComboBoxes {
+		err := scaleComboBoxUnits(&cb, sf)
+		if err != nil {
+			return err
+		}
+		ladder.ComboBoxes[idx] = cb
+	}
+
 	return nil
 }
 
@@ -347,7 +419,18 @@ func scaleTextFieldUnits(tf *TextField, sf float64) error {
 
 	return nil
 }
+func scaleComboBoxUnits(cb *ComboBox, sf float64) error {
+	if cb == nil {
+		return errors.New("nil pointer to ComboBox")
+	}
 
+	cb.Rect.Corner.X = sf * cb.Rect.Corner.X
+	cb.Rect.Corner.Y = sf * cb.Rect.Corner.Y
+	cb.Rect.Dim.Width = sf * cb.Rect.Dim.Width
+	cb.Rect.Dim.Height = sf * cb.Rect.Dim.Height
+
+	return nil
+}
 func scaleTextPrefillUnits(tf *TextPrefill, sf float64) error {
 	if tf == nil {
 		return errors.New("nil pointer to TextField")
@@ -361,9 +444,9 @@ func scaleTextPrefillUnits(tf *TextPrefill, sf float64) error {
 	return nil
 }
 
-func formRect(tf TextField, dim geo.Dim) []float64 {
+func formRect(rect geo.Rect, dim geo.Dim) []float64 {
 
-	return []float64{tf.Rect.Corner.X, dim.Height - tf.Rect.Corner.Y, (tf.Rect.Corner.X + tf.Rect.Dim.Width), dim.Height - (tf.Rect.Corner.Y + +tf.Rect.Dim.Height)}
+	return []float64{rect.Corner.X, dim.Height - rect.Corner.Y, (rect.Corner.X + rect.Dim.Width), dim.Height - (rect.Corner.Y + rect.Dim.Height)}
 
 }
 

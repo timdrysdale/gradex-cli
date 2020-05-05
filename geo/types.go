@@ -22,6 +22,7 @@ const (
 	ChromeLayer       = "chrome"
 	TextFieldsLayer   = "textfields"
 	TextPrefillsLayer = "textprefills"
+	ComboBoxesLayer   = "comboboxes"
 	PagesLayer        = "pages"
 	ImagesLayer       = "images"
 	Translate         = "translate"
