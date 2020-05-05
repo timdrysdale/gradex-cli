@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="100mm"
+   height="100mm"
+   viewBox="0 0 100 100"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="combobox-a.svg"
+   inkscape:export-filename="/home/tim/tg/gradex-cli/parsesvg/test/combobox.png"
+   inkscape:export-xdpi="241.89999"
+   inkscape:export-ydpi="241.89999">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="327.18068"
+     inkscape:cy="126.64543"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer2"
+     showgrid="false"
+     inkscape:snap-page="true"
+     inkscape:snap-object-midpoints="true"
+     inkscape:window-width="1850"
+     inkscape:window-height="1136"
+     inkscape:window-x="70"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="chrome">
+    <rect
+       style="opacity:1;fill:#008080;fill-opacity:1;stroke:none;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:0.99999999, 0.99999999;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect5976"
+       width="100"
+       height="100"
+       x="0"
+       y="-3.0079641e-14"
+       rx="4.2763124"
+       ry="5.8799305" />
+    <rect
+       y="36.770836"
+       x="17.00893"
+       height="26.458332"
+       width="65.98214"
+       id="rect5982"
+       style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.99999994;stroke-miterlimit:4;stroke-dasharray:0.99999999, 0.99999999;stroke-dashoffset:0;stroke-opacity:1"
+       rx="2.4054258"
+       ry="2.4054258">
+      <desc
+         id="desc5978">{&quot;options&quot;:[&quot;Hello&quot;,&quot;A1&quot;,&quot;B1&quot;,&quot;B2&quot;,&quot;B3&quot;]}</desc>
+      <title
+         id="title5980">question</title>
+    </rect>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.62412834px;line-height:1.25;font-family:comfortaa;-inkscape-font-specification:comfortaa;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.94680965"
+       x="10.706828"
+       y="24.341658"
+       id="text5991"><tspan
+         sodipodi:role="line"
+         id="tspan5989"
+         x="10.706828"
+         y="24.341658"
+         style="fill:#ffffff;stroke-width:0.94680965">SAY HELLO!</tspan></text>
+  </g>
+  <g
+     inkscape:label="anchors"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-197)"
+     style="display:inline">
+    <path
+       style="opacity:1;fill:#ff1010;fill-opacity:1;stroke:none;stroke-width:0.99999994;stroke-miterlimit:4;stroke-dasharray:0.99999999, 0.99999999;stroke-dashoffset:0;stroke-opacity:1"
+       id="path1045"
+       sodipodi:type="arc"
+       sodipodi:cx="0"
+       sodipodi:cy="197"
+       sodipodi:rx="9.8273811"
+       sodipodi:ry="9.8273811"
+       sodipodi:start="3.3679619"
+       sodipodi:end="3.3449061"
+       sodipodi:open="true"
+       d="m -9.5766621,194.79433 a 9.8273811,9.8273811 0 0 1 11.7270925,-7.38355 9.8273811,9.8273811 0 0 1 7.4510215,11.68434 9.8273811,9.8273811 0 0 1 -11.6411983,7.51825 9.8273811,9.8273811 0 0 1 -7.5852194,-11.59767" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="comboboxes"
+     style="display:inline">
+    <rect
+       style="opacity:1;fill:#ff1010;fill-opacity:1;stroke:none;stroke-width:0.99999994;stroke-miterlimit:4;stroke-dasharray:0.99999999, 0.99999999;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect1048"
+       width="65.98214"
+       height="26.458332"
+       x="17.00893"
+       y="36.770836">
+      <desc
+         id="desc1053">{&quot;options&quot;:[&quot;Hello&quot;,&quot;A1&quot;,&quot;B1&quot;,&quot;B2&quot;,&quot;B3&quot;]}</desc>
+      <title
+         id="title1051">question-a</title>
+    </rect>
+  </g>
+</svg>

@@ -18,12 +18,15 @@ type SpreadContents struct {
 	Candidate                 string
 	PageData                  pagedata.PageData
 	Prefills                  DocPrefills
+	ComboBoxes                DocComboBoxes
 	TemplatePathsRelative     bool
 	PrefillImagePathsRelative bool
 }
 
 type PagePrefills map[string]string
 type DocPrefills map[int]PagePrefills
+type PageComboBoxes map[string]ComboOptions
+type DocComboBoxes map[int]PageComboBoxes
 
 type TextField struct {
 	Rect        geo.Rect
@@ -97,6 +100,7 @@ type Spread struct {
 	Ladders      []Ladder
 	TextFields   []TextField
 	TextPrefills []TextPrefill
+	ComboBoxes   []ComboBox
 }
 
 type ImageInsert struct {

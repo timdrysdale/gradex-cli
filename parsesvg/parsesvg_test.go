@@ -596,8 +596,8 @@ var expectedComboBox = &Ladder{
 	ComboBoxes: []ComboBox{
 		ComboBox{
 			Rect: geo.Rect{
-				Corner: geo.Point{X: 17.00893, Y: 36.770836},
-				Dim:    geo.Dim{Width: 65.98214, Height: 26.458332},
+				Corner: geo.Point{X: 48.21428976377953, Y: 104.23229102362207},
+				Dim:    geo.Dim{Width: 187.03598740157483, Height: 74.99999622047244},
 			},
 			ID:         "question",
 			Properties: "{\"options\":[\"A1\",\"B1\",\"B2\",\"B3\"]}",
@@ -789,7 +789,7 @@ func writeParsedLayout(svg []byte, img *creator.Image, pageFilename string, c *c
 
 		tfopt := annotator.TextFieldOptions{Value: tf.Prefill} //TODO - MaxLen?!
 		name := fmt.Sprintf("Page-00-%s", tf.ID)
-		textf, err := annotator.NewTextField(page, name, formRect(tf, ladder.Dim), tfopt)
+		textf, err := annotator.NewTextField(page, name, formRect(tf.Rect, ladder.Dim), tfopt)
 		if err != nil {
 			panic(err)
 		}
@@ -880,7 +880,7 @@ func writeParsedGeometry(svg []byte, img *creator.Image, pageFilename string, c 
 
 		tfopt := annotator.TextFieldOptions{Value: tf.Prefill} //TODO - MaxLen?!
 		name := fmt.Sprintf("Page-00-%s", tf.ID)
-		textf, err := annotator.NewTextField(page, name, formRect(tf, ladder.Dim), tfopt)
+		textf, err := annotator.NewTextField(page, name, formRect(tf.Rect, ladder.Dim), tfopt)
 		if err != nil {
 			panic(err)
 		}

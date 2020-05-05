@@ -19,6 +19,42 @@ import (
 	"github.com/timdrysdale/unipdf/v3/model/optimize"
 )
 
+func TestRenderComboBox(t *testing.T) {
+
+	svgLayoutPath := "./test/layout-a4-combo.svg"
+
+	pdfOutputPath := "./test/render-combo.pdf"
+
+	previousImagePath := ""
+
+	spreadName := "mark"
+
+	pageNumber := int(1)
+
+	combos := DocComboBoxes{}
+
+	combos[1] = PageComboBoxes{}
+
+	combos[1]["question"] = ComboOptions{
+		Options: []string{"Guten Tag", "Bonjour", "Hola", "Gday"},
+	}
+
+	contents := SpreadContents{
+		SvgLayoutPath:     svgLayoutPath,
+		SpreadName:        spreadName,
+		PreviousImagePath: previousImagePath,
+		PageNumber:        pageNumber,
+		PdfOutputPath:     pdfOutputPath,
+		ComboBoxes:        combos,
+	}
+
+	err := RenderSpreadExtra(contents)
+	if err != nil {
+		t.Error(err)
+	}
+
+}
+
 func TestRenderSpreadMarkPrefill(t *testing.T) {
 
 	svgLayoutPath := "./test/layout-a4-prefill.svg"
@@ -385,7 +421,7 @@ func testPrintSpreadsFromLayout(t *testing.T) {
 
 		tfopt := annotator.TextFieldOptions{Value: tf.Prefill} //TODO - MaxLen?!
 		name := fmt.Sprintf("Page-00-%s", tf.ID)
-		textf, err := annotator.NewTextField(page, name, formRect(tf, layout.Dim), tfopt)
+		textf, err := annotator.NewTextField(page, name, formRect(tf.Rect, layout.Dim), tfopt)
 		if err != nil {
 			panic(err)
 		}
