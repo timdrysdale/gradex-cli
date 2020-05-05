@@ -33,6 +33,7 @@ type OverlayTask struct {
 	SpreadName     string
 	Template       string
 	Msg            *chmsg.Messager
+	Who            string
 }
 
 // Overlay command struct - for backwards compatability
