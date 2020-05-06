@@ -28,9 +28,9 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
-// markCmd represents the mark command
-var markCmd = &cobra.Command{
-	Use:   "mark",
+// labelCmd represents the label command
+var labelCmd = &cobra.Command{
+	Use:   "label",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -79,9 +79,11 @@ to quickly create a Cobra application.`,
 			os.Exit(1)
 		}
 
+		exam := os.Args[2]
 		g.EnsureDirectoryStructure()
+		g.SetupExamPaths(exam)
 
-		err = g.AddMarkBar(os.Args[2], os.Args[3])
+		err = g.AddLabelBar(exam)
 
 		if err != nil {
 			fmt.Println(err)
@@ -93,15 +95,15 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	rootCmd.AddCommand(markCmd)
+	rootCmd.AddCommand(labelCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// markCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// labelCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// markCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// labelCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

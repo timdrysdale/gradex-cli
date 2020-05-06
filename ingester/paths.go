@@ -103,6 +103,10 @@ func (g *Ingester) DoneDecoration() string {
 	return "d"
 }
 
+func (g *Ingester) LabellerABCDecoration(initials string) string {
+	return fmt.Sprintf("-la%s", limit(initials, N))
+}
+
 func (g *Ingester) MarkerABCDecoration(initials string) string {
 	return fmt.Sprintf("-ma%s", limit(initials, N))
 }

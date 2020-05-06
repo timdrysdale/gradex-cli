@@ -8,6 +8,60 @@ import (
 	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
+func (g *Ingester) AddLabelBar(exam string) error {
+
+	logger := g.logger.With().Str("process", "add-label-bar").Logger()
+
+	labeller := "X"
+
+	mc := chmsg.MessagerConf{
+		ExamName:     exam,
+		FunctionName: "overlay",
+		TaskName:     "add-label-bar",
+	}
+
+	cm := chmsg.New(mc, g.msgCh, g.timeout)
+
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
+		UnixTime: time.Now().UnixNano(),
+		Name:     "label-bar",
+		By:       "gradex-cli",
+		ToDo:     "labelling",
+		For:      labeller,
+	}
+
+	oc := OverlayCommand{
+		FromPath:       g.AnonymousPapers(exam),
+		ToPath:         g.QuestionReady(exam),
+		ExamName:       exam,
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "label",
+		ProcessDetail:  procDetail,
+		Msg:            cm,
+		PathDecoration: g.LabellerABCDecoration(labeller),
+	}
+
+	err := g.OverlayPapers(oc, &logger)
+
+	if err == nil {
+		cm.Send(fmt.Sprintf("Finished Processing markbar UUID=%s\n", procDetail.UUID))
+		logger.Info().
+			Str("UUID", procDetail.UUID).
+			Str("labeller", labeller).
+			Str("exam", exam).
+			Msg("Finished add-label-bar")
+	} else {
+		logger.Error().
+			Str("UUID", procDetail.UUID).
+			Str("labeller", labeller).
+			Str("exam", exam).
+			Str("error", err.Error()).
+			Msg("Error add-label-bar")
+	}
+	return err
+}
+
 func (g *Ingester) AddMarkBar(exam string, marker string) error {
 
 	logger := g.logger.With().Str("process", "add-mark-bar").Logger()
