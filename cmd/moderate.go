@@ -31,14 +31,24 @@ import (
 // moderateCmd represents the moderate command
 var moderateCmd = &cobra.Command{
 	Use:   "moderate",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Add mark bars to an exam",
+	Args:  ExactArgs(2),
+	Long: `Add mark bars to all flattened scripts, decorating the path with the marker name, for example
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+gradex-cli moderate abc demo-exam
+
+this will produce a bunch of files in the readyToModerate folder, e.g
+
+$GRADEX_CLI_ROOT/usr/demo-exam/30.ReadyToModerate/ABC/<original-filename>-moABC.pdf
+
+Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT/usr/exam/
+
+`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		moderator := os.Args[2]
+		exam := os.Args[3]
+
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
 		if err := envconfig.Process("gradex_cli", &s); err != nil {
@@ -79,9 +89,14 @@ to quickly create a Cobra application.`,
 			os.Exit(1)
 		}
 
+		// if we've added new steps to the process, this prepares
+		// the directories - is idempotent so doesn't matter
+		// if we call it on structure already setup
+		// these functions MUST not delete anything!
 		g.EnsureDirectoryStructure()
+		g.SetupExamPaths(exam)
 
-		err = g.AddModerateActiveBar(os.Args[2], os.Args[3])
+		err = g.AddModerateActiveBar(exam, moderator)
 
 		if err != nil {
 			fmt.Println(err)

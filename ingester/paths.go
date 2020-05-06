@@ -13,19 +13,27 @@ import (
 //>>>>>>>>>>>>>> ANNOTATE PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 func (g *Ingester) QuestionImages(exam string) string {
-	return filepath.Join(g.Exam(), exam, qImages)
+	return filepath.Join(g.Exam(), exam, questionImages)
 }
 func (g *Ingester) QuestionPages(exam string) string {
-	return filepath.Join(g.Exam(), exam, qPages)
+	return filepath.Join(g.Exam(), exam, questionPages)
 }
-func (g *Ingester) QuestionReady(exam string) string {
-	return filepath.Join(g.Exam(), exam, qReady)
+func (g *Ingester) QuestionReady(exam, labeller string) string {
+	return filepath.Join(g.Exam(), exam, questionReady, limit(labeller, N))
 }
-func (g *Ingester) QuestionBack(exam string) string {
-	return filepath.Join(g.Exam(), exam, qBack)
+
+func (g *Ingester) QuestionSent(exam, labeller string) string {
+	return filepath.Join(g.Exam(), exam, questionSent, limit(labeller, N))
+}
+func (g *Ingester) QuestionBack(exam, labeller string) string {
+	return filepath.Join(g.Exam(), exam, questionBack, limit(labeller, N))
 }
 
 //>>>>>>>>>>>>>>>> EXPORT PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+func (g *Ingester) ExportLabelling(exam, labeller string) string {
+	return filepath.Join(g.Export(), exam, questionReady, limit(labeller, N))
+}
 
 func (g *Ingester) ExportMarking(exam, marker string) string {
 	return filepath.Join(g.Export(), exam, markerReady, limit(marker, N))

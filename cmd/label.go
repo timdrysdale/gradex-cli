@@ -32,13 +32,24 @@ import (
 var labelCmd = &cobra.Command{
 	Use:   "label",
 	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Args:  ExactArgs(1),
+	Long: `Add labelling bars to all flattened scripts, decorating the path with the labeller name, for example
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+gradex-cli label x demo-exam
+
+this will produce a bunch of files in the questionReady folder, e.g
+
+$GRADEX_CLI_ROOT/usr/demo-exam/08-question-ready/X/<original-filename>-laTDD.pdf
+
+Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT/usr/exam/
+
+`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		exam := os.Args[2]
+
+		labeller := "x"
+
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
 		if err := envconfig.Process("gradex_cli", &s); err != nil {
@@ -79,11 +90,10 @@ to quickly create a Cobra application.`,
 			os.Exit(1)
 		}
 
-		exam := os.Args[2]
 		g.EnsureDirectoryStructure()
 		g.SetupExamPaths(exam)
 
-		err = g.AddLabelBar(exam)
+		err = g.AddLabelBar(exam, labeller)
 
 		if err != nil {
 			fmt.Println(err)

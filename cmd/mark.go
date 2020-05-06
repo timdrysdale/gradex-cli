@@ -31,14 +31,24 @@ import (
 // markCmd represents the mark command
 var markCmd = &cobra.Command{
 	Use:   "mark",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Add mark bars to an exam",
+	Long: `Add mark bars to all flattened scripts, decorating the path with the marker name, for example
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+gradex-cli mark tdd demo-exam
+
+this will produce a bunch of files in the readyToMark folder, e.g
+
+$GRADEX_CLI_ROOT/usr/demo-exam/20.ReadyToMark/TDD/<original-filename>-maTDD.pdf
+
+Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT/usr/exam/
+
+`,
+	Args: ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
+
+		marker := os.Args[2]
+		exam := os.Args[3]
+
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
 		if err := envconfig.Process("gradex_cli", &s); err != nil {
@@ -81,7 +91,7 @@ to quickly create a Cobra application.`,
 
 		g.EnsureDirectoryStructure()
 
-		err = g.AddMarkBar(os.Args[2], os.Args[3])
+		err = g.AddMarkBar(exam, marker)
 
 		if err != nil {
 			fmt.Println(err)

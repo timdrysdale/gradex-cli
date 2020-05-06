@@ -8,11 +8,9 @@ import (
 	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
-func (g *Ingester) AddLabelBar(exam string) error {
+func (g *Ingester) AddLabelBar(exam, labeller string) error {
 
 	logger := g.logger.With().Str("process", "add-label-bar").Logger()
-
-	labeller := "X"
 
 	mc := chmsg.MessagerConf{
 		ExamName:     exam,
@@ -33,7 +31,7 @@ func (g *Ingester) AddLabelBar(exam string) error {
 
 	oc := OverlayCommand{
 		FromPath:       g.AnonymousPapers(exam),
-		ToPath:         g.QuestionReady(exam),
+		ToPath:         g.QuestionReady(exam, labeller),
 		ExamName:       exam,
 		TemplatePath:   g.OverlayLayoutSVG(),
 		SpreadName:     "label",
