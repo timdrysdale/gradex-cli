@@ -116,6 +116,23 @@ var (
 )
 
 const (
+
+	// EXTERNAL, e.g. command args, so no numbers
+
+	QuestionReady  = "questionReady"
+	QuestionSent   = "questionSent"
+	MarkerReady    = "markerReady"
+	MarkerSent     = "markerSent"
+	ModeratorReady = "moderatorReady"
+	ModeratorSent  = "moderatorSent"
+	CheckerReady   = "checkerReady"
+	CheckerSent    = "checkerSent"
+	RemarkerReady  = "remarkerReady"
+	RemarkerSent   = "remarkerSent"
+	RecheckerReady = "recheckerReady"
+	RecheckerSent  = "recheckerSent"
+
+	//>>>>>>>>>>>> INTERNAL >>>>>>>>>>>>>>>>>>
 	config = "00-config"
 
 	tempImages = "03-temporary-images"

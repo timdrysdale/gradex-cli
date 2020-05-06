@@ -32,7 +32,7 @@ import (
 var moderateCmd = &cobra.Command{
 	Use:   "moderate",
 	Short: "Add mark bars to an exam",
-	Args:  ExactArgs(2),
+	Args:  cobra.ExactArgs(2),
 	Long: `Add mark bars to all flattened scripts, decorating the path with the marker name, for example
 
 gradex-cli moderate abc demo-exam

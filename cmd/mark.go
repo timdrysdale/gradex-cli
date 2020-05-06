@@ -43,7 +43,7 @@ $GRADEX_CLI_ROOT/usr/demo-exam/20.ReadyToMark/TDD/<original-filename>-maTDD.pdf
 Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT/usr/exam/
 
 `,
-	Args: ExactArgs(2),
+	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		marker := os.Args[2]

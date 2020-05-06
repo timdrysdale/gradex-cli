@@ -32,7 +32,7 @@ import (
 var labelCmd = &cobra.Command{
 	Use:   "label",
 	Short: "A brief description of your command",
-	Args:  ExactArgs(1),
+	Args:  cobra.ExactArgs(2),
 	Long: `Add labelling bars to all flattened scripts, decorating the path with the labeller name, for example
 
 gradex-cli label x demo-exam
@@ -46,9 +46,9 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		exam := os.Args[2]
+		exam := os.Args[3]
 
-		labeller := "x"
+		labeller := os.Args[2]
 
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>

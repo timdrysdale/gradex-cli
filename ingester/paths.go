@@ -13,45 +13,68 @@ import (
 //>>>>>>>>>>>>>> ANNOTATE PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 func (g *Ingester) QuestionImages(exam string) string {
-	return filepath.Join(g.Exam(), exam, questionImages)
+	path := filepath.Join(g.Exam(), exam, questionImages)
+	g.EnsureDirAll(path)
+	return path
 }
+
 func (g *Ingester) QuestionPages(exam string) string {
-	return filepath.Join(g.Exam(), exam, questionPages)
+	path := filepath.Join(g.Exam(), exam, questionPages)
+	g.EnsureDirAll(path)
+	return path
 }
 func (g *Ingester) QuestionReady(exam, labeller string) string {
-	return filepath.Join(g.Exam(), exam, questionReady, limit(labeller, N))
+	path := filepath.Join(g.Exam(), exam, questionReady, limit(labeller, N))
+	g.EnsureDirAll(path)
+	return path
 }
 
 func (g *Ingester) QuestionSent(exam, labeller string) string {
-	return filepath.Join(g.Exam(), exam, questionSent, limit(labeller, N))
+	path := filepath.Join(g.Exam(), exam, questionSent, limit(labeller, N))
+	g.EnsureDirAll(path)
+	return path
 }
 func (g *Ingester) QuestionBack(exam, labeller string) string {
-	return filepath.Join(g.Exam(), exam, questionBack, limit(labeller, N))
+	path := filepath.Join(g.Exam(), exam, questionBack, limit(labeller, N))
+	g.EnsureDirAll(path)
+	return path
 }
 
 //>>>>>>>>>>>>>>>> EXPORT PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 func (g *Ingester) ExportLabelling(exam, labeller string) string {
-	return filepath.Join(g.Export(), exam, questionReady, limit(labeller, N))
+	path := filepath.Join(g.Export(), exam, questionReady, limit(labeller, N))
+	g.EnsureDirAll(path)
+	return path
 }
 
 func (g *Ingester) ExportMarking(exam, marker string) string {
-	return filepath.Join(g.Export(), exam, markerReady, limit(marker, N))
+	path := filepath.Join(g.Export(), exam, markerReady, limit(marker, N))
+	g.EnsureDirAll(path)
+	return path
 }
 
 func (g *Ingester) ExportModerating(exam, moderator string) string {
-	return filepath.Join(g.Export(), exam, moderatorReady, limit(moderator, N))
+	path := filepath.Join(g.Export(), exam, moderatorReady, limit(moderator, N))
+	g.EnsureDirAll(path)
+	return path
 }
 
 func (g *Ingester) ExportChecking(exam, checker string) string {
-	return filepath.Join(g.Export(), exam, checkerReady, limit(checker, N))
+	path := filepath.Join(g.Export(), exam, checkerReady, limit(checker, N))
+	g.EnsureDirAll(path)
+	return path
 }
 func (g *Ingester) ExportReMarking(exam, marker string) string {
-	return filepath.Join(g.Export(), exam, remarkerReady, limit(marker, N))
+	path := filepath.Join(g.Export(), exam, remarkerReady, limit(marker, N))
+	g.EnsureDirAll(path)
+	return path
 }
 
 func (g *Ingester) ExportReChecking(exam, checker string) string {
-	return filepath.Join(g.Export(), exam, recheckerReady, limit(checker, N))
+	path := filepath.Join(g.Export(), exam, recheckerReady, limit(checker, N))
+	g.EnsureDirAll(path)
+	return path
 }
 
 //>>>>>>>>>>>>>>>> GENERAL PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

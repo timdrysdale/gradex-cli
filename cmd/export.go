@@ -28,26 +28,21 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
-// checkCmd represents the check command
-var checkCmd = &cobra.Command{
-	Use:   "check",
-	Short: "Add check bars to an exam",
-	Args:  cobra.ExactArgs(2),
-	Long: `Add check bars to all flattened scripts, decorating the path with the checker name, for example
+// exportCmd represents the export command
+var exportCmd = &cobra.Command{
+	Use:   "export",
+	Short: "Put files into the export directory",
+	Args:  cobra.ExactArgs(3),
+	Long: `A helper command to take files from key points in the process, and put them in the export 
+directory where they are easier to find. Example usage
 
-gradex-cli checker x demo-exam
+gradex-cli export readyToMark tdd exam
 
-this will produce a bunch of files in the readyToMark folder, e.g
-
-$GRADEX_CLI_ROOT/usr/demo-exam/40.ReadyToCheck/X/<original-filename>-maTDD.pdf
-
-Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT/usr/exam/
-
-`,
+Exported files are usually flagged in some way, e.g. being moved to a "sent" folder internally.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		checker := os.Args[2]
-		exam := os.Args[3]
+		which := os.Args[2]
+		who := os.Args[3]
+		exam := os.Args[4]
 
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
@@ -82,7 +77,17 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 			os.Exit(1)
 		}
 		defer f.Close()
-		logger := zerolog.New(f).With().Timestamp().Logger()
+
+		logger := zerolog.
+			New(f).
+			With().
+			Timestamp().
+			Str("command", "export").
+			Str("which", which).
+			Str("who", who).
+			Str("exam", exam).
+			Logger()
+
 		g, err := ingester.New(s.Root, mch, &logger)
 		if err != nil {
 			fmt.Printf("Failed getting New Ingester %v", err)
@@ -90,28 +95,69 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 		}
 
 		g.EnsureDirectoryStructure()
+		g.SetupExamPaths(exam)
 
-		err = g.AddCheckBar(exam, checker)
+		switch which {
+		case ingester.QuestionReady:
+			files, err := g.GetFileList(g.QuestionReady(exam, who))
+			if err != nil {
+				logger.Error().
+					Str("Error", err.Error()).
+					Msg("Can't get files to export")
+				return
+			}
+			for _, file := range files {
 
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+				err = g.CopyToDir(file, g.ExportLabelling(exam, who))
+
+				if err != nil {
+					logger.Error().
+						Str("file", file).
+						Str("Error", err.Error()).
+						Msg("Can't copy file to export them")
+					return
+				}
+				err = g.MoveToDir(file, g.QuestionSent(exam, who))
+				if err != nil {
+					logger.Error().
+						Str("file", file).
+						Str("Error", err.Error()).
+						Msg("Can't move file to sent, after exported")
+					return
+				}
+			}
+
 		}
 
-		os.Exit(0)
+		/*
+
+					questionReady,
+					questionSent,
+			markerReady,
+					markerSent,
+			moderatorReady,
+					moderatorSent,
+				checkerReady,
+					checkerSent,
+				remarkerReady,
+					remarkerSent,
+				recheckerReady,
+					recheckerSent,
+		*/
+
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(checkCmd)
+	rootCmd.AddCommand(exportCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// checkCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// exportCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// checkCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// exportCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
