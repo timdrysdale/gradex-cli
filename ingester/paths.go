@@ -10,6 +10,21 @@ import (
 	"github.com/timdrysdale/copy"
 )
 
+//>>>>>>>>>>>>>> ANNOTATE PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+func (g *Ingester) QuestionImages(exam string) string {
+	return filepath.Join(g.Exam(), exam, qImages)
+}
+func (g *Ingester) QuestionPages(exam string) string {
+	return filepath.Join(g.Exam(), exam, qPages)
+}
+func (g *Ingester) QuestionReady(exam string) string {
+	return filepath.Join(g.Exam(), exam, qReady)
+}
+func (g *Ingester) QuestionBack(exam string) string {
+	return filepath.Join(g.Exam(), exam, qBack)
+}
+
 //>>>>>>>>>>>>>>>> EXPORT PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 func (g *Ingester) ExportMarking(exam, marker string) string {

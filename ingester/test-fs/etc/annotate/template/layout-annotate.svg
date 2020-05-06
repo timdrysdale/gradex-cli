@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="91mm"
+   height="38.5mm"
+   viewBox="0 0 91 38.5"
+   version="1.1"
+   id="svg5999"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="layout-annotate.svg"
+   inkscape:export-filename="/home/tim/tg/gradex-cli/annotate/template/question.png"
+   inkscape:export-xdpi="300.05493"
+   inkscape:export-ydpi="300.05493">
+  <defs
+     id="defs5993" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="5.367366"
+     inkscape:cx="100.68169"
+     inkscape:cy="90.203036"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer8"
+     showgrid="false"
+     inkscape:snap-page="true"
+     inkscape:snap-global="true"
+     inkscape:window-width="1850"
+     inkscape:window-height="1136"
+     inkscape:window-x="70"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:snap-object-midpoints="true" />
+  <metadata
+     id="metadata5996">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:groupmode="layer"
+     id="layer7"
+     inkscape:label="images"
+     transform="translate(0,-6.5)"
+     style="display:inline">
+    <rect
+       style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:#ff0d0d;stroke-width:0.18799999;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect6739"
+       width="50.799999"
+       height="31.931427"
+       x="0.95984983"
+       y="8.5332432">
+      <title
+         id="title12946">image-static-annotate-question</title>
+    </rect>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer8"
+     inkscape:label="anchors"
+     style="display:inline">
+    <path
+       d="M -1.3586971,-0.31293075 A 1.394268,1.394268 0 0 1 0.30509414,-1.3604782 1.394268,1.394268 0 0 1 1.3622141,0.29724738 1.394268,1.394268 0 0 1 -0.28939075,1.3639048 1.394268,1.394268 0 0 1 -1.3655502,-0.28152451"
+       sodipodi:open="true"
+       sodipodi:end="3.3449061"
+       sodipodi:start="3.3679619"
+       sodipodi:ry="1.394268"
+       sodipodi:rx="1.394268"
+       sodipodi:cy="0"
+       sodipodi:cx="-3.5527137e-15"
+       sodipodi:type="arc"
+       id="path12961"
+       style="display:inline;opacity:1;fill:#0000ff;fill-opacity:0.98591548;stroke:none;stroke-width:0.13862069;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1">
+      <desc
+         id="desc824">question</desc>
+      <title
+         id="title12959">svg-annotate-question</title>
+    </path>
+    <path
+       style="display:inline;opacity:1;fill:#ff0000;fill-opacity:0.98591548;stroke:none;stroke-width:0.07490793;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="path12965"
+       sodipodi:type="arc"
+       sodipodi:cx="0"
+       sodipodi:cy="6.5"
+       sodipodi:rx="0.75343537"
+       sodipodi:ry="0.75343537"
+       sodipodi:start="3.3679619"
+       sodipodi:end="3.3449061"
+       sodipodi:open="true"
+       d="M -0.73421351,6.3308983 A 0.75343537,0.75343537 0 0 1 0.16486695,5.764824 0.75343537,0.75343537 0 0 1 0.73611407,6.6606267 0.75343537,0.75343537 0 0 1 -0.15638114,7.2370277 0.75343537,0.75343537 0 0 1 -0.7379168,6.3478696"
+       transform="translate(0,-6.5)">
+      <title
+         id="title12963">ref-anchor</title>
+    </path>
+    <path
+       d="M 0.93666776,3.0497009 A 1.0167221,1.0167221 0 0 1 -0.05661777,2.0104967 1.0167221,1.0167221 0 0 1 0.9821608,1.0167659 1.0167221,1.0167221 0 0 1 1.9763366,2.0551186 1.0167221,1.0167221 0 0 1 0.93841,3.0497392"
+       sodipodi:open="true"
+       sodipodi:end="1.5918851"
+       sodipodi:start="1.5935991"
+       sodipodi:ry="1.0167221"
+       sodipodi:rx="1.0167221"
+       sodipodi:cy="2.0332432"
+       sodipodi:cx="0.95984983"
+       sodipodi:type="arc"
+       id="path22025"
+       style="display:inline;opacity:0.98999999;fill:#45ff20;fill-opacity:1;stroke:#f70000;stroke-width:0.47820631;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1">
+      <desc
+         id="desc22021">no-image-supplied</desc>
+      <title
+         id="title22023">annotate-question</title>
+    </path>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer9"
+     inkscape:label="pages"
+     style="display:none">
+    <rect
+       style="opacity:1;fill:#1ab1f0;fill-opacity:0.5023474;stroke:none;stroke-width:0.20099999;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect12949"
+       width="91"
+       height="38.5"
+       x="0"
+       y="-1.9073487e-07"
+       rx="0"
+       ry="0">
+      <title
+         id="title12953">page-static-annotate</title>
+    </rect>
+  </g>
+</svg>

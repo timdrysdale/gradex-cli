@@ -67,6 +67,10 @@ var (
 		tempImages,
 		tempPages,
 		anonPapers,
+		qImages,
+		qPages,
+		qReady,
+		qBack,
 		markerReady,
 		markerSent,
 		markerBack,
@@ -119,6 +123,11 @@ const (
 	acceptedReceipts = "02-accepted-receipts"
 	acceptedPapers   = "03-accepted-papers"
 	anonPapers       = "05-anonymous-papers"
+
+	qImages = "06-question-images"
+	qPages  = "07-question-pages"
+	qReady  = "08-question-ready"
+	qBack   = "09-question-back"
 
 	markerReady          = "20-marker-ready"
 	markerSent           = "21-marker-sent"
