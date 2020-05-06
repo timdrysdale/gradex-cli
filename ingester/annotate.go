@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/timdrysdale/chmsg"
+	"github.com/timdrysdale/gradex-cli/merge"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
 	"github.com/timdrysdale/pool"
 )
@@ -70,6 +71,32 @@ func (g *Ingester) Annotate(exam string) error {
 		}
 	}
 
+	pageFiles, err := g.GetFileList(g.QuestionPages(exam))
+
+	var divided [][]string
+
+	chunkSize := 100 //len(pageFiles)
+
+	for i := 0; i < len(pageFiles); i += chunkSize {
+		end := i + chunkSize
+
+		if end > len(pageFiles) {
+			end = len(pageFiles)
+		}
+
+		divided = append(divided, pageFiles[i:end])
+
+		outputPath := filepath.Join(g.QuestionReady(exam), fmt.Sprintf("batch-%02d.pdf", i+1))
+		err = merge.PDF(pageFiles[i:end], outputPath)
+		if err != nil {
+			logger.Error().
+				Str("file", outputPath).
+				Str("error", err.Error()).
+				Msg(fmt.Sprintf("Error merging processed pages for (%s) because %v\n", outputPath, err))
+
+			return err
+		}
+	}
 	if err == nil {
 		cm.Send("Finished Processing annotations")
 		logger.Info().

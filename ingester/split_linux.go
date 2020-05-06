@@ -25,8 +25,8 @@ func ConvertPDFToJPEGs(pdfPath string, jpegPath string, outputFile string) error
 }
 
 func CropToQuestion(inputPath, outputPath string) error {
-
-	cmd := exec.Command("convert", inputPath, "-crop", "350x220+0+110", filepath.Join(outputPath))
+	//350x220+0+110
+	cmd := exec.Command("convert", inputPath, "-crop", " 700x500+0+0", filepath.Join(outputPath))
 
 	err := cmd.Run()
 
