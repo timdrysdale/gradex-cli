@@ -62,6 +62,7 @@ var (
 	testroot  = "./tmp-delete-me"
 	ExamStage = []string{
 		config,
+		pageBad,
 		acceptedPapers,
 		acceptedReceipts,
 		tempImages,
@@ -135,6 +136,8 @@ const (
 
 	//>>>>>>>>>>>> INTERNAL >>>>>>>>>>>>>>>>>>
 	config = "00-config"
+
+	pageBad = "01-page-bad"
 
 	tempImages = "03-temporary-images"
 	tempPages  = "04-temporary-pages"
