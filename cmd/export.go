@@ -269,23 +269,6 @@ Exported files are usually flagged in some way, e.g. being moved to a "sent" fol
 			}
 
 		} // switch
-
-		/*
-			QuestionReady  = "questionReady"
-			QuestionSent   = "questionSent"
-			MarkerReady    = "markerReady"
-			MarkerSent     = "markerSent"
-			ModeratorReady = "moderatorReady"
-			ModeratorSent  = "moderatorSent"
-			CheckerReady   = "checkerReady"
-			CheckerSent    = "checkerSent"
-			RemarkerReady  = "remarkerReady"
-			RemarkerSent   = "remarkerSent"
-			RecheckerReady = "recheckerReady"
-			RecheckerSent  = "recheckerSent"
-
-		*/
-
 	},
 }
 
