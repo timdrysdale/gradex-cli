@@ -67,11 +67,13 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 			continue
 		}
 
-		if getDoneFor(inPath, oc.PathDecoration) {
-			logger.Info().
-				Str("file", inPath).
-				Msg("Skipping because already done")
-			continue
+		if !g.Redo { //prevent skipping if --redo flag given
+			if getDoneFor(inPath, oc.PathDecoration) {
+				logger.Info().
+					Str("file", inPath).
+					Msg("Skipping because already done")
+				continue
+			}
 		}
 
 		count, err := CountPages(inPath)
@@ -98,6 +100,9 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 		if pagedata.GetLen(pageDataMap) < 1 {
 			oc.Msg.Send(fmt.Sprintf("Skipping (%s): no pagedata in file\n", inPath))
+			logger.Error().
+				Str("file", inPath).
+				Msg(fmt.Sprintf("Skipping (%s): no pagedata in file\n", inPath))
 			continue
 		}
 

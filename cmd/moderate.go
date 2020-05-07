@@ -30,15 +30,28 @@ import (
 
 // moderateCmd represents the moderate command
 var moderateCmd = &cobra.Command{
-	Use:   "moderate",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "moderate [moderator] [exam]",
+	Short: "Add moderation bars to an exam",
+	Args:  cobra.ExactArgs(2),
+	Long: `Add moderation bar to flattened, marked scripts, decorating the path with the moderator name, for example
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+gradex-cli moderate abc demo-exam
+
+this will produce a bunch of files in the readyToModerate folder, e.g
+
+$GRADEX_CLI_ROOT/usr/demo-exam/30.ReadyToModerate/ABC/<original-filename>-moABC.pdf
+
+Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT/usr/exam/
+
+Also, you need to have split your batch of marked scripts and moved them into the 
+active/inactive directory according to whether they are to be moderated or not
+
+`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		moderator := os.Args[2]
+		exam := os.Args[3]
+
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
 		if err := envconfig.Process("gradex_cli", &s); err != nil {
@@ -79,9 +92,32 @@ to quickly create a Cobra application.`,
 			os.Exit(1)
 		}
 
+		// if we've added new steps to the process, this prepares
+		// the directories - is idempotent so doesn't matter
+		// if we call it on structure already setup
+		// these functions MUST not delete anything!
 		g.EnsureDirectoryStructure()
+		g.SetupExamPaths(exam)
 
-		err = g.AddModerateActiveBar(os.Args[2], os.Args[3])
+		// TODO handling redo flag to redo the split is starting to get into
+		// unclear territory - do you remove all files from moderation sets?
+		// what if they have been sent?
+		// do you block if any moderation files have been exported?
+		// better to handle these cases manually
+		err = g.SplitForModeration(exam, 10, 10) //TODO set these from flag
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		err = g.AddModerateActiveBar(exam, moderator)
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		err = g.AddModerateInActiveBar(exam)
 
 		if err != nil {
 			fmt.Println(err)

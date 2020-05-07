@@ -67,10 +67,11 @@ var (
 		tempImages,
 		tempPages,
 		anonPapers,
-		qImages,
-		qPages,
-		qReady,
-		qBack,
+		questionImages,
+		questionPages,
+		questionReady,
+		questionSent,
+		questionBack,
 		markerReady,
 		markerSent,
 		markerBack,
@@ -96,25 +97,42 @@ var (
 		checkedPruned,
 		checkedReady,
 
-		remarkerReady,
-		remarkerSent,
-		remarkerBack,
-		remarkedCombined,
-		remarkedMerged,
-		remarkedPruned,
-		remarkedReady,
-		recheckerReady,
-		recheckerSent,
-		recheckerBack,
-		recheckedCombined,
-		recheckedMerged,
-		recheckedPruned,
-		recheckedReady,
+		reMarkerReady,
+		reMarkerSent,
+		reMarkerBack,
+		reMarkedCombined,
+		reMarkedMerged,
+		reMarkedPruned,
+		reMarkedReady,
+		reCheckerReady,
+		reCheckerSent,
+		reCheckerBack,
+		reCheckedCombined,
+		reCheckedMerged,
+		reCheckedPruned,
+		reCheckedReady,
 		reports,
 	}
 )
 
 const (
+
+	// EXTERNAL, e.g. command args, so no numbers
+
+	QuestionReady  = "questionReady"
+	QuestionSent   = "questionSent"
+	MarkerReady    = "markerReady"
+	MarkerSent     = "markerSent"
+	ModeratorReady = "moderatorReady"
+	ModeratorSent  = "moderatorSent"
+	CheckerReady   = "checkerReady"
+	CheckerSent    = "checkerSent"
+	ReMarkerReady  = "remarkerReady"
+	ReMarkerSent   = "remarkerSent"
+	ReCheckerReady = "recheckerReady"
+	ReCheckerSent  = "recheckerSent"
+
+	//>>>>>>>>>>>> INTERNAL >>>>>>>>>>>>>>>>>>
 	config = "00-config"
 
 	tempImages = "03-temporary-images"
@@ -124,10 +142,11 @@ const (
 	acceptedPapers   = "03-accepted-papers"
 	anonPapers       = "05-anonymous-papers"
 
-	qImages = "06-question-images"
-	qPages  = "07-question-pages"
-	qReady  = "08-question-ready"
-	qBack   = "09-question-back"
+	questionImages = "06-question-images"
+	questionPages  = "07-question-pages"
+	questionReady  = "08-question-ready"
+	questionSent   = "09-question-sent"
+	questionBack   = "10-question-back"
 
 	markerReady          = "20-marker-ready"
 	markerSent           = "21-marker-sent"
@@ -156,21 +175,21 @@ const (
 	checkedReady    = "46-checked-ready"
 	reports         = "99-reports"
 
-	remarkerReady    = "50-remarker-ready"
-	remarkerSent     = "51-remarker-sent"
-	remarkerBack     = "52-remarker-back"
-	remarkedCombined = "53-marked-combined"
-	remarkedMerged   = "54-marked-merged"
-	remarkedPruned   = "55-marked-pruned" //whatever gets trimmed goes here for potential audit
-	remarkedReady    = "56-marked-ready"
+	reMarkerReady    = "50-remarker-ready"
+	reMarkerSent     = "51-remarker-sent"
+	reMarkerBack     = "52-remarker-back"
+	reMarkedCombined = "53-marked-combined"
+	reMarkedMerged   = "54-marked-merged"
+	reMarkedPruned   = "55-marked-pruned" //whatever gets trimmed goes here for potential audit
+	reMarkedReady    = "56-marked-ready"
 
-	recheckerReady    = "60-rechecker-ready"
-	recheckerSent     = "61-rechecker-sent"
-	recheckerBack     = "62-rechecker-back"
-	recheckedCombined = "63-rechecked-combined"
-	recheckedMerged   = "64-rechecked-merged"
-	recheckedPruned   = "65-rechecked-pruned"
-	recheckedReady    = "66-rechecked-ready"
+	reCheckerReady    = "60-rechecker-ready"
+	reCheckerSent     = "61-rechecker-sent"
+	reCheckerBack     = "62-rechecker-back"
+	reCheckedCombined = "63-rechecked-combined"
+	reCheckedMerged   = "64-rechecked-merged"
+	reCheckedPruned   = "65-rechecked-pruned"
+	reCheckedReady    = "66-rechecked-ready"
 
 	N = 3
 )

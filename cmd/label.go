@@ -28,17 +28,27 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
-// annotateCmd represents the annotate command
-var annotateCmd = &cobra.Command{
-	Use:   "annotate",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+// labelCmd represents the label command
+var labelCmd = &cobra.Command{
+	Use:   "label [labeller] [exam]",
+	Short: "Adds labelling side bar to the left of flattened scripts",
+	Args:  cobra.ExactArgs(2),
+	Long: `Add labelling bars to all flattened scripts, decorating the path with the labeller name, for example
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+gradex-cli label x demo-exam
+
+this will produce a bunch of files in the questionReady folder, e.g
+
+$GRADEX_CLI_ROOT/usr/demo-exam/08-question-ready/X/<original-filename>-laTDD.pdf
+
+Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT/usr/exam/
+
+`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		exam := os.Args[3]
+
+		labeller := os.Args[2]
 
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
@@ -81,8 +91,9 @@ to quickly create a Cobra application.`,
 		}
 
 		g.EnsureDirectoryStructure()
-		g.SetupExamPaths(os.Args[2])
-		err = g.Annotate(os.Args[2])
+		g.SetupExamPaths(exam)
+
+		err = g.AddLabelBar(exam, labeller)
 
 		if err != nil {
 			fmt.Println(err)
@@ -94,15 +105,15 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	rootCmd.AddCommand(annotateCmd)
+	rootCmd.AddCommand(labelCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// annotateCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// labelCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// annotateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// labelCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

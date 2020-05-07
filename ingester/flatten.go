@@ -46,7 +46,7 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 			Str("course", exam).
 			Str("error", err.Error()).
 			Msg("Cannot get list of accepted Receipts")
-		return err
+		return errors.New("Can't find this exam - please check spelling or ingest your first papers")
 	}
 
 	for _, receipt := range receipts {
@@ -73,11 +73,13 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 			continue
 		}
 
-		if getDone(pdfPath) { //check for done file - don't process if it exists
-			logger.Info().
-				Str("file", pdfPath).
-				Msg("Skipping flattening - already done")
-			continue
+		if !g.Redo { //carry on regardless if forcing a redo
+			if getDone(pdfPath) { //check for done file - don't process if it exists
+				logger.Info().
+					Str("file", pdfPath).
+					Msg("Skipping flattening - already done")
+				continue
+			}
 		}
 
 		logger.Info().

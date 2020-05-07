@@ -1,6 +1,7 @@
 package ingester
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -8,6 +9,7 @@ import (
 	"github.com/mholt/archiver"
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/gradex-cli/pagedata"
+	"github.com/timdrysdale/gradex-cli/parselearn"
 )
 
 // wait for user to press an "do ingest button", then filewalk to get the paths
@@ -109,6 +111,12 @@ func (g *Ingester) handleIngestArchive(path string, logger *zerolog.Logger) {
 }
 
 func (g *Ingester) handleTXT(path string, logger *zerolog.Logger) {
+
+	err := parselearn.CheckFilename(path)
+
+	if err != nil {
+		g.logger.Warn().Str("file", path).Msg(fmt.Sprintf("Can't find the file listed in the receipt in the receipt %s", path))
+	}
 
 	moved, err := g.MoveIfNewerThanDestinationInDir(path, g.TempTXT(), logger)
 
@@ -214,7 +222,83 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		return
 
 		// leave the file in ingest if we don't want it
+	case "labelling":
+		// these could be marked, or just being returned by DSA if prematurely exported
+		origin := g.QuestionSent(t.What, t.For)
 
+		preOrigin := g.QuestionReady(t.What, t.For)
+
+		if g.IsSameAsSelfInDir(path, origin) {
+			// put the file back in Ready (we keep this incoming version _just_in_case_ it had mods
+			// despite having original time stamp and size!
+			err := os.Rename(path, filepath.Join(preOrigin, filepath.Base(path)))
+			if err != nil {
+				return
+			}
+
+			// delete the version we had "sent" - this could be DSA re-ingesting exports before sending them
+			err = os.Remove(filepath.Join(origin, filepath.Base(path)))
+			if err != nil {
+				return
+			}
+		} else {
+			// it's (probably) been marked at least partly, so see if it is newer
+			// than a version we might already have
+			destination := g.MarkerBack(t.What, t.For)
+
+			moved, err := g.MoveIfNewerThanDestinationInDir(path, destination, logger)
+
+			switch {
+
+			case err == nil && moved:
+
+				g.logger.Info().
+					Str("file", path).
+					Str("destination", destination).
+					Str("stage", "marking").
+					Msg("PDF moved to QuestionBack because it looks labelled")
+
+			case err == nil && !moved:
+
+				err := os.Remove(path)
+
+				if err == nil {
+					g.logger.Info().
+						Str("file", path).
+						Str("destination", destination).
+						Msg("PDF labelled but we have a newer labelled version, deleted")
+				} else {
+					g.logger.Error().
+						Str("file", path).
+						Str("destination", destination).
+						Str("error", err.Error()).
+						Msg("PDF labelled, but we have a newer labelled version, and ERROR deleting. Sigh. Over to you, human")
+				}
+
+			case err != nil:
+
+				g.logger.Error().
+					Str("file", path).
+					Str("destination", destination).
+					Str("error", err.Error()).
+					Msg("PDF marked, but ERROR prevented attempted move to marked papers, returning to ingest")
+
+				destination := g.Ingest()
+
+				err := g.MoveToDir(path, destination)
+
+				if err != nil {
+					g.logger.Error().
+						Str("file", path).
+						Str("destination", destination).
+						Str("error", err.Error()).
+						Msg(fmt.Sprintf("Couldn't put in marked papers or return to ingest. Consider checking %s and moving as needed.", path))
+				}
+
+			} //switch
+
+		}
+		return
 	case "marking":
 		// these could be marked, or just being returned by DSA if prematurely exported
 		origin := g.MarkerSent(t.What, t.For)

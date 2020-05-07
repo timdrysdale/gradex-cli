@@ -2,6 +2,7 @@ package parselearn
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -30,6 +31,26 @@ type Submission struct {
 	FilesizeMB         float64 `csv:"FilesizeMB"`
 	NumberOfFiles      int     `csv:"NumberOfFiles"`
 	OwnPath            string  `csv:"OwnPath"`
+}
+
+func CheckFilename(receiptPath string) error {
+
+	files, err := GetFilePaths(receiptPath)
+
+	if err != nil {
+		return fmt.Errorf("Could not get file list from receipt because %s", err.Error())
+	}
+
+	for _, file := range files {
+		_, err := os.Stat(file)
+
+		if os.IsNotExist(err) {
+			return fmt.Errorf("Can't find file %s", file)
+
+		}
+
+	}
+	return nil
 }
 
 func HandleIgnoreReceipts(receiptMap *map[string]Submission) {
