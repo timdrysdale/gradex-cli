@@ -39,6 +39,11 @@ func (g *Ingester) QuestionBack(exam, labeller string) string {
 	g.EnsureDirAll(path)
 	return path
 }
+func (g *Ingester) QuestionSplit(exam string) string {
+	path := filepath.Join(g.Exam(), exam, questionSplit)
+	g.EnsureDirAll(path)
+	return path
+}
 
 //>>>>>>>>>>>>>>>> EXPORT PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 

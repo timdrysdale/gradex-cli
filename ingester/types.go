@@ -72,6 +72,7 @@ var (
 		questionReady,
 		questionSent,
 		questionBack,
+		questionSplit,
 		markerReady,
 		markerSent,
 		markerBack,
@@ -147,6 +148,7 @@ const (
 	questionReady  = "08-question-ready"
 	questionSent   = "09-question-sent"
 	questionBack   = "10-question-back"
+	questionSplit  = "11-question-split"
 
 	markerReady          = "20-marker-ready"
 	markerSent           = "21-marker-sent"
