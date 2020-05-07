@@ -28,28 +28,30 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
-// ingestCmd represents the ingest command
-var ingestCmd = &cobra.Command{
-	Use:   "ingest",
-	Args:  cobra.ExactArgs(0),
-	Short: "Ingest files into exams for further processing",
-	Long: `This command works on all files in the ingest directory for your exam processing system. 
-You MUST set the root of this system as an environment variable 
+// exportCmd represents the export command
+var exportCmd = &cobra.Command{
+	Use:   "export [stage] [who] [exam]",
+	Short: "Put files into the export directory",
+	Args:  cobra.ExactArgs(3),
+	Long: `A helper command to take files from key points in the process, and put them in the export 
+directory where they are easier to find. Example usage
 
-eg. on linux 
-export $GRADEX_CLI_ROOT=/usr/local/gradex
+gradex-cli export marking pjh 'ELEE09000 a b c exam'
 
-Then you can issue the ingest command as
+valid stages are: 
+labelling
+marking
+moderating
+checking
+remarking
+rechecking
 
-gradex-cli ingest
-
-If you are chopping and changing between test and production systems, you might wish to use a local "one time setting" of the environment
-variable, e.g. on linux
-
-GRADEX_CLI_ROOT=/some/test/gradex; gradex-cli ingest
-
-`,
+Exported files are usually flagged in some way, e.g. being moved to a "sent" folder internally.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		which := os.Args[2]
+		who := os.Args[3]
+		exam := os.Args[4]
+
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
 		if err := envconfig.Process("gradex_cli", &s); err != nil {
@@ -83,7 +85,17 @@ GRADEX_CLI_ROOT=/some/test/gradex; gradex-cli ingest
 			os.Exit(1)
 		}
 		defer f.Close()
-		logger := zerolog.New(f).With().Timestamp().Logger()
+
+		logger := zerolog.
+			New(f).
+			With().
+			Timestamp().
+			Str("command", "export").
+			Str("which", which).
+			Str("who", who).
+			Str("exam", exam).
+			Logger()
+
 		g, err := ingester.New(s.Root, mch, &logger)
 		if err != nil {
 			fmt.Printf("Failed getting New Ingester %v", err)
@@ -91,25 +103,42 @@ GRADEX_CLI_ROOT=/some/test/gradex; gradex-cli ingest
 		}
 
 		g.EnsureDirectoryStructure()
+		g.SetupExamPaths(exam)
 
-		err = g.StageFromIngest()
+		switch which {
 
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		case "labelling", "label":
+			g.ExportForLabelling(exam, who)
 
-		g.ValidateNewPapers()
-		if err != nil {
-			fmt.Printf("Validate error %v", err)
-			os.Exit(1)
-		}
+		case "marking", "mark":
+			g.ExportForMarking(exam, who)
 
-		os.Exit(0)
+		case "moderating", "moderate":
+			g.ExportForModerating(exam, who)
 
+		case "checking", "check":
+			g.ExportForChecking(exam, who)
+
+		case "remarking", "remark":
+			g.ExportForReMarking(exam, who)
+
+		case "rechecking", "recheck":
+			g.ExportForChecking(exam, who)
+
+		} // switch
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(ingestCmd)
+	rootCmd.AddCommand(exportCmd)
+
+	// Here you will define your flags and configuration settings.
+
+	// Cobra supports Persistent Flags which will work for this command
+	// and all subcommands, e.g.:
+	// exportCmd.PersistentFlags().String("foo", "", "A help for foo")
+
+	// Cobra supports local flags which will only run when this command
+	// is called directly, e.g.:
+	// exportCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

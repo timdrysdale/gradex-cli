@@ -3,6 +3,7 @@ package ingester
 import (
 	"fmt"
 	"os/exec"
+	"path/filepath"
 )
 
 // simplified https://github.com/catherinelu/evangelist/blob/master/server.go
@@ -17,6 +18,20 @@ func ConvertPDFToJPEGs(pdfPath string, jpegPath string, outputFile string) error
 	err := cmd.Run()
 	if err != nil {
 		fmt.Printf("gs command failed: %s\n", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func CropToQuestion(inputPath, outputPath string) error {
+	//350x220+0+110
+	cmd := exec.Command("convert", inputPath, "-crop", " 700x500+0+0", filepath.Join(outputPath))
+
+	err := cmd.Run()
+
+	if err != nil {
+		fmt.Printf("convert command failed: %s\n", err.Error())
 		return err
 	}
 

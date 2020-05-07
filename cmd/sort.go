@@ -28,28 +28,20 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
-// ingestCmd represents the ingest command
-var ingestCmd = &cobra.Command{
-	Use:   "ingest",
-	Args:  cobra.ExactArgs(0),
-	Short: "Ingest files into exams for further processing",
-	Long: `This command works on all files in the ingest directory for your exam processing system. 
-You MUST set the root of this system as an environment variable 
-
-eg. on linux 
-export $GRADEX_CLI_ROOT=/usr/local/gradex
-
-Then you can issue the ingest command as
-
-gradex-cli ingest
-
-If you are chopping and changing between test and production systems, you might wish to use a local "one time setting" of the environment
-variable, e.g. on linux
-
-GRADEX_CLI_ROOT=/some/test/gradex; gradex-cli ingest
+// sortCmd represents the sort command
+var sortCmd = &cobra.Command{
+	Use:   "sort [marker] [exam]",
+	Short: "Sort by question into batches for the marker",
+	Args:  cobra.ExactArgs(2),
+	Long: ` Example:
+gradex-cli sort tdd demo-exam
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		marker := os.Args[2]
+		exam := os.Args[3]
+
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
 		if err := envconfig.Process("gradex_cli", &s); err != nil {
@@ -91,25 +83,35 @@ GRADEX_CLI_ROOT=/some/test/gradex; gradex-cli ingest
 		}
 
 		g.EnsureDirectoryStructure()
+		g.Redo = redo
 
-		err = g.StageFromIngest()
+		err = g.SortQuestions(exam)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		err = g.AddMarkBarByQ(exam, marker)
 
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		g.ValidateNewPapers()
-		if err != nil {
-			fmt.Printf("Validate error %v", err)
-			os.Exit(1)
-		}
-
 		os.Exit(0)
-
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(ingestCmd)
+	rootCmd.AddCommand(sortCmd)
+
+	// Here you will define your flags and configuration settings.
+
+	// Cobra supports Persistent Flags which will work for this command
+	// and all subcommands, e.g.:
+	// sortCmd.PersistentFlags().String("foo", "", "A help for foo")
+
+	// Cobra supports local flags which will only run when this command
+	// is called directly, e.g.:
+	// sortCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

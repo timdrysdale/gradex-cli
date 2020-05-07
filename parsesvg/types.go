@@ -18,12 +18,15 @@ type SpreadContents struct {
 	Candidate                 string
 	PageData                  pagedata.PageData
 	Prefills                  DocPrefills
+	ComboBoxes                DocComboBoxes
 	TemplatePathsRelative     bool
 	PrefillImagePathsRelative bool
 }
 
 type PagePrefills map[string]string
 type DocPrefills map[int]PagePrefills
+type PageComboBoxes map[string]ComboOptions
+type DocComboBoxes map[int]PageComboBoxes
 
 type TextField struct {
 	Rect        geo.Rect
@@ -37,6 +40,13 @@ type TextPrefill struct {
 	ID         string
 	Properties string
 	Text       Paragraph
+}
+
+type ComboBox struct {
+	Rect       geo.Rect
+	ID         string
+	Properties string
+	Options    ComboOptions
 }
 
 // we read the properties from a JSON object in the Description field
@@ -58,12 +68,17 @@ type Paragraph struct {
 	ColorHex            string    `json:"colorHex"`
 }
 
+type ComboOptions struct {
+	Options []string `json:"options"`
+}
+
 type Ladder struct {
 	Anchor       geo.Point
 	Dim          geo.Dim
 	ID           string
 	TextFields   []TextField
 	TextPrefills []TextPrefill
+	ComboBoxes   []ComboBox
 }
 
 type Layout struct {
@@ -85,6 +100,7 @@ type Spread struct {
 	Ladders      []Ladder
 	TextFields   []TextField
 	TextPrefills []TextPrefill
+	ComboBoxes   []ComboBox
 }
 
 type ImageInsert struct {

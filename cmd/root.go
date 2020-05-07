@@ -23,6 +23,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var redo bool
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "gradex-cli",
@@ -43,7 +45,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
+	rootCmd.PersistentFlags().BoolVar(&redo, "redo", false, "Force redo of already processed files")
 }
 
 func initConfig() {

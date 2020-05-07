@@ -10,29 +10,82 @@ import (
 	"github.com/timdrysdale/copy"
 )
 
+//>>>>>>>>>>>>>> ANNOTATE PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+func (g *Ingester) QuestionImages(exam string) string {
+	path := filepath.Join(g.Exam(), exam, questionImages)
+	g.EnsureDirAll(path)
+	return path
+}
+
+func (g *Ingester) QuestionPages(exam string) string {
+	path := filepath.Join(g.Exam(), exam, questionPages)
+	g.EnsureDirAll(path)
+	return path
+}
+func (g *Ingester) QuestionReady(exam, labeller string) string {
+	path := filepath.Join(g.Exam(), exam, questionReady, limit(labeller, N))
+	g.EnsureDirAll(path)
+	return path
+}
+
+func (g *Ingester) QuestionSent(exam, labeller string) string {
+	path := filepath.Join(g.Exam(), exam, questionSent, limit(labeller, N))
+	g.EnsureDirAll(path)
+	return path
+}
+func (g *Ingester) QuestionBack(exam, labeller string) string {
+	path := filepath.Join(g.Exam(), exam, questionBack, limit(labeller, N))
+	g.EnsureDirAll(path)
+	return path
+}
+func (g *Ingester) QuestionSplit(exam, question string) string {
+	path := filepath.Join(g.Exam(), exam, questionSplit, question)
+	g.EnsureDirAll(path)
+	return path
+}
+
 //>>>>>>>>>>>>>>>> EXPORT PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+func (g *Ingester) ExportLabelling(exam, labeller string) string {
+	path := filepath.Join(g.Export(), exam+"-"+questionReady+"-"+limit(labeller, N))
+	g.EnsureDirAll(path)
+	return path
+}
+
 func (g *Ingester) ExportMarking(exam, marker string) string {
-	return filepath.Join(g.Export(), exam, markerReady, limit(marker, N))
+	path := filepath.Join(g.Export(), exam+"-"+markerReady+"-"+limit(marker, N))
+	g.EnsureDirAll(path)
+	return path
 }
 
 func (g *Ingester) ExportModerating(exam, moderator string) string {
-	return filepath.Join(g.Export(), exam, moderatorReady, limit(moderator, N))
+	path := filepath.Join(g.Export(), exam+"-"+moderatorReady+"-"+limit(moderator, N))
+	g.EnsureDirAll(path)
+	return path
 }
 
 func (g *Ingester) ExportChecking(exam, checker string) string {
-	return filepath.Join(g.Export(), exam, checkerReady, limit(checker, N))
+	path := filepath.Join(g.Export(), exam+"-"+checkerReady+"-"+limit(checker, N))
+	g.EnsureDirAll(path)
+	return path
 }
 func (g *Ingester) ExportReMarking(exam, marker string) string {
-	return filepath.Join(g.Export(), exam, remarkerReady, limit(marker, N))
+	path := filepath.Join(g.Export(), exam+"-"+reMarkerReady+"-"+limit(marker, N))
+	g.EnsureDirAll(path)
+	return path
 }
 
 func (g *Ingester) ExportReChecking(exam, checker string) string {
-	return filepath.Join(g.Export(), exam, recheckerReady, limit(checker, N))
+	path := filepath.Join(g.Export(), exam+"-"+reCheckerReady+"-"+limit(checker, N))
+	g.EnsureDirAll(path)
+	return path
 }
 
 //>>>>>>>>>>>>>>>> GENERAL PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
+func (g *Ingester) PageBad(exam string) string {
+	return filepath.Join(g.Exam(), exam, pageBad)
+}
 func (g *Ingester) MarkedCombined(exam string) string {
 	return filepath.Join(g.Exam(), exam, markedCombined)
 }
@@ -86,6 +139,10 @@ func (g *Ingester) CheckedReady(exam string) string {
 
 func (g *Ingester) DoneDecoration() string {
 	return "d"
+}
+
+func (g *Ingester) LabellerABCDecoration(initials string) string {
+	return fmt.Sprintf("-la%s", limit(initials, N))
 }
 
 func (g *Ingester) MarkerABCDecoration(initials string) string {
@@ -191,37 +248,37 @@ func (g *Ingester) CheckerBack(exam, checker string) string {
 }
 
 func (g *Ingester) ReMarkerReady(exam, marker string) string {
-	path := filepath.Join(g.Exam(), exam, remarkerReady, limit(marker, N))
+	path := filepath.Join(g.Exam(), exam, reMarkerReady, limit(marker, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ReMarkerSent(exam, marker string) string {
-	path := filepath.Join(g.Exam(), exam, remarkerSent, limit(marker, N))
+	path := filepath.Join(g.Exam(), exam, reMarkerSent, limit(marker, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ReMarkerBack(exam, marker string) string {
-	path := filepath.Join(g.Exam(), exam, remarkerBack, limit(marker, N))
+	path := filepath.Join(g.Exam(), exam, reMarkerBack, limit(marker, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ReCheckerReady(exam, checker string) string {
-	path := filepath.Join(g.Exam(), exam, recheckerReady, limit(checker, N))
+	path := filepath.Join(g.Exam(), exam, reCheckerReady, limit(checker, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ReCheckerSent(exam, checker string) string {
-	path := filepath.Join(g.Exam(), exam, recheckerSent, limit(checker, N))
+	path := filepath.Join(g.Exam(), exam, reCheckerSent, limit(checker, N))
 	EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ReCheckerBack(exam, checker string) string {
-	path := filepath.Join(g.Exam(), exam, recheckerBack, limit(checker, N))
+	path := filepath.Join(g.Exam(), exam, reCheckerBack, limit(checker, N))
 	g.EnsureDirAll(path)
 	return path
 }

@@ -67,11 +67,13 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 			continue
 		}
 
-		if getDone(inPath) {
-			logger.Info().
-				Str("file", inPath).
-				Msg("Skipping because already done")
-			continue
+		if !g.Redo { //prevent skipping if --redo flag given
+			if getDoneFor(inPath, oc.PathDecoration) {
+				logger.Info().
+					Str("file", inPath).
+					Msg("Skipping because already done")
+				continue
+			}
 		}
 
 		count, err := CountPages(inPath)
@@ -98,6 +100,9 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 		if pagedata.GetLen(pageDataMap) < 1 {
 			oc.Msg.Send(fmt.Sprintf("Skipping (%s): no pagedata in file\n", inPath))
+			logger.Error().
+				Str("file", inPath).
+				Msg(fmt.Sprintf("Skipping (%s): no pagedata in file\n", inPath))
 			continue
 		}
 
@@ -158,6 +163,7 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 			SpreadName:     oc.SpreadName,
 			Template:       oc.TemplatePath,
 			Msg:            oc.Msg,
+			Who:            oc.PathDecoration,
 		})
 		logger.Info().
 			Str("file", inPath).
@@ -182,7 +188,8 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 		newtask := pool.NewTask(func() error {
 			pc, err := g.OverlayOnePDF(ot, logger)
 			if err == nil {
-				setDone(ot.InputPath, logger)
+				setDoneFor(ot.InputPath, ot.Who, logger)
+				logger.Debug().Str("file", ot.InputPath).Str("who", ot.Who).Msg("set done file at source")
 				logger.Info().
 					Str("file", ot.InputPath).
 					Str("destination", ot.OutputPath).
@@ -424,7 +431,8 @@ OUTER:
 		return 0, err
 	}
 
-	doneFile := doneFilePath(ot.OutputPath)
+	doneFile := doneFilePathFor(ot.OutputPath, ot.Who)
+	logger.Debug().Str("donefile", doneFile).Msg("removing done file at destination")
 	_, err = os.Stat(doneFile)
 	if err == nil {
 		err = os.Remove(doneFile)
@@ -432,7 +440,7 @@ OUTER:
 			logger.Error().
 				Str("file", ot.OutputPath).
 				Str("error", err.Error()).
-				Msg("Could not delete stale Done File")
+				Msg(fmt.Sprintf("Could not delete stale Done File for %s", ot.Who))
 		}
 	}
 

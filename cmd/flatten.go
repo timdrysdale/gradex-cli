@@ -30,15 +30,18 @@ import (
 
 // flattenCmd represents the flatten command
 var flattenCmd = &cobra.Command{
-	Use:   "flatten",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Use:   "flatten [exam]",
+	Short: "Validates and anonymises PDF files submitted via Learn",
+	Args:  cobra.ExactArgs(1),
+	Long: `You must specify the exam for which you wish to flatten files. You should have already ingested the files.
+Example usage:
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+gradex-cli flatten SomeExam
+`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		exam := os.Args[2]
+
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
 		if err := envconfig.Process("gradex_cli", &s); err != nil {
@@ -81,7 +84,9 @@ to quickly create a Cobra application.`,
 
 		g.EnsureDirectoryStructure()
 
-		err = g.FlattenNewPapers(os.Args[2])
+		g.Redo = redo
+
+		err = g.FlattenNewPapers(exam)
 
 		if err != nil {
 			fmt.Println(err)

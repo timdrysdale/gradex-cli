@@ -146,6 +146,14 @@ func RenderSpreadExtra(contents SpreadContents) error {
 			tp.Rect.Corner = TranslatePosition(corner, tp.Rect.Corner)
 			spread.TextPrefills = append(spread.TextPrefills, tp)
 		}
+		//append ComboBoxes to the ComboBox list
+		for _, cb := range ladder.ComboBoxes {
+
+			//shift the text field and add it to the list
+			//let engine take care of mangling name to suit page
+			cb.Rect.Corner = TranslatePosition(corner, cb.Rect.Corner)
+			spread.ComboBoxes = append(spread.ComboBoxes, cb)
+		}
 
 	}
 
@@ -326,12 +334,28 @@ func RenderSpreadExtra(contents SpreadContents) error {
 			tf.Rect.Corner.X = tf.Rect.Corner.X + spread.ExtraWidth
 		}
 
-		textf, err := annotator.NewTextField(page, name, formRect(tf, layout.Dim), tfopt)
+		textf, err := annotator.NewTextField(page, name, formRect(tf.Rect, layout.Dim), tfopt)
 		if err != nil {
 			panic(err)
 		}
 		*form.Fields = append(*form.Fields, textf.PdfField)
 		page.AddAnnotation(textf.Annotations[0].PdfAnnotation)
+	}
+
+	for _, cb := range spread.ComboBoxes { //also a forms object
+		//update combobox options (possible values) from info given
+		if val, ok := contents.ComboBoxes[pageNumber][cb.ID]; ok {
+			cb.Options.Options = val.Options
+		}
+		name := fmt.Sprintf("page-%03d-%s", pageNumber+1, cb.ID) //match physical page number
+		opt := annotator.ComboboxFieldOptions{Choices: cb.Options.Options}
+		comboboxf, err := annotator.NewComboboxField(page, name, formRect(cb.Rect, layout.Dim), opt)
+		if err != nil {
+			panic(err)
+		}
+
+		*form.Fields = append(*form.Fields, comboboxf.PdfField)
+		page.AddAnnotation(comboboxf.Annotations[0].PdfAnnotation)
 	}
 
 	err = c.SetForms(form)
