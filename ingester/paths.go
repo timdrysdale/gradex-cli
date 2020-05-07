@@ -66,13 +66,13 @@ func (g *Ingester) ExportChecking(exam, checker string) string {
 	return path
 }
 func (g *Ingester) ExportReMarking(exam, marker string) string {
-	path := filepath.Join(g.Export(), exam, remarkerReady, limit(marker, N))
+	path := filepath.Join(g.Export(), exam, reMarkerReady, limit(marker, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ExportReChecking(exam, checker string) string {
-	path := filepath.Join(g.Export(), exam, recheckerReady, limit(checker, N))
+	path := filepath.Join(g.Export(), exam, reCheckerReady, limit(checker, N))
 	g.EnsureDirAll(path)
 	return path
 }
@@ -241,37 +241,37 @@ func (g *Ingester) CheckerBack(exam, checker string) string {
 }
 
 func (g *Ingester) ReMarkerReady(exam, marker string) string {
-	path := filepath.Join(g.Exam(), exam, remarkerReady, limit(marker, N))
+	path := filepath.Join(g.Exam(), exam, reMarkerReady, limit(marker, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ReMarkerSent(exam, marker string) string {
-	path := filepath.Join(g.Exam(), exam, remarkerSent, limit(marker, N))
+	path := filepath.Join(g.Exam(), exam, reMarkerSent, limit(marker, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ReMarkerBack(exam, marker string) string {
-	path := filepath.Join(g.Exam(), exam, remarkerBack, limit(marker, N))
+	path := filepath.Join(g.Exam(), exam, reMarkerBack, limit(marker, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ReCheckerReady(exam, checker string) string {
-	path := filepath.Join(g.Exam(), exam, recheckerReady, limit(checker, N))
+	path := filepath.Join(g.Exam(), exam, reCheckerReady, limit(checker, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ReCheckerSent(exam, checker string) string {
-	path := filepath.Join(g.Exam(), exam, recheckerSent, limit(checker, N))
+	path := filepath.Join(g.Exam(), exam, reCheckerSent, limit(checker, N))
 	EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ReCheckerBack(exam, checker string) string {
-	path := filepath.Join(g.Exam(), exam, recheckerBack, limit(checker, N))
+	path := filepath.Join(g.Exam(), exam, reCheckerBack, limit(checker, N))
 	g.EnsureDirAll(path)
 	return path
 }
