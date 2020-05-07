@@ -67,11 +67,13 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 			continue
 		}
 
-		if getDoneFor(inPath, oc.PathDecoration) {
-			logger.Info().
-				Str("file", inPath).
-				Msg("Skipping because already done")
-			continue
+		if !g.Redo { //prevent skipping if --redo flag given
+			if getDoneFor(inPath, oc.PathDecoration) {
+				logger.Info().
+					Str("file", inPath).
+					Msg("Skipping because already done")
+				continue
+			}
 		}
 
 		count, err := CountPages(inPath)

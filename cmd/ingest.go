@@ -31,16 +31,25 @@ import (
 // ingestCmd represents the ingest command
 var ingestCmd = &cobra.Command{
 	Use:   "ingest",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Args:  cobra.ExactArgs(0),
+	Short: "Ingest files into exams for further processing",
+	Long: `This command works on all files in the ingest directory for your exam processing system. 
+You MUST set the root of this system as an environment variable 
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+eg. on linux 
+export $GRADEX_CLI_ROOT=/usr/local/gradex
+
+Then you can issue the ingest command as
+
+gradex-cli ingest
+
+If you are chopping and changing between test and production systems, you might wish to use a local "one time setting" of the environment
+variable, e.g. on linux
+
+GRADEX_CLI_ROOT=/some/test/gradex; gradex-cli ingest
+
+`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("ingest called")
-
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
 		if err := envconfig.Process("gradex_cli", &s); err != nil {

@@ -13,6 +13,7 @@ type Ingester struct {
 	msgCh   chan chmsg.MessageInfo
 	timeout time.Duration
 	logger  *zerolog.Logger
+	Redo    bool
 }
 
 func New(path string, msgCh chan chmsg.MessageInfo, logger *zerolog.Logger) (*Ingester, error) {

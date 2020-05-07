@@ -30,7 +30,7 @@ import (
 
 // markCmd represents the mark command
 var markCmd = &cobra.Command{
-	Use:   "mark",
+	Use:   "mark [marker] [exam]",
 	Short: "Add mark bars to an exam",
 	Long: `Add mark bars to all flattened scripts, decorating the path with the marker name, for example
 

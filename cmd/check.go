@@ -30,10 +30,10 @@ import (
 
 // checkCmd represents the check command
 var checkCmd = &cobra.Command{
-	Use:   "check",
+	Use:   "check [checker] [exam]",
 	Short: "Add check bars to an exam",
 	Args:  cobra.ExactArgs(2),
-	Long: `Add check bars to all flattened scripts, decorating the path with the checker name, for example
+	Long: `Add check bars to flattened, marked, moderated scripts, decorating the path with the checker name, for example
 
 gradex-cli checker x demo-exam
 

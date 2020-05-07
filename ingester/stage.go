@@ -9,6 +9,7 @@ import (
 	"github.com/mholt/archiver"
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/gradex-cli/pagedata"
+	"github.com/timdrysdale/gradex-cli/parselearn"
 )
 
 // wait for user to press an "do ingest button", then filewalk to get the paths
@@ -110,6 +111,12 @@ func (g *Ingester) handleIngestArchive(path string, logger *zerolog.Logger) {
 }
 
 func (g *Ingester) handleTXT(path string, logger *zerolog.Logger) {
+
+	err := parselearn.CheckFilename(path)
+
+	if err != nil {
+		g.logger.Warn().Str("file", path).Msg(fmt.Sprintf("Can't find the file listed in the receipt in the receipt %s", path))
+	}
 
 	moved, err := g.MoveIfNewerThanDestinationInDir(path, g.TempTXT(), logger)
 

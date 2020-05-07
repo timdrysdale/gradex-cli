@@ -30,10 +30,10 @@ import (
 
 // moderateCmd represents the moderate command
 var moderateCmd = &cobra.Command{
-	Use:   "moderate",
-	Short: "Add mark bars to an exam",
+	Use:   "moderate [moderator] [exam]",
+	Short: "Add moderation bars to an exam",
 	Args:  cobra.ExactArgs(2),
-	Long: `Add mark bars to all flattened scripts, decorating the path with the marker name, for example
+	Long: `Add moderation bar to flattened, marked scripts, decorating the path with the moderator name, for example
 
 gradex-cli moderate abc demo-exam
 
@@ -42,6 +42,9 @@ this will produce a bunch of files in the readyToModerate folder, e.g
 $GRADEX_CLI_ROOT/usr/demo-exam/30.ReadyToModerate/ABC/<original-filename>-moABC.pdf
 
 Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT/usr/exam/
+
+Also, you need to have split your batch of marked scripts and moved them into the 
+active/inactive directory according to whether they are to be moderated or not
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {

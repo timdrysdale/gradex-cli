@@ -30,8 +30,8 @@ import (
 
 // labelCmd represents the label command
 var labelCmd = &cobra.Command{
-	Use:   "label",
-	Short: "A brief description of your command",
+	Use:   "label [labeller] [exam]",
+	Short: "Adds labelling side bar to the left of flattened scripts",
 	Args:  cobra.ExactArgs(2),
 	Long: `Add labelling bars to all flattened scripts, decorating the path with the labeller name, for example
 
