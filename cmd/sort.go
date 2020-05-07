@@ -28,27 +28,19 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
-// labelCmd represents the label command
-var labelCmd = &cobra.Command{
-	Use:   "label [labeller] [exam]",
-	Short: "Adds labelling side bar to the left of flattened scripts",
+// sortCmd represents the sort command
+var sortCmd = &cobra.Command{
+	Use:   "sort [marker] [exam]",
+	Short: "Sort by question into batches for the marker",
 	Args:  cobra.ExactArgs(2),
-	Long: `Add labelling bars to all flattened scripts, decorating the path with the labeller name, for example
-
-gradex-cli label x demo-exam
-
-this will produce a bunch of files in the questionReady folder, e.g
-
-$GRADEX_CLI_ROOT/usr/demo-exam/08-question-ready/X/<original-filename>-laTDD.pdf
-
-Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT/usr/exam/
+	Long: ` Example:
+gradex-cli sort tdd demo-exam
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		marker := os.Args[2]
 		exam := os.Args[3]
-
-		labeller := os.Args[2]
 
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
@@ -91,11 +83,15 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 		}
 
 		g.EnsureDirectoryStructure()
-		g.SetupExamPaths(exam)
-
 		g.Redo = redo
 
-		err = g.AddLabelBar(exam, labeller)
+		err = g.SortQuestions(exam)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		err = g.AddMarkBarByQ(exam, marker)
 
 		if err != nil {
 			fmt.Println(err)
@@ -107,15 +103,15 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 }
 
 func init() {
-	rootCmd.AddCommand(labelCmd)
+	rootCmd.AddCommand(sortCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// labelCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// sortCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// labelCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// sortCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

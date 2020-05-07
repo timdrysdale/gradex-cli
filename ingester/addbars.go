@@ -60,6 +60,58 @@ func (g *Ingester) AddLabelBar(exam, labeller string) error {
 	return err
 }
 
+func (g *Ingester) AddMarkBarByQ(exam string, marker string) error {
+
+	logger := g.logger.With().Str("process", "add-mark-bar").Logger()
+
+	mc := chmsg.MessagerConf{
+		ExamName:     exam,
+		FunctionName: "overlay",
+		TaskName:     "add-mark-bar-byQ",
+	}
+
+	cm := chmsg.New(mc, g.msgCh, g.timeout)
+
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
+		UnixTime: time.Now().UnixNano(),
+		Name:     "mark-bar-byQ",
+		By:       "gradex-cli",
+		ToDo:     "marking",
+		For:      marker,
+	}
+
+	oc := OverlayCommand{
+		FromPath:       g.QuestionSplit(exam, ""),
+		ToPath:         g.MarkerReady(exam, marker),
+		ExamName:       exam,
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "mark",
+		ProcessDetail:  procDetail,
+		Msg:            cm,
+		PathDecoration: g.MarkerABCDecoration(marker),
+	}
+
+	err := g.OverlayPapers(oc, &logger)
+
+	if err == nil {
+		cm.Send(fmt.Sprintf("Finished Processing markbar UUID=%s\n", procDetail.UUID))
+		logger.Info().
+			Str("UUID", procDetail.UUID).
+			Str("marker", marker).
+			Str("exam", exam).
+			Msg("Finished add-mark-bar-byQ")
+	} else {
+		logger.Error().
+			Str("UUID", procDetail.UUID).
+			Str("marker", marker).
+			Str("exam", exam).
+			Str("error", err.Error()).
+			Msg("Error add-mark-bar-byQ")
+	}
+	return err
+}
+
 func (g *Ingester) AddMarkBar(exam string, marker string) error {
 
 	logger := g.logger.With().Str("process", "add-mark-bar").Logger()

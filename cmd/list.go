@@ -28,27 +28,26 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
-// labelCmd represents the label command
-var labelCmd = &cobra.Command{
-	Use:   "label [labeller] [exam]",
-	Short: "Adds labelling side bar to the left of flattened scripts",
+// listCmd represents the list command
+var listCmd = &cobra.Command{
+	Use:   "list [what] [exam]",
 	Args:  cobra.ExactArgs(2),
-	Long: `Add labelling bars to all flattened scripts, decorating the path with the labeller name, for example
+	Short: "show a list of [what] for [exam]",
+	Long: `Shows selected information about an exam
 
-gradex-cli label x demo-exam
+for example
 
-this will produce a bunch of files in the questionReady folder, e.g
+badpages - pages marked with badpage
+tree - tree diagram of exam folder with file/done counts
 
-$GRADEX_CLI_ROOT/usr/demo-exam/08-question-ready/X/<original-filename>-laTDD.pdf
+For example:
 
-Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT/usr/exam/
+gradex-cli list badpages 'PGEE00000 A B D Exam'
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-
+		what := os.Args[2]
 		exam := os.Args[3]
-
-		labeller := os.Args[2]
 
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
@@ -83,7 +82,16 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 			os.Exit(1)
 		}
 		defer f.Close()
-		logger := zerolog.New(f).With().Timestamp().Logger()
+
+		logger := zerolog.
+			New(f).
+			With().
+			Timestamp().
+			Str("command", "list").
+			Str("what", what).
+			Str("exam", exam).
+			Logger()
+
 		g, err := ingester.New(s.Root, mch, &logger)
 		if err != nil {
 			fmt.Printf("Failed getting New Ingester %v", err)
@@ -93,29 +101,35 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 		g.EnsureDirectoryStructure()
 		g.SetupExamPaths(exam)
 
-		g.Redo = redo
+		switch what {
 
-		err = g.AddLabelBar(exam, labeller)
+		case "badpage", "badpages", "pagebad":
+			files, err := g.GetFileList(g.PageBad(exam))
+			if err != nil {
+				return
+			}
+			for _, file := range files {
+				fmt.Println(file)
+			}
 
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		os.Exit(0)
+		case "tree":
+			fmt.Println("tree not integrated yet")
+			//g.ListTree(exam)
+		default:
+			fmt.Printf("Unknown list type: %s\n", what)
+		} // switch
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(labelCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// labelCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// listCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// labelCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

@@ -39,6 +39,11 @@ func (g *Ingester) QuestionBack(exam, labeller string) string {
 	g.EnsureDirAll(path)
 	return path
 }
+func (g *Ingester) QuestionSplit(exam, question string) string {
+	path := filepath.Join(g.Exam(), exam, questionSplit, question)
+	g.EnsureDirAll(path)
+	return path
+}
 
 //>>>>>>>>>>>>>>>> EXPORT PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -78,7 +83,9 @@ func (g *Ingester) ExportReChecking(exam, checker string) string {
 }
 
 //>>>>>>>>>>>>>>>> GENERAL PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
+func (g *Ingester) PageBad(exam string) string {
+	return filepath.Join(g.Exam(), exam, pageBad)
+}
 func (g *Ingester) MarkedCombined(exam string) string {
 	return filepath.Join(g.Exam(), exam, markedCombined)
 }

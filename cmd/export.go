@@ -30,13 +30,21 @@ import (
 
 // exportCmd represents the export command
 var exportCmd = &cobra.Command{
-	Use:   "export",
+	Use:   "export [stage] [who] [exam]",
 	Short: "Put files into the export directory",
 	Args:  cobra.ExactArgs(3),
 	Long: `A helper command to take files from key points in the process, and put them in the export 
 directory where they are easier to find. Example usage
 
-gradex-cli export readyToMark tdd exam
+gradex-cli export marking pjh 'ELEE09000 a b c exam'
+
+valid stages are: 
+labelling
+marking
+moderating
+checking
+remarking
+rechecking
 
 Exported files are usually flagged in some way, e.g. being moved to a "sent" folder internally.`,
 	Run: func(cmd *cobra.Command, args []string) {

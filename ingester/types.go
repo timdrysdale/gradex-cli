@@ -62,6 +62,7 @@ var (
 	testroot  = "./tmp-delete-me"
 	ExamStage = []string{
 		config,
+		pageBad,
 		acceptedPapers,
 		acceptedReceipts,
 		tempImages,
@@ -72,6 +73,7 @@ var (
 		questionReady,
 		questionSent,
 		questionBack,
+		questionSplit,
 		markerReady,
 		markerSent,
 		markerBack,
@@ -135,6 +137,8 @@ const (
 	//>>>>>>>>>>>> INTERNAL >>>>>>>>>>>>>>>>>>
 	config = "00-config"
 
+	pageBad = "01-page-bad"
+
 	tempImages = "03-temporary-images"
 	tempPages  = "04-temporary-pages"
 
@@ -147,6 +151,7 @@ const (
 	questionReady  = "08-question-ready"
 	questionSent   = "09-question-sent"
 	questionBack   = "10-question-back"
+	questionSplit  = "11-question-split"
 
 	markerReady          = "20-marker-ready"
 	markerSent           = "21-marker-sent"

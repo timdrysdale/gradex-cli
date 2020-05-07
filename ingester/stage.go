@@ -244,7 +244,7 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		} else {
 			// it's (probably) been marked at least partly, so see if it is newer
 			// than a version we might already have
-			destination := g.MarkerBack(t.What, t.For)
+			destination := g.QuestionBack(t.What, t.For)
 
 			moved, err := g.MoveIfNewerThanDestinationInDir(path, destination, logger)
 
