@@ -99,22 +99,22 @@ Exported files are usually flagged in some way, e.g. being moved to a "sent" fol
 
 		switch which {
 
-		case ingester.QuestionReady:
+		case "labelling", "label":
 			g.ExportForLabelling(exam, who)
 
-		case ingester.MarkerReady:
+		case "marking", "mark":
 			g.ExportForMarking(exam, who)
 
-		case ingester.ModeratorReady:
+		case "moderating", "moderate":
 			g.ExportForModerating(exam, who)
 
-		case ingester.CheckerReady:
+		case "checking", "check":
 			g.ExportForChecking(exam, who)
 
-		case ingester.ReMarkerReady:
+		case "remarking", "remark":
 			g.ExportForReMarking(exam, who)
 
-		case ingester.ReCheckerReady:
+		case "rechecking", "recheck":
 			g.ExportForChecking(exam, who)
 
 		} // switch

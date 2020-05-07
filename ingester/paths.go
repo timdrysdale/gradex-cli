@@ -43,36 +43,36 @@ func (g *Ingester) QuestionBack(exam, labeller string) string {
 //>>>>>>>>>>>>>>>> EXPORT PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 func (g *Ingester) ExportLabelling(exam, labeller string) string {
-	path := filepath.Join(g.Export(), exam, questionReady, limit(labeller, N))
+	path := filepath.Join(g.Export(), exam+"-"+questionReady+"-"+limit(labeller, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ExportMarking(exam, marker string) string {
-	path := filepath.Join(g.Export(), exam, markerReady, limit(marker, N))
+	path := filepath.Join(g.Export(), exam+"-"+markerReady+"-"+limit(marker, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ExportModerating(exam, moderator string) string {
-	path := filepath.Join(g.Export(), exam, moderatorReady, limit(moderator, N))
+	path := filepath.Join(g.Export(), exam+"-"+moderatorReady+"-"+limit(moderator, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ExportChecking(exam, checker string) string {
-	path := filepath.Join(g.Export(), exam, checkerReady, limit(checker, N))
+	path := filepath.Join(g.Export(), exam+"-"+checkerReady+"-"+limit(checker, N))
 	g.EnsureDirAll(path)
 	return path
 }
 func (g *Ingester) ExportReMarking(exam, marker string) string {
-	path := filepath.Join(g.Export(), exam, reMarkerReady, limit(marker, N))
+	path := filepath.Join(g.Export(), exam+"-"+reMarkerReady+"-"+limit(marker, N))
 	g.EnsureDirAll(path)
 	return path
 }
 
 func (g *Ingester) ExportReChecking(exam, checker string) string {
-	path := filepath.Join(g.Export(), exam, reCheckerReady, limit(checker, N))
+	path := filepath.Join(g.Export(), exam+"-"+reCheckerReady+"-"+limit(checker, N))
 	g.EnsureDirAll(path)
 	return path
 }

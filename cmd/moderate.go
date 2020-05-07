@@ -99,7 +99,25 @@ active/inactive directory according to whether they are to be moderated or not
 		g.EnsureDirectoryStructure()
 		g.SetupExamPaths(exam)
 
+		// TODO handling redo flag to redo the split is starting to get into
+		// unclear territory - do you remove all files from moderation sets?
+		// what if they have been sent?
+		// do you block if any moderation files have been exported?
+		// better to handle these cases manually
+		err = g.SplitForModeration(exam, 10, 10) //TODO set these from flag
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
 		err = g.AddModerateActiveBar(exam, moderator)
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		err = g.AddModerateInActiveBar(exam)
 
 		if err != nil {
 			fmt.Println(err)

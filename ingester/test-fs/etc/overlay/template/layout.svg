@@ -4062,8 +4062,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.55352036"
-     inkscape:cx="321.27054"
-     inkscape:cy="627.63063"
+     inkscape:cx="-14.76046"
+     inkscape:cy="620.40416"
      inkscape:document-units="mm"
      inkscape:current-layer="layer6"
      showgrid="false"
@@ -4096,13 +4096,13 @@
      style="display:inline">
     <rect
        ry="0.61828327"
-       rx="0.61158043"
+       rx="0.27919975"
        y="-2.9802266e-08"
        x="0.47800109"
        height="312"
-       width="115"
+       width="52.5"
        id="rect3919"
-       style="opacity:1;fill:#b9ffab;fill-opacity:0.55868542;stroke:none;stroke-width:0.50624073;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1">
+       style="opacity:1;fill:#b9ffab;fill-opacity:0.55868542;stroke:none;stroke-width:0.34204859;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1">
       <title
          id="title3917">page-dynamic-moderate-active</title>
     </rect>
@@ -4119,18 +4119,6 @@
          id="title13635">page-static-label</title>
     </rect>
     <rect
-       style="opacity:1;fill:#c5ecbe;fill-opacity:0.55868542;stroke:none;stroke-width:0.50221616;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
-       id="rect31453"
-       width="70"
-       height="311.625"
-       x="0"
-       y="0"
-       rx="0.36673132"
-       ry="0.61754012">
-      <title
-         id="title31451">page-static-moderate-inactive</title>
-    </rect>
-    <rect
        style="opacity:1;fill:url(#meshgradient17791);fill-opacity:1;stroke:none;stroke-width:0.50376958;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
        id="rect3913"
        width="63"
@@ -4141,6 +4129,18 @@
        ry="0.61754012">
       <title
          id="title3915">page-dynamic-mark</title>
+    </rect>
+    <rect
+       style="opacity:1;fill:#c5ecbe;fill-opacity:0.55868542;stroke:none;stroke-width:0.18007894;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
+       id="rect31453"
+       width="9"
+       height="311.625"
+       x="0"
+       y="0"
+       rx="0.047151171"
+       ry="0.61754012">
+      <title
+         id="title31451">page-dynamic-moderate-inactive</title>
     </rect>
     <rect
        style="opacity:1;fill:#abf9ff;fill-opacity:0.3802817;stroke:none;stroke-width:0.51035035;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
@@ -4227,7 +4227,7 @@
      inkscape:groupmode="layer"
      id="layer2"
      inkscape:label="chrome"
-     style="display:none">
+     style="display:inline">
     <rect
        style="opacity:1;fill:none;fill-opacity:1;stroke:#ed1a1f;stroke-width:0.10166976;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect16398"
@@ -4423,5 +4423,5 @@
      inkscape:groupmode="layer"
      id="layer5"
      inkscape:label="textfields"
-     style="display:none" />
+     style="display:inline" />
 </svg>
