@@ -16,7 +16,8 @@ ingester/draft
 ingester/example-output
 ingester/tmp-delete-me
 gradex
-gradex.zip
+*.zip
+doc
 # Test binary, built with `go test -c`
 *.test
 

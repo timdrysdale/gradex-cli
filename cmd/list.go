@@ -135,6 +135,10 @@ gradex-cli list badpages 'PGEE00000 A B D Exam'
 
 			fmt.Println(lines)
 
+		case "sortcheck":
+
+			g.SortCheck(exam)
+
 		default:
 			fmt.Printf("Unknown list type: %s\n", what)
 		} // switch
