@@ -15,7 +15,8 @@ tmp-delete-me
 ingester/draft
 ingester/example-output
 ingester/tmp-delete-me
-
+gradex
+gradex.zip
 # Test binary, built with `go test -c`
 *.test
 
