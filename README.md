@@ -171,7 +171,8 @@ cp -r $GRADEX_CLI_ROOT/usr/exam/Demo/22-marker-back/* $GRADEX_CLI_ROOT/usr/exam/
 
 Now we can prepare for moderating. The bit of the system that puts papers back into by-script files is not currently integrated. At this stage of the workflow, both by-script and by-questions processes return to the same path. With many scripts in this folder, the system automatically splits the set of scripts into a set to be actively moderated, with a green sidebar. The rest get a smaller grey "inactive" sidebar.
 
-<TODO> FINISH
+
+### TODO -- FINISH THIS SECTION
 
 
 
