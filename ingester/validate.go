@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/timdrysdale/parselearn"
+	"github.com/timdrysdale/gradex-cli/parselearn"
 )
 
 func (g *Ingester) ValidateNewPapers() error {
