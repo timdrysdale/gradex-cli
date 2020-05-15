@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/disiqueira/gotree"
-	"github.com/timdrysdale/gradexpath"
 
 	"github.com/timdrysdale/gradex-cli/count"
+	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
 func Tree(path string, doPageCount bool) (string, error) {
@@ -27,12 +27,12 @@ func Tree(path string, doPageCount bool) (string, error) {
 		}
 		if info.IsDir() {
 
-			filelist, _ := gradexpath.GetFileList(path)
+			filelist, _ := ingester.GetFileList(path)
 			numPdf := 0
 			numPages := 0
 			numDone := 0
 			for _, file := range filelist {
-				if gradexpath.IsPdf(file) {
+				if ingester.IsPDF(file) {
 					if doPageCount {
 						thisCount, err := count.Pages(file)
 						if err == nil {
@@ -41,7 +41,7 @@ func Tree(path string, doPageCount bool) (string, error) {
 					}
 					numPdf++
 				}
-				if gradexpath.IsTxt(file) {
+				if ingester.IsTXT(file) {
 					numPdf++
 				}
 

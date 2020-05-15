@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/timdrysdale/parselearn"
+	"github.com/timdrysdale/gradex-cli/parselearn"
 )
 
 func safeUUID() string {
