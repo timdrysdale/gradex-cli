@@ -9,7 +9,7 @@ import (
 	"github.com/disiqueira/gotree"
 	"github.com/timdrysdale/gradexpath"
 
-	"github.com/timdrysdale/dt/count"
+	"github.com/timdrysdale/gradex-cli/count"
 )
 
 func Tree(path string, doPageCount bool) (string, error) {
