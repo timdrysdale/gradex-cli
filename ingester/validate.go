@@ -106,16 +106,20 @@ func (g *Ingester) ValidateNewPapers() error {
 		destinationDir := g.AcceptedPapers(sub.Assignment)
 
 		baseFileName := filepath.Base(pdfFilename)
-		ShortLearnName := regexp.MustCompile("(\\_.*\\_{1})")
+		shortLearnName := regexp.MustCompile("(\\_.*\\_{1})")
 		//Before: PGEEnnnn A Super Long Exam Name - Exam Dropbox_s0000000_attempt_2020-05-01-02-00-00_PGEEnnnn-B000000.pdf
 		//After _s0000000_attempt_2020-05-01-02-00-00_
-		ShortLearnName := LearnOnly.FindString(baseFileName)
-		destination := filepath.Join(destinationDir, ShortLearnName+filepath.Ext(pdfFilename))
+		shortLearnNamePDF := shortLearnName.FindString(baseFileName) + filepath.Ext(pdfFilename)
+		shortLearnNameTXT := shortLearnName.FindString(baseFileName) + filepath.Ext(sub.OwnPath)
+		sub.Filename = shortLearnNamePDF
+		destination := filepath.Join(destinationDir, shortLearnNamePDF)
 
 		logger.Info().
-			Str("before", baseFileName).
-			Str("after", ShortLearnLearn).
-			Msg("Using LEARN-specific name shortener")
+			Str("PDF-before", baseFileName).
+			Str("PDF-after", shortLearnNamePDF).
+			Str("TXT-before", sub.OwnPath).
+			Str("TXT-after", shortLearnNameTXT).
+			Msg("Using LEARN-specific name shortener on PDF & receipt")
 
 		_, err = os.Stat(currentPath)
 
@@ -134,18 +138,31 @@ func (g *Ingester) ValidateNewPapers() error {
 					Str("destination", destination).
 					Msg("PDF validated and moved to accepted papers")
 
-				destination := g.AcceptedReceipts(sub.Assignment)
+				// write receipt with updated filename in it
+				destinationDir := g.AcceptedReceipts(sub.Assignment)
+				destination := filepath.Join(destinationDir, shortLearnNameTXT)
 
-				// this is not move-if-newer because it should match the pdf?
-				err = g.MoveToDir(sub.OwnPath,
-					destination)
+				err = parselearn.WriteLearnReceipt(destination, sub)
 
 				if err == nil {
-					g.logger.Info().
-						Str("file", sub.OwnPath).
-						Str("course", sub.Assignment).
-						Str("destination", destination).
-						Msg("Moved receipt to Accepted Receipts")
+
+					err = os.Remove(sub.OwnPath)
+
+					if err == nil {
+
+						g.logger.Info().
+							Str("file", sub.OwnPath).
+							Str("course", sub.Assignment).
+							Str("destination", destination).
+							Msg("Moved rewritten receipt to Accepted Receipts")
+					} else {
+
+						g.logger.Error().
+							Str("file", sub.OwnPath).
+							Str("course", sub.Assignment).
+							Str("destination", destination).
+							Msg("Could not delete stale receipt after successful rewrite of new receipt")
+					}
 
 				} else {
 					g.logger.Error().
