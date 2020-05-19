@@ -150,7 +150,7 @@ func TestAddBars(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, g.ValidateNewPapers())
 
-	exam := "Practice Exam Drop Box"
+	exam := "Practice"
 
 	actualPdf, err = g.GetFileList(g.AcceptedPapers(exam))
 	assert.NoError(t, err)
@@ -189,16 +189,16 @@ func TestAddBars(t *testing.T) {
 	_, err = os.Stat(dest)
 
 	//>>>>>>>>>>>>>>>>>>>>>>>>> FLATTEN/RENAME  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	err = g.FlattenNewPapers("Practice Exam Drop Box")
+	err = g.FlattenNewPapers("Practice")
 	assert.NoError(t, err)
 
 	// check files exist
 
 	expectedAnonymousPdf := []string{
-		"Practice Exam Drop Box-B999995.pdf",
-		"Practice Exam Drop Box-B999997.pdf",
-		"Practice Exam Drop Box-B999998.pdf",
-		"Practice Exam Drop Box-B999999.pdf",
+		"Practice-B999995.pdf",
+		"Practice-B999997.pdf",
+		"Practice-B999998.pdf",
+		"Practice-B999999.pdf",
 	}
 
 	anonymousPdf, err := g.GetFileList(g.AnonymousPapers(exam))
@@ -213,7 +213,7 @@ func TestAddBars(t *testing.T) {
 	pds, err := pagedata.UnMarshalAllFromFile(anonymousPdf[0])
 	assert.NoError(t, err)
 	pd := pds[1] //book number 1 for page 1
-	assert.Equal(t, "Practice Exam Drop Box", pd.Current.Item.What)
+	assert.Equal(t, "Practice", pd.Current.Item.What)
 
 	CollectFilesFrom(g.AnonymousPapers(exam))
 	assert.NoError(t, err)
@@ -235,10 +235,10 @@ func TestAddBars(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedMarker1Pdf := []string{
-		"Practice Exam Drop Box-B999995-maTDD.pdf",
-		"Practice Exam Drop Box-B999997-maTDD.pdf",
-		"Practice Exam Drop Box-B999998-maTDD.pdf",
-		"Practice Exam Drop Box-B999999-maTDD.pdf",
+		"Practice-B999995-maTDD.pdf",
+		"Practice-B999997-maTDD.pdf",
+		"Practice-B999998-maTDD.pdf",
+		"Practice-B999999-maTDD.pdf",
 	}
 
 	CollectFilesFrom(g.MarkerReady(exam, marker))
@@ -274,8 +274,8 @@ func TestAddBars(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedActive := []string{ //note the d is missing for convenience here
-		"Practice Exam Drop Box-B999995-maTDD-moABC.pdf",
-		"Practice Exam Drop Box-B999997-maTDD-moABC.pdf",
+		"Practice-B999995-maTDD-moABC.pdf",
+		"Practice-B999997-maTDD-moABC.pdf",
 	}
 
 	activePdf, err := g.GetFileList(g.ModeratorReady(exam, moderator))
@@ -292,8 +292,8 @@ func TestAddBars(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedInActive := []string{ //note the d is missing for convenience here
-		"Practice Exam Drop Box-B999998-maTDD-moX.pdf",
-		"Practice Exam Drop Box-B999999-maTDD-moX.pdf",
+		"Practice-B999998-maTDD-moX.pdf",
+		"Practice-B999999-maTDD-moX.pdf",
 	}
 
 	inActivePdf, err := g.GetFileList(g.ModeratedInActiveBack(exam))
@@ -321,10 +321,10 @@ func TestAddBars(t *testing.T) {
 	}
 
 	expectedModeratedReadyPdf := []string{ //note the d is missing for convenience here
-		"Practice Exam Drop Box-B999995-maTDD-moABC.pdf",
-		"Practice Exam Drop Box-B999997-maTDD-moABC.pdf",
-		"Practice Exam Drop Box-B999998-maTDD-moX.pdf",
-		"Practice Exam Drop Box-B999999-maTDD-moX.pdf",
+		"Practice-B999995-maTDD-moABC.pdf",
+		"Practice-B999997-maTDD-moABC.pdf",
+		"Practice-B999998-maTDD-moX.pdf",
+		"Practice-B999999-maTDD-moX.pdf",
 	}
 
 	moderatedReadyPdf, err := g.GetFileList(g.ModeratedReady(exam))
@@ -341,10 +341,10 @@ func TestAddBars(t *testing.T) {
 	err = g.AddCheckBar(exam, checker)
 	assert.NoError(t, err)
 	expectedChecked := []string{ //note the d is missing for convenience here
-		"Practice Exam Drop Box-B999995-maTDD-moABC-cLD.pdf",
-		"Practice Exam Drop Box-B999997-maTDD-moABC-cLD.pdf",
-		"Practice Exam Drop Box-B999998-maTDD-moX-cLD.pdf",
-		"Practice Exam Drop Box-B999999-maTDD-moX-cLD.pdf",
+		"Practice-B999995-maTDD-moABC-cLD.pdf",
+		"Practice-B999997-maTDD-moABC-cLD.pdf",
+		"Practice-B999998-maTDD-moX-cLD.pdf",
+		"Practice-B999999-maTDD-moX-cLD.pdf",
 	}
 
 	checkedPdf, err := g.GetFileList(g.CheckerReady(exam, checker))

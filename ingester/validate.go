@@ -3,7 +3,6 @@ package ingester
 import (
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/timdrysdale/gradex-cli/parselearn"
@@ -81,6 +80,11 @@ func (g *Ingester) ValidateNewPapers() error {
 
 		// assume we want to process this exam at some point - so set up the structure now
 		// if it does not exist already
+
+		if !g.UseFullAssignmentName {
+			sub.Assignment = shortenAssignment(sub.Assignment)
+		}
+
 		_, err = os.Stat(g.GetExamPath(sub.Assignment))
 		if os.IsNotExist(err) {
 			err = g.SetupExamPaths(sub.Assignment)
@@ -106,12 +110,13 @@ func (g *Ingester) ValidateNewPapers() error {
 		destinationDir := g.AcceptedPapers(sub.Assignment)
 
 		baseFileName := filepath.Base(pdfFilename)
-		shortLearnName := regexp.MustCompile("(\\_.*\\_{1})")
-		//Before: PGEEnnnn A Super Long Exam Name - Exam Dropbox_s0000000_attempt_2020-05-01-02-00-00_PGEEnnnn-B000000.pdf
-		//After _s0000000_attempt_2020-05-01-02-00-00_
-		shortLearnNamePDF := shortLearnName.FindString(baseFileName) + filepath.Ext(pdfFilename)
-		shortLearnNameTXT := shortLearnName.FindString(baseFileName) + filepath.Ext(sub.OwnPath)
+
+		shortLearnName := shortenBaseFileName(baseFileName)
+
+		shortLearnNamePDF := shortLearnName + filepath.Ext(pdfFilename)
+		shortLearnNameTXT := shortLearnName + filepath.Ext(sub.OwnPath)
 		sub.Filename = shortLearnNamePDF
+
 		destination := filepath.Join(destinationDir, shortLearnNamePDF)
 
 		logger.Info().
