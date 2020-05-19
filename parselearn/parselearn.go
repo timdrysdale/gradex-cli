@@ -18,6 +18,7 @@ type Submission struct {
 	Matriculation      string  `csv:"Matriculation"`
 	Assignment         string  `csv:"Assignment"`
 	DateSubmitted      string  `csv:"DateSubmitted"`
+	CurrentMark        string  `csv:"CurrentMark"`
 	SubmissionField    string  `csv:"SubmissionField"`
 	Comments           string  `csv:"Comments"`
 	OriginalFilename   string  `csv:"OriginalFilename"`
@@ -133,6 +134,8 @@ SCAN:
 			processAssignment(line, &sub)
 		case strings.HasPrefix(lline, "date submitted:"):
 			processDateSubmitted(line, &sub)
+		case strings.HasPrefix(lline, "current mark:"):
+			processCurrentMark(line, &sub)
 		case strings.HasPrefix(lline, "submission field:"):
 			scanner.Scan()
 			processSubmission(scanner.Text(), &sub)
@@ -244,6 +247,14 @@ func processSubmission(line string, sub *Submission) {
 
 }
 
+//Current Mark: Needs Marking
+func processCurrentMark(line string, sub *Submission) {
+	line = strings.TrimSpace(line)
+	line = strings.TrimPrefix(line, "Current Mark:")
+	sub.CurrentMark = strings.TrimSpace(line)
+
+}
+
 //Comments:
 //There are no student comments for this assignment
 func processComments(line string, sub *Submission) {
@@ -288,3 +299,74 @@ func WriteSubmissionsToCSV(subs []Submission, outputPath string) error {
 //Files:
 //	Original filename: OnlineExam-Bxxxxxx.pdf
 //	Filename: Practice Exam Drop Box_sxxxxxxx_attempt_yyyy-mm-dd-hh-mm-ss_OnlineExam-Bxxxxxx.pdf
+
+// write a receipt from the submission
+func WriteLearnReceipt(path string, sub Submission) error {
+
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(fmt.Sprintf("Revision: %d\n", sub.Revision))
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString(fmt.Sprintf("Action: %s\n", sub.Action))
+	if err != nil {
+		return err
+	}
+
+	// note we ignore FirstName due to difficulty parsing the space
+	_, err = file.WriteString(fmt.Sprintf("Name: %s (%s)\n", sub.LastName, sub.Matriculation))
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString(fmt.Sprintf("Assignment: %s\n", sub.Assignment))
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString(fmt.Sprintf("Date Submitted: %s\n", sub.DateSubmitted))
+	if err != nil {
+		return err
+	}
+	_, err = file.WriteString(fmt.Sprintf("Current Mark: %s\n\n", sub.CurrentMark))
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString(fmt.Sprintf("Submission Field:\n%s\n\n", sub.SubmissionField))
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString(fmt.Sprintf("Comments:\n%s\n\n", sub.Comments))
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("Files:\n")
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString(fmt.Sprintf("\tOriginal filename: %s\n", sub.OriginalFilename))
+	if err != nil {
+		return err
+	}
+
+	//fmt.Printf("[%s]", sub.Filename)
+	//fmt.Println(fmt.Sprintf("\tFilename:%s\n", sub.Filename))
+	//fmt.Println("-----------------------------")
+	_, err = file.WriteString(fmt.Sprintf("\tFilename: %s\n", sub.Filename))
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}

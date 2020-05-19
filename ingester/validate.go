@@ -3,6 +3,7 @@ package ingester
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/timdrysdale/gradex-cli/parselearn"
@@ -102,13 +103,26 @@ func (g *Ingester) ValidateNewPapers() error {
 
 		// file we want to get from the temp-pdf dir
 		currentPath := filepath.Join(g.TempPDF(), filepath.Base(pdfFilename))
-		destination := g.AcceptedPapers(sub.Assignment)
+		destinationDir := g.AcceptedPapers(sub.Assignment)
+
+		baseFileName := filepath.Base(pdfFilename)
+		ShortLearnName := regexp.MustCompile("(\\_.*\\_{1})")
+		//Before: PGEEnnnn A Super Long Exam Name - Exam Dropbox_s0000000_attempt_2020-05-01-02-00-00_PGEEnnnn-B000000.pdf
+		//After _s0000000_attempt_2020-05-01-02-00-00_
+		ShortLearnName := LearnOnly.FindString(baseFileName)
+		destination := filepath.Join(destinationDir, ShortLearnName+filepath.Ext(pdfFilename))
+
+		logger.Info().
+			Str("before", baseFileName).
+			Str("after", ShortLearnLearn).
+			Msg("Using LEARN-specific name shortener")
 
 		_, err = os.Stat(currentPath)
 
 		if !os.IsNotExist(err) { //PDF file exists, move it to accepted papers
 
-			moved, err := g.MoveIfNewerThanDestinationInDir(currentPath, destination, &logger)
+			//moved, err := g.MoveIfNewerThanDestinationInDir(currentPath, destination, &logger)
+			moved, err := g.MoveIfNewerThanDestination(currentPath, destination, &logger)
 
 			switch {
 

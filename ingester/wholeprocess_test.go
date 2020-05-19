@@ -204,7 +204,7 @@ func TestAddBars(t *testing.T) {
 	anonymousPdf, err := g.GetFileList(g.AnonymousPapers(exam))
 	assert.NoError(t, err)
 
-	assert.Equal(t, len(anonymousPdf), len(expectedAnonymousPdf))
+	assert.Equal(t, len(expectedAnonymousPdf), len(anonymousPdf))
 
 	assert.True(t, CopyIsComplete(expectedAnonymousPdf, anonymousPdf))
 
