@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mholt/archiver"
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parselearn"
@@ -71,43 +70,6 @@ LOOP:
 	//TODO some reporting on what is left over? or another tool can do that?
 	// and overall file system status tool?
 	return nil
-}
-
-func (g *Ingester) handleIngestArchive(path string, logger *zerolog.Logger) {
-
-	logger.Info().Str("file", path).Msg("Archive found. Triggering extraction and another pass through ingest afterwards")
-
-	err := archiver.Unarchive(path, g.Ingest())
-
-	if err != nil {
-
-		logger.Error().
-			Str("file", path).
-			Str("destination", g.Ingest()).
-			Str("error", err.Error()).
-			Msg("Could not extract archive")
-
-	} else {
-
-		logger.Info().Str("file", path).
-			Str("destination", g.Ingest()).
-			Msg("Archive extracted")
-
-		err = os.Remove(path)
-
-		if err != nil {
-
-			logger.Error().Str("file", path).
-				Str("error", err.Error()).
-				Msg("After extraction, could not delete archive")
-
-		} else {
-
-			logger.Info().Str("file", path).
-				Msg("After extraction, archive deleted")
-
-		}
-	}
 }
 
 func (g *Ingester) handleTXT(path string, logger *zerolog.Logger) {
