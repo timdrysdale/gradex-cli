@@ -86,8 +86,8 @@ func (g *Ingester) ExportReChecking(exam, checker string) string {
 func (g *Ingester) PageBad(exam string) string {
 	return filepath.Join(g.Exam(), exam, pageBad)
 }
-func (g *Ingester) MarkedCombined(exam string) string {
-	return filepath.Join(g.Exam(), exam, markedCombined)
+func (g *Ingester) MarkedFlattened(exam string) string {
+	return filepath.Join(g.Exam(), exam, markedFlattened)
 }
 func (g *Ingester) MarkedMerged(exam string) string {
 	return filepath.Join(g.Exam(), exam, markedMerged)
@@ -102,8 +102,8 @@ func (g *Ingester) ModerateActive(exam string) string {
 	return filepath.Join(g.Exam(), exam, moderateActive)
 }
 
-func (g *Ingester) ModeratedCombined(exam string) string {
-	return filepath.Join(g.Exam(), exam, moderatedCombined)
+func (g *Ingester) ModeratedFlattened(exam string) string {
+	return filepath.Join(g.Exam(), exam, moderatedFlattened)
 }
 func (g *Ingester) ModeratedMerged(exam string) string {
 	return filepath.Join(g.Exam(), exam, moderatedMerged)
@@ -124,8 +124,8 @@ func (g *Ingester) ModeratedInActiveBack(exam string) string {
 	return filepath.Join(g.Exam(), exam, moderateInActiveBack)
 }
 
-func (g *Ingester) CheckedCombined(exam string) string {
-	return filepath.Join(g.Exam(), exam, checkedCombined)
+func (g *Ingester) CheckedFlattened(exam string) string {
+	return filepath.Join(g.Exam(), exam, checkedFlattened)
 }
 func (g *Ingester) CheckedMerged(exam string) string {
 	return filepath.Join(g.Exam(), exam, checkedMerged)
