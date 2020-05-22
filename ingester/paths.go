@@ -40,6 +40,7 @@ func (g *Ingester) QuestionBack(exam, labeller string) string {
 	return path
 }
 func (g *Ingester) QuestionSplit(exam, question string) string {
+
 	path := filepath.Join(g.Exam(), exam, questionSplit, question)
 	g.EnsureDirAll(path)
 	return path

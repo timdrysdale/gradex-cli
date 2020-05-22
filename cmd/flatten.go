@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
@@ -30,17 +31,30 @@ import (
 
 // flattenCmd represents the flatten command
 var flattenCmd = &cobra.Command{
-	Use:   "flatten [exam]",
+	Use:   "flatten [exam] [stage]",
 	Short: "Validates and anonymises PDF files submitted via Learn",
-	Args:  cobra.ExactArgs(1),
-	Long: `You must specify the exam for which you wish to flatten files. You should have already ingested the files.
+	Args:  cobra.ExactArgs(2),
+	Long: `You must specify the exam and the stage for which you wish to flatten files. You should have already ingested the files.
 Example usage:
 
-gradex-cli flatten SomeExam
+gradex-cli flatten SomeExam new
+
+Possible stages to flatten
+
+new
+marked
+remarked*
+moderated*
+checked*
+rechecked*
+
+* not implemented yet
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		exam := os.Args[2]
+
+		stage := os.Args[3]
 
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
@@ -86,7 +100,21 @@ gradex-cli flatten SomeExam
 
 		g.Redo = redo
 
-		err = g.FlattenNewPapers(exam)
+		switch strings.ToLower(stage) {
+
+		case "new":
+
+			err = g.FlattenNewPapers(exam)
+
+		case "marked":
+
+			err = g.FlattenMarkedPapers(exam)
+
+		default:
+
+			fmt.Printf("Stage [%s] not known;  try\nnew\nmarked\n", stage)
+
+		}
 
 		if err != nil {
 			fmt.Println(err)

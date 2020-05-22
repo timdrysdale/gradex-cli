@@ -262,11 +262,7 @@ func RenderSpreadExtra(contents SpreadContents) error {
 
 	}
 
-	// put our pagedata in first
-
-	if !reflect.DeepEqual(contents.PageData, pagedata.PageData{}) {
-		pagedata.MarshalOneToCreator(c, &contents.PageData)
-	}
+	// pagedata used to go in here
 
 	for _, v := range spread.Images {
 		img, err := c.NewImageFromFile(v.Filename)
@@ -294,9 +290,17 @@ func RenderSpreadExtra(contents SpreadContents) error {
 	x := 0.3 * rowHeight
 	y := c.Height() - ((0.3 + numComments) * rowHeight)
 	for i, cmt := range comments.GetByPage(pageNumber) {
-
+		commentLabel
 		comment.DrawComment(c, cmt, strconv.Itoa(i), x, y)
 		y = y + rowHeight
+	}
+
+	// work out our comments and labels, add to pagedata
+
+	// put our pagedata in
+
+	if !reflect.DeepEqual(contents.PageData, pagedata.PageData{}) {
+		pagedata.MarshalOneToCreator(c, &contents.PageData)
 	}
 
 	for _, tp := range spread.TextPrefills {
