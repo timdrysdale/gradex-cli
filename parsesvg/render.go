@@ -290,13 +290,13 @@ func RenderSpreadExtra(contents SpreadContents) error {
 	// comments above them.
 	numOldComments := len(contents.PageData.Current.Comments)
 	numNewComments := len(comments.GetByPage(pageNumber))
-	numTotalComments := numOldComments + numNewComments
-
+	//numTotalComments := numOldComments + numNewComments
+	fmt.Printf("Prev comments: %d\nCurrent comments: %d\n", numOldComments, numNewComments)
 	// Draw in our flattened comments
 	rowHeight := 12.0
 	x := 0.3 * rowHeight
-	y := c.Height() - ((0.3 + float64(numTotalComments)) * rowHeight)
-	y = y + float64(numOldComments)*rowHeight
+	y := c.Height() - rowHeight //- ((0.3 + float64(numTotalComments)) * rowHeight)
+	y = y - float64(numOldComments)*rowHeight
 
 	// figure out who edited last, and hence made any new comments
 	numOldPageDatas := len(contents.PageData.Previous)
@@ -309,7 +309,7 @@ func RenderSpreadExtra(contents SpreadContents) error {
 	for i, cmt := range comments.GetByPage(pageNumber) {
 		cmt.Label = fmt.Sprintf("%d%s", i+numOldComments, lastEditor)
 		comment.DrawComment(c, cmt, x, y)
-		y = y + rowHeight
+		y = y - rowHeight
 		updatedComments = append(updatedComments, cmt)
 	}
 

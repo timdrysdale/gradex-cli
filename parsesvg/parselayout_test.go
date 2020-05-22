@@ -13,6 +13,7 @@ import (
 	"github.com/mattetti/filebuffer"
 	"github.com/timdrysdale/gradex-cli/comment"
 	"github.com/timdrysdale/gradex-cli/geo"
+	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/unipdf/v3/annotator"
 	"github.com/timdrysdale/unipdf/v3/creator"
 	"github.com/timdrysdale/unipdf/v3/model"
@@ -476,6 +477,62 @@ func TestRenderSpreadMark(t *testing.T) {
 
 	err := RenderSpread(svgLayoutPath, spreadName, previousImagePath, pageNumber, pdfOutputPath)
 
+	if err != nil {
+		t.Error(err)
+	}
+
+}
+
+func TestRenderSpreadMarkOldAndNewComments(t *testing.T) {
+
+	var comments = make(map[int][]comment.Comment)
+
+	comments[0] = []comment.Comment{c00}
+
+	comments[1] = []comment.Comment{c10, c11}
+
+	comments[2] = []comment.Comment{c20, c21}
+
+	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
+
+	pdfOutputPath := "./test/render-mark-spread-old-and-new-commments.pdf"
+
+	previousImagePath := "./test/script.jpg"
+
+	spreadName := "mark"
+
+	pageNumber := int(1)
+
+	thisPageData := pagedata.PageData{
+		Current: pagedata.PageDetail{
+			Comments: []comment.Comment{
+				comment.Comment{
+					Pos:   geo.Point{X: 120, Y: 300},
+					Text:  "Old comment!",
+					Page:  1,
+					Label: "-ABC",
+				},
+				comment.Comment{
+					Pos:   geo.Point{X: 240, Y: 200},
+					Text:  "Another Old comment",
+					Page:  1,
+					Label: "-ABC",
+				},
+			},
+		},
+	}
+
+	contents := SpreadContents{
+		SvgLayoutPath:     svgLayoutPath,
+		SpreadName:        spreadName,
+		PreviousImagePath: previousImagePath,
+		PageNumber:        pageNumber,
+		PdfOutputPath:     pdfOutputPath,
+		Comments:          comments,
+		PageData:          thisPageData,
+	}
+
+	err := RenderSpreadExtra(contents)
 	if err != nil {
 		t.Error(err)
 	}
