@@ -283,20 +283,20 @@ func RenderSpreadExtra(contents SpreadContents) error {
 		c.Draw(img)
 	}
 
-	newComments := []comment.Comment{}
+	updatedComments := contents.PageData.Current.Comments
 
 	// expect our calling function to have pre-loaded any old comments
 	// into the pagedata.Comment array, so we know to print our new
 	// comments above them.
 	numOldComments := len(contents.PageData.Current.Comments)
-	numNewComments := float64(len(comments.GetByPage(pageNumber)))
+	numNewComments := len(comments.GetByPage(pageNumber))
 	numTotalComments := numOldComments + numNewComments
 
 	// Draw in our flattened comments
 	rowHeight := 12.0
 	x := 0.3 * rowHeight
-	y := c.Height() - ((0.3 + numTotalComments) * rowHeight)
-	y = y + numOldComments*rowHeight
+	y := c.Height() - ((0.3 + float64(numTotalComments)) * rowHeight)
+	y = y + float64(numOldComments)*rowHeight
 
 	// figure out who edited last, and hence made any new comments
 	numOldPageDatas := len(contents.PageData.Previous)
@@ -307,14 +307,14 @@ func RenderSpreadExtra(contents SpreadContents) error {
 	}
 
 	for i, cmt := range comments.GetByPage(pageNumber) {
-		cmt.Label = fmt.Sprintf("%d%s", lastEditor, i+numOldComments)
+		cmt.Label = fmt.Sprintf("%d%s", i+numOldComments, lastEditor)
 		comment.DrawComment(c, cmt, x, y)
 		y = y + rowHeight
-		newComments = append(newComments, cmt)
+		updatedComments = append(updatedComments, cmt)
 	}
 
 	// add these comments and labels to the page data
-	contents.PageData.Current.Comments = append(content.PageData.Current.Comments, newComments)
+	contents.PageData.Current.Comments = updatedComments
 
 	if !reflect.DeepEqual(contents.PageData, pagedata.PageData{}) {
 		pagedata.MarshalOneToCreator(c, &contents.PageData)
