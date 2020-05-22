@@ -56,8 +56,8 @@ func TestPDFFlatten(t *testing.T) {
 	c00.Label = "1"
 	c10.Label = "1"
 	c11.Label = "2"
-	c20.Label = "1"
-	c21.Label = "2"
+	c20.Label = "1-ABC"
+	c21.Label = "2-EFG"
 	DrawComment(c, c00, 10, 820)
 	c.NewPage()
 	DrawComment(c, c10, 10, 820)

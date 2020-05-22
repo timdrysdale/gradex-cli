@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/timdrysdale/gradex-cli/comment"
@@ -284,20 +283,38 @@ func RenderSpreadExtra(contents SpreadContents) error {
 		c.Draw(img)
 	}
 
+	newComments := []comment.Comment{}
+
+	// expect our calling function to have pre-loaded any old comments
+	// into the pagedata.Comment array, so we know to print our new
+	// comments above them.
+	numOldComments := len(contents.PageData.Current.Comments)
+	numNewComments := float64(len(comments.GetByPage(pageNumber)))
+	numTotalComments := numOldComments + numNewComments
+
 	// Draw in our flattened comments
 	rowHeight := 12.0
-	numComments := float64(len(comments.GetByPage(pageNumber)))
 	x := 0.3 * rowHeight
-	y := c.Height() - ((0.3 + numComments) * rowHeight)
-	for i, cmt := range comments.GetByPage(pageNumber) {
-		cmt.Label = strconv.Itoa(i)
-		comment.DrawComment(c, cmt, x, y)
-		y = y + rowHeight
+	y := c.Height() - ((0.3 + numTotalComments) * rowHeight)
+	y = y + numOldComments*rowHeight
+
+	// figure out who edited last, and hence made any new comments
+	numOldPageDatas := len(contents.PageData.Previous)
+	lastEditor := "" //just show a number if editor not named
+	if numOldPageDatas > 0 {
+		previousPageData := contents.PageData.Previous[numOldPageDatas-1]
+		lastEditor = "-" + limit(previousPageData.Process.For, 3)
 	}
 
-	// work out our comments and labels, add to pagedata
+	for i, cmt := range comments.GetByPage(pageNumber) {
+		cmt.Label = fmt.Sprintf("%d%s", lastEditor, i+numOldComments)
+		comment.DrawComment(c, cmt, x, y)
+		y = y + rowHeight
+		newComments = append(newComments, cmt)
+	}
 
-	// put our pagedata in
+	// add these comments and labels to the page data
+	contents.PageData.Current.Comments = append(content.PageData.Current.Comments, newComments)
 
 	if !reflect.DeepEqual(contents.PageData, pagedata.PageData{}) {
 		pagedata.MarshalOneToCreator(c, &contents.PageData)
@@ -379,4 +396,11 @@ func RenderSpreadExtra(contents SpreadContents) error {
 
 	c.WriteToFile(pdfOutputPath)
 	return nil
+}
+
+func limit(initials string, N int) string {
+	if len(initials) < 3 {
+		N = len(initials)
+	}
+	return strings.ToUpper(initials[0:N])
 }

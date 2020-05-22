@@ -14,6 +14,13 @@ import (
 	"github.com/timdrysdale/gradex-cli/parselearn"
 )
 
+func limit(initials string, N int) string {
+	if len(initials) < 3 {
+		N = len(initials)
+	}
+	return strings.ToUpper(initials[0:N])
+}
+
 func shortenBaseFileName(baseFileName string) string {
 
 	getShortLearnName := regexp.MustCompile("\\_([a-zA-Z0-9]*\\_attempt_[0-9-]*)\\_")

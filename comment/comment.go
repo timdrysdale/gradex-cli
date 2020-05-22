@@ -79,7 +79,8 @@ func (c Comments) GetByPage(page int) []Comment {
 
 func DrawMarker(c *creator.Creator, comment Comment) {
 
-	r := c.NewRectangle(comment.Pos.X, comment.Pos.Y, 5*creator.PPMM, 5*creator.PPMM)
+	width := ((float64(len(comment.Label)) * 2.1) + 1.9) * creator.PPMM
+	r := c.NewRectangle(comment.Pos.X, comment.Pos.Y, width, 5*creator.PPMM)
 	r.SetBorderColor(creator.ColorYellow)
 	r.SetFillColor(creator.ColorYellow)
 	c.Draw(r)
