@@ -2,6 +2,8 @@ package parselearn
 
 import (
 	"bufio"
+	"bytes"
+	"log"
 	"os"
 	"testing"
 
@@ -118,13 +120,58 @@ func TestParseFile(t *testing.T) {
 
 }
 
-var expected1 = `Revision,Action,FirstName,LastName,Matriculation,Assignment,DateSubmitted,SubmissionField,Comments,OriginalFilename,Filename,ExamNumber,MatriculationError,ExamNumberError,FiletypeError,FilenameError,NumberOfPages,FilesizeMB,NumberOfFiles,OwnPath`
+func TestWriteFile(t *testing.T) {
 
-var expected2 = `0,,-,First Last,sxxxxxxx,Practice Exam Drop Box,"Monday, dd April yyyy hh:mm:ss o'clock BST",There is no student submission text data for this assignment.,There are no student comments for this assignment.,OnlineExam-Bxxxxxx.pdf,Practice Exam Drop Box_sxxxxxxx_attempt_yyyy-mm-dd-hh-mm-ss_OnlineExam-Bxxxxxx.pdf,,,,,,,0,1,./test/receipt1.txt`
+	_, err := os.Stat("./test/receipt4-rewrite.txt")
+	if !os.IsNotExist(err) {
+		err := os.Remove("./test/receipt4-rewrite.txt")
+		assert.NoError(t, err)
+	}
 
-var expected3 = `99,ignore,-,John Smith,s00000000,Some Exam Or Other,"Tuesday, dd April yyyy hh:mm:ss o'clock BST",There is no student submission text data for this assignment.,There are no student comments for this assignment.,ENGI1234-Bxxxxxx.pdf,Practice Exam Drop Box_sxxxxxxx_attempt_yyyy-mm-dd-hh-mm-ss_ENGI1234-Bxxxxxx.pdf,,,,,,,0,1,./test/receipt2.txt`
+	sub, err := ParseLearnReceipt("./test/receipt4.txt")
 
-var expected4 = `1,,-,First Last,sxxxxxxx,Practice Exam Drop Box,"Monday, dd April yyyy hh:mm:ss o'clock BST",There is no student submission text data for this assignment.,There are no student comments for this assignment.,OnlineExam-Bxxxxxx.pdf,Practice Exam Drop Box_sxxxxxxx_attempt_yyyy-mm-dd-hh-mm-ss_OnlineExam-Bxxxxxx.pdf,,,,,,,0,1,./test/receipt3.txt`
+	assert.NoError(t, err)
+
+	err = WriteLearnReceipt("./test/receipt4-rewrite.txt", sub)
+
+	assert.NoError(t, err)
+
+	assert.False(t, deepCompare("./test/receipt4.txt", "./test/receipt4-rewrite.txt"))
+
+}
+
+// https://play.golang.org/p/NlQZRrW1dT
+func deepCompare(file1, file2 string) bool {
+	sf, err := os.Open(file1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	df, err := os.Open(file2)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sscan := bufio.NewScanner(sf)
+	dscan := bufio.NewScanner(df)
+
+	for sscan.Scan() {
+		dscan.Scan()
+		if !bytes.Equal(sscan.Bytes(), dscan.Bytes()) {
+			return true
+		}
+	}
+
+	return false
+}
+
+var expected1 = `Revision,Action,FirstName,LastName,Matriculation,Assignment,DateSubmitted,CurrentMark,SubmissionField,Comments,OriginalFilename,Filename,ExamNumber,MatriculationError,ExamNumberError,FiletypeError,FilenameError,NumberOfPages,FilesizeMB,NumberOfFiles,OwnPath`
+
+var expected2 = `0,,-,First Last,sxxxxxxx,Practice Exam Drop Box,"Monday, dd April yyyy hh:mm:ss o'clock BST",Needs Marking,There is no student submission text data for this assignment.,There are no student comments for this assignment.,OnlineExam-Bxxxxxx.pdf,Practice Exam Drop Box_sxxxxxxx_attempt_yyyy-mm-dd-hh-mm-ss_OnlineExam-Bxxxxxx.pdf,,,,,,,0,1,./test/receipt1.txt`
+
+var expected3 = `99,ignore,-,John Smith,s00000000,Some Exam Or Other,"Tuesday, dd April yyyy hh:mm:ss o'clock BST",Needs Marking,There is no student submission text data for this assignment.,There are no student comments for this assignment.,ENGI1234-Bxxxxxx.pdf,Practice Exam Drop Box_sxxxxxxx_attempt_yyyy-mm-dd-hh-mm-ss_ENGI1234-Bxxxxxx.pdf,,,,,,,0,1,./test/receipt2.txt`
+
+var expected4 = `1,,-,First Last,sxxxxxxx,Practice Exam Drop Box,"Monday, dd April yyyy hh:mm:ss o'clock BST",Needs Marking,There is no student submission text data for this assignment.,There are no student comments for this assignment.,OnlineExam-Bxxxxxx.pdf,Practice Exam Drop Box_sxxxxxxx_attempt_yyyy-mm-dd-hh-mm-ss_OnlineExam-Bxxxxxx.pdf,,,,,,,0,1,./test/receipt3.txt`
 
 func TestMarshallToFile(t *testing.T) {
 

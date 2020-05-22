@@ -28,6 +28,8 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
+var UseFullAssignmentName bool
+
 // ingestCmd represents the ingest command
 var ingestCmd = &cobra.Command{
 	Use:   "ingest",
@@ -90,6 +92,13 @@ GRADEX_CLI_ROOT=/some/test/gradex; gradex-cli ingest
 			os.Exit(1)
 		}
 
+		if UseFullAssignmentName {
+			logger.Info().Msg("Using long names for assignments")
+			g.SetUseFullAssignmentName()
+		} else {
+			logger.Info().Msg("Using short names for assignments")
+		}
+
 		g.EnsureDirectoryStructure()
 
 		err = g.StageFromIngest()
@@ -112,4 +121,5 @@ GRADEX_CLI_ROOT=/some/test/gradex; gradex-cli ingest
 
 func init() {
 	rootCmd.AddCommand(ingestCmd)
+	ingestCmd.Flags().BoolVarP(&UseFullAssignmentName, "use-long-name", "l", false, "Use long name for assignment [default false]")
 }

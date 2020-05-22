@@ -38,7 +38,7 @@ gradex-cli sort tdd demo-exam
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-
+		fmt.Println("Sort v0.2.0")
 		marker := os.Args[2]
 		exam := os.Args[3]
 

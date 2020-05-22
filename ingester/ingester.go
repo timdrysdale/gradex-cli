@@ -9,11 +9,12 @@ import (
 )
 
 type Ingester struct {
-	root    string
-	msgCh   chan chmsg.MessageInfo
-	timeout time.Duration
-	logger  *zerolog.Logger
-	Redo    bool
+	root                  string
+	msgCh                 chan chmsg.MessageInfo
+	timeout               time.Duration
+	logger                *zerolog.Logger
+	Redo                  bool
+	UseFullAssignmentName bool
 }
 
 func New(path string, msgCh chan chmsg.MessageInfo, logger *zerolog.Logger) (*Ingester, error) {
@@ -31,6 +32,11 @@ func New(path string, msgCh chan chmsg.MessageInfo, logger *zerolog.Logger) (*In
 		g.logger = logger
 	}
 	return g, err
+}
+
+func (g *Ingester) SetUseFullAssignmentName() {
+
+	g.UseFullAssignmentName = true
 }
 
 /*func NewIngester(path string, msgCh chan chmsg.MessageInfo) (*Ingester, error) {

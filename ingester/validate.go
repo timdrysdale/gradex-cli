@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/timdrysdale/parselearn"
+	"github.com/timdrysdale/gradex-cli/parselearn"
 )
 
 func (g *Ingester) ValidateNewPapers() error {
@@ -80,6 +80,11 @@ func (g *Ingester) ValidateNewPapers() error {
 
 		// assume we want to process this exam at some point - so set up the structure now
 		// if it does not exist already
+
+		if !g.UseFullAssignmentName {
+			sub.Assignment = shortenAssignment(sub.Assignment)
+		}
+
 		_, err = os.Stat(g.GetExamPath(sub.Assignment))
 		if os.IsNotExist(err) {
 			err = g.SetupExamPaths(sub.Assignment)
@@ -102,13 +107,31 @@ func (g *Ingester) ValidateNewPapers() error {
 
 		// file we want to get from the temp-pdf dir
 		currentPath := filepath.Join(g.TempPDF(), filepath.Base(pdfFilename))
-		destination := g.AcceptedPapers(sub.Assignment)
+		destinationDir := g.AcceptedPapers(sub.Assignment)
+
+		baseFileName := filepath.Base(pdfFilename)
+
+		shortLearnName := shortenBaseFileName(baseFileName)
+
+		shortLearnNamePDF := shortLearnName + filepath.Ext(pdfFilename)
+		shortLearnNameTXT := shortLearnName + filepath.Ext(sub.OwnPath)
+		sub.Filename = shortLearnNamePDF
+
+		destination := filepath.Join(destinationDir, shortLearnNamePDF)
+
+		logger.Info().
+			Str("PDF-before", baseFileName).
+			Str("PDF-after", shortLearnNamePDF).
+			Str("TXT-before", sub.OwnPath).
+			Str("TXT-after", shortLearnNameTXT).
+			Msg("Using LEARN-specific name shortener on PDF & receipt")
 
 		_, err = os.Stat(currentPath)
 
 		if !os.IsNotExist(err) { //PDF file exists, move it to accepted papers
 
-			moved, err := g.MoveIfNewerThanDestinationInDir(currentPath, destination, &logger)
+			//moved, err := g.MoveIfNewerThanDestinationInDir(currentPath, destination, &logger)
+			moved, err := g.MoveIfNewerThanDestination(currentPath, destination, &logger)
 
 			switch {
 
@@ -120,18 +143,31 @@ func (g *Ingester) ValidateNewPapers() error {
 					Str("destination", destination).
 					Msg("PDF validated and moved to accepted papers")
 
-				destination := g.AcceptedReceipts(sub.Assignment)
+				// write receipt with updated filename in it
+				destinationDir := g.AcceptedReceipts(sub.Assignment)
+				destination := filepath.Join(destinationDir, shortLearnNameTXT)
 
-				// this is not move-if-newer because it should match the pdf?
-				err = g.MoveToDir(sub.OwnPath,
-					destination)
+				err = parselearn.WriteLearnReceipt(destination, sub)
 
 				if err == nil {
-					g.logger.Info().
-						Str("file", sub.OwnPath).
-						Str("course", sub.Assignment).
-						Str("destination", destination).
-						Msg("Moved receipt to Accepted Receipts")
+
+					err = os.Remove(sub.OwnPath)
+
+					if err == nil {
+
+						g.logger.Info().
+							Str("file", sub.OwnPath).
+							Str("course", sub.Assignment).
+							Str("destination", destination).
+							Msg("Moved rewritten receipt to Accepted Receipts")
+					} else {
+
+						g.logger.Error().
+							Str("file", sub.OwnPath).
+							Str("course", sub.Assignment).
+							Str("destination", destination).
+							Msg("Could not delete stale receipt after successful rewrite of new receipt")
+					}
 
 				} else {
 					g.logger.Error().

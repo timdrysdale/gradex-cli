@@ -26,6 +26,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/timdrysdale/chmsg"
 	"github.com/timdrysdale/gradex-cli/ingester"
+	"github.com/timdrysdale/gradex-cli/tree"
 )
 
 // listCmd represents the list command
@@ -113,8 +114,31 @@ gradex-cli list badpages 'PGEE00000 A B D Exam'
 			}
 
 		case "tree":
-			fmt.Println("tree not integrated yet")
-			//g.ListTree(exam)
+
+			lines, err := tree.Tree(g.GetExamPath(exam), false)
+
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			fmt.Println(lines)
+
+		case "pagetree":
+
+			lines, err := tree.Tree(g.GetExamPath(exam), true)
+
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			fmt.Println(lines)
+
+		case "sortcheck":
+
+			g.SortCheck(exam)
+
 		default:
 			fmt.Printf("Unknown list type: %s\n", what)
 		} // switch
@@ -122,7 +146,7 @@ gradex-cli list badpages 'PGEE00000 A B D Exam'
 }
 
 func init() {
-
+	rootCmd.AddCommand(listCmd)
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

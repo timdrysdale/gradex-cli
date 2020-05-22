@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/timdrysdale/gradexpath"
 	pdf "github.com/timdrysdale/unipdf/v3/model"
 )
 
@@ -19,15 +18,15 @@ func GetPDFPath(filename, directory string) (string, error) {
 	// so search for matching basename
 	if !IsPDF(filename) {
 
-		possibleFiles, err := gradexpath.GetFileList(directory)
+		possibleFiles, err := GetFileList(directory)
 		if err != nil {
 			return "", err
 		}
 
 	LOOP:
 		for _, file := range possibleFiles {
-			want := gradexpath.BareFile(filename)
-			got := gradexpath.BareFile(file)
+			want := BareFile(filename)
+			got := BareFile(file)
 			equal := strings.Compare(want, got) == 0
 			if equal {
 				filename = file
