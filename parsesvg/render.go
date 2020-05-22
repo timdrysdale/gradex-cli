@@ -290,8 +290,8 @@ func RenderSpreadExtra(contents SpreadContents) error {
 	x := 0.3 * rowHeight
 	y := c.Height() - ((0.3 + numComments) * rowHeight)
 	for i, cmt := range comments.GetByPage(pageNumber) {
-		commentLabel
-		comment.DrawComment(c, cmt, strconv.Itoa(i), x, y)
+		cmt.Label = strconv.Itoa(i)
+		comment.DrawComment(c, cmt, x, y)
 		y = y + rowHeight
 	}
 
