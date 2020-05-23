@@ -12,8 +12,8 @@ test/*.pdf
 *.test
 draft/
 expected/*.jpg
-expected/visual/*.jpg
 test/*.jpg
+test/*.pdf
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 

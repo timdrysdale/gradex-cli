@@ -481,7 +481,7 @@ func testPrintSpreadsFromLayout(t *testing.T) {
 // gs -dNOPAUSE -sDEVICE=jpeg -sOutputFile=mark-spread-gs.jpg -dJPEGQ=95 -r300 -q mark-spread.pdf -c quit
 func TestRenderSpreadMark(t *testing.T) {
 
-	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
+	svgLayoutPath := "./test/layout-312pt.svg"
 
 	pdfOutputPath := "./test/render-mark-spread.pdf"
 
@@ -494,8 +494,16 @@ func TestRenderSpreadMark(t *testing.T) {
 	spreadName := "mark"
 
 	pageNumber := int(16)
+	contents := SpreadContents{
+		SvgLayoutPath:         svgLayoutPath,
+		SpreadName:            spreadName,
+		PreviousImagePath:     previousImagePath,
+		PageNumber:            pageNumber,
+		PdfOutputPath:         pdfOutputPath,
+		TemplatePathsRelative: true,
+	}
 
-	err := RenderSpread(svgLayoutPath, spreadName, previousImagePath, pageNumber, pdfOutputPath)
+	err := RenderSpreadExtra(contents)
 
 	if err != nil {
 		t.Error(err)
@@ -517,7 +525,7 @@ func TestRenderSpreadMarkOldAndNewComments(t *testing.T) {
 
 	comments[2] = []comment.Comment{c20, c21}
 
-	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
+	svgLayoutPath := "./test/layout-312pt.svg"
 
 	pdfOutputPath := "./test/render-mark-spread-old-and-new-commments.pdf"
 
@@ -554,13 +562,14 @@ func TestRenderSpreadMarkOldAndNewComments(t *testing.T) {
 	}
 
 	contents := SpreadContents{
-		SvgLayoutPath:     svgLayoutPath,
-		SpreadName:        spreadName,
-		PreviousImagePath: previousImagePath,
-		PageNumber:        pageNumber,
-		PdfOutputPath:     pdfOutputPath,
-		Comments:          comments,
-		PageData:          thisPageData,
+		SvgLayoutPath:         svgLayoutPath,
+		SpreadName:            spreadName,
+		PreviousImagePath:     previousImagePath,
+		PageNumber:            pageNumber,
+		PdfOutputPath:         pdfOutputPath,
+		Comments:              comments,
+		PageData:              thisPageData,
+		TemplatePathsRelative: true,
 	}
 
 	err := RenderSpreadExtra(contents)
@@ -583,7 +592,7 @@ func TestRenderSpreadMarkComment(t *testing.T) {
 
 	comments[2] = []comment.Comment{c20, c21}
 
-	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
+	svgLayoutPath := "./test/layout-312pt.svg"
 
 	pdfOutputPath := "./test/render-mark-spread-commments.pdf"
 
@@ -594,12 +603,13 @@ func TestRenderSpreadMarkComment(t *testing.T) {
 	pageNumber := int(1)
 
 	contents := SpreadContents{
-		SvgLayoutPath:     svgLayoutPath,
-		SpreadName:        spreadName,
-		PreviousImagePath: previousImagePath,
-		PageNumber:        pageNumber,
-		PdfOutputPath:     pdfOutputPath,
-		Comments:          comments,
+		SvgLayoutPath:         svgLayoutPath,
+		SpreadName:            spreadName,
+		PreviousImagePath:     previousImagePath,
+		PageNumber:            pageNumber,
+		PdfOutputPath:         pdfOutputPath,
+		Comments:              comments,
+		TemplatePathsRelative: true,
 	}
 
 	err := RenderSpreadExtra(contents)
@@ -615,7 +625,7 @@ func TestRenderSpreadMarkComment(t *testing.T) {
 
 func TestRenderSpreadModerate(t *testing.T) {
 
-	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
+	svgLayoutPath := "./test/layout-312pt.svg"
 
 	pdfOutputPath := "./test/render-moderate-active-spread.pdf"
 	expectedPdf := "./expected/render-moderate-active-spread.pdf"
@@ -627,7 +637,16 @@ func TestRenderSpreadModerate(t *testing.T) {
 
 	pageNumber := int(16)
 
-	err := RenderSpread(svgLayoutPath, spreadName, previousImagePath, pageNumber, pdfOutputPath)
+	contents := SpreadContents{
+		SvgLayoutPath:         svgLayoutPath,
+		SpreadName:            spreadName,
+		PreviousImagePath:     previousImagePath,
+		PageNumber:            pageNumber,
+		PdfOutputPath:         pdfOutputPath,
+		TemplatePathsRelative: true,
+	}
+
+	err := RenderSpreadExtra(contents)
 
 	if err != nil {
 		t.Error(err)
@@ -639,7 +658,7 @@ func TestRenderSpreadModerate(t *testing.T) {
 
 func TestRenderSpreadCheck(t *testing.T) {
 
-	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
+	svgLayoutPath := "./test/layout-312pt.svg"
 
 	pdfOutputPath := "./test/render-check-spread.pdf"
 	expectedPdf := "./expected/render-check-spread.pdf"
@@ -650,8 +669,16 @@ func TestRenderSpreadCheck(t *testing.T) {
 	spreadName := "check"
 
 	pageNumber := int(16)
+	contents := SpreadContents{
+		SvgLayoutPath:         svgLayoutPath,
+		SpreadName:            spreadName,
+		PreviousImagePath:     previousImagePath,
+		PageNumber:            pageNumber,
+		PdfOutputPath:         pdfOutputPath,
+		TemplatePathsRelative: true,
+	}
 
-	err := RenderSpread(svgLayoutPath, spreadName, previousImagePath, pageNumber, pdfOutputPath)
+	err := RenderSpreadExtra(contents)
 
 	if err != nil {
 		t.Error(err)
@@ -663,7 +690,7 @@ func TestRenderSpreadCheck(t *testing.T) {
 
 func TestRenderSpreadCheckAfterInactive(t *testing.T) {
 
-	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
+	svgLayoutPath := "./test/layout-312pt.svg"
 
 	pdfOutputPath := "./test/render-check-after-inactive-spread.pdf"
 	expectedPdf := "./expected/render-check-after-inactive-spread.pdf"
@@ -674,8 +701,16 @@ func TestRenderSpreadCheckAfterInactive(t *testing.T) {
 	spreadName := "check"
 
 	pageNumber := int(16)
+	contents := SpreadContents{
+		SvgLayoutPath:         svgLayoutPath,
+		SpreadName:            spreadName,
+		PreviousImagePath:     previousImagePath,
+		PageNumber:            pageNumber,
+		PdfOutputPath:         pdfOutputPath,
+		TemplatePathsRelative: true,
+	}
 
-	err := RenderSpread(svgLayoutPath, spreadName, previousImagePath, pageNumber, pdfOutputPath)
+	err := RenderSpreadExtra(contents)
 
 	if err != nil {
 		t.Error(err)
