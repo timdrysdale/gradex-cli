@@ -520,6 +520,13 @@ func TestRenderSpreadMarkOldAndNewComments(t *testing.T) {
 				},
 			},
 		},
+		Previous: []pagedata.PageDetail{
+			pagedata.PageDetail{
+				Process: pagedata.ProcessDetail{
+					For: "ABC",
+				},
+			},
+		},
 	}
 
 	contents := SpreadContents{
