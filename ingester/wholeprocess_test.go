@@ -95,6 +95,32 @@ func TestAddBars(t *testing.T) {
 
 	assert.NoError(t, err)
 
+	expectedTestFiles := []string{
+		"bar.jpg",
+		"foo.doc",
+		"Practice Exam Drop Box_s00000000_attempt_2020-04-23-09-51-20_some thing.pdf",
+		"Practice Exam Drop Box_s00000000_attempt_2020-04-23-09-51-20.txt",
+		"Practice Exam Drop Box_s00000001_attempt_2020-04-22-08-25-32_a paper.pdf",
+		"Practice Exam Drop Box_s00000001_attempt_2020-04-22-08-25-32.txt",
+		"Practice Exam Drop Box_s00000002_attempt_2020-04-22-10-43-23_my exam.doc",
+		"Practice Exam Drop Box_s00000002_attempt_2020-04-22-10-43-23_my exam.pdf",
+		"Practice Exam Drop Box_s00000002_attempt_2020-04-22-10-43-23.txt",
+		"Practice Exam Drop Box_s00000003_attempt_2020_one (copy).pdf",
+		"Practice Exam Drop Box_s00000003_attempt_2020_one.pdf",
+		"Practice Exam Drop Box_s00000003_attempt_2020_one.txt",
+		"Practice Exam Drop Box_s00000005_attempt_2020-04-22-11-58-24_Practice Online Exam - Copy (copy).jpg",
+		"Practice Exam Drop Box_s00000005_attempt_2020-04-22-11-58-24_Practice Online Exam - Copy.jpg",
+		"Practice Exam Drop Box_s00000005_attempt_2020-04-22-11-58-24_Practice Online Exam.jpg",
+		"Practice Exam Drop Box_s00000005_attempt_2020-04-22-11-58-24_Practice Online Exam.pdf",
+		"Practice Exam Drop Box_s00000005_attempt_2020-04-22-11-58-24 rev.txt",
+		"Practice Exam Drop Box_s00000005_attempt_2020-04-22-11-58-24.txt",
+	}
+
+	// if you get extra files in the ingest, it can disrupt the tests in this section
+	assert.Equal(t, len(expectedTestFiles), len(testfiles))
+
+	assert.True(t, CopyIsComplete(expectedTestFiles, testfiles))
+
 	for _, file := range testfiles {
 		destination := filepath.Join(g.Ingest(), filepath.Base(file))
 		err := Copy(file, destination)
