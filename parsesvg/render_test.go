@@ -3,6 +3,7 @@ package parsesvg
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/gradex-cli/comment"
 )
 
@@ -19,6 +20,10 @@ func TestRenderImagePrefillBackwardsCompatibility(t *testing.T) {
 	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
 
 	pdfOutputPath := "./test/render-mark-spread-commments-backwards-compatibility.pdf"
+
+	expectedPdf := "./expected/render-mark-spread-commments-backwards-compatibility.pdf"
+
+	diffPdf := "./test/render-mark-spread-commments-backwards-compatibility-diff.pdf"
 
 	previousImagePath := "./test/script.jpg"
 
@@ -39,6 +44,9 @@ func TestRenderImagePrefillBackwardsCompatibility(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	result, err := visuallyIdenticalPDF(pdfOutputPath, expectedPdf, diffPdf)
+	assert.NoError(t, err)
+	assert.True(t, result)
 
 }
 func TestRenderImagePrefillNoPreviousImage(t *testing.T) {
@@ -54,6 +62,8 @@ func TestRenderImagePrefillNoPreviousImage(t *testing.T) {
 	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
 
 	pdfOutputPath := "./test/render-mark-spread-commments-no-previous-image.pdf"
+	expectedPdf := "./expected/render-mark-spread-commments-no-previous-image.pdf"
+	diffPdf := "./test/render-mark-spread-commments-no-previous-image-diff.pdf"
 
 	previousImagePath := ""
 
@@ -74,7 +84,9 @@ func TestRenderImagePrefillNoPreviousImage(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
+	result, err := visuallyIdenticalPDF(pdfOutputPath, expectedPdf, diffPdf)
+	assert.NoError(t, err)
+	assert.True(t, result)
 }
 
 func TestRenderImagePrefillReplaceImage(t *testing.T) {
@@ -90,6 +102,8 @@ func TestRenderImagePrefillReplaceImage(t *testing.T) {
 	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
 
 	pdfOutputPath := "./test/render-mark-spread-commments-prefill-header.pdf"
+	expectedPdf := "./expected/render-mark-spread-commments-prefill-header.pdf"
+	diffPdf := "./test/render-mark-spread-commments-prefill-header-diff.pdf"
 
 	previousImagePath := ""
 
@@ -116,5 +130,7 @@ func TestRenderImagePrefillReplaceImage(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
+	result, err := visuallyIdenticalPDF(pdfOutputPath, expectedPdf, diffPdf)
+	assert.NoError(t, err)
+	assert.True(t, result)
 }
