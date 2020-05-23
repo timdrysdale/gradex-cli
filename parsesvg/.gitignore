@@ -7,7 +7,7 @@
 *~
 *#
 .#*
-*.pdf
+test/*.pdf
 # Test binary, built with `go test -c`
 *.test
 draft/

@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/mattetti/filebuffer"
+	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/gradex-cli/comment"
 	"github.com/timdrysdale/gradex-cli/geo"
 	"github.com/timdrysdale/gradex-cli/pagedata"
@@ -20,11 +22,27 @@ import (
 	"github.com/timdrysdale/unipdf/v3/model/optimize"
 )
 
+func visuallyIdenticalPDF(pdf1, pdf2, diff string) (bool, error) {
+
+	out, err := exec.Command("compare", "-metric", "ae", pdf1, pdf2, diff).CombinedOutput()
+
+	result := false
+
+	if string(out) == "0" {
+		result = true
+
+	}
+
+	return result, err
+}
+
 func TestRenderComboBox(t *testing.T) {
 
 	svgLayoutPath := "./test/layout-a4-combo.svg"
 
 	pdfOutputPath := "./test/render-combo.pdf"
+	diffPdf := "./test/render-combo-diff.pdf"
+	expectedPdf := "./expected/render-combo.pdf"
 
 	previousImagePath := ""
 
@@ -50,9 +68,11 @@ func TestRenderComboBox(t *testing.T) {
 	}
 
 	err := RenderSpreadExtra(contents)
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
+
+	result, err := visuallyIdenticalPDF(pdfOutputPath, expectedPdf, diffPdf)
+	assert.NoError(t, err)
+	assert.True(t, result)
 
 }
 
@@ -61,6 +81,8 @@ func TestRenderSpreadMarkPrefill(t *testing.T) {
 	svgLayoutPath := "./test/layout-a4-prefill.svg"
 
 	pdfOutputPath := "./test/render-mark-spread-prefill.pdf"
+	expectedPdf := "./expected/render-mark-spread-prefill.pdf"
+	diffPdf := "./test/render-mark-spread-prefill.pdf"
 
 	previousImagePath := "./test/a4-three-square.jpg"
 
@@ -104,7 +126,9 @@ func TestRenderSpreadMarkPrefill(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
+	result, err := visuallyIdenticalPDF(pdfOutputPath, expectedPdf, diffPdf)
+	assert.NoError(t, err)
+	assert.True(t, result)
 }
 
 const expectedLayoutJSON = `{"anchor":{"x":1.2588355559055121e-15,"y":-0.0003496930299212599},"dim":{"width":901.4173228346458,"height":884.4094488188978,"dynamicWidth":false},"id":"a4-portrait-layout","anchors":{"img-previous-mark":{"x":0,"y":42.51951212598426},"mark-header":{"x":6.294177637795276e-16,"y":1.062992040944882},"svg-check-flow":{"x":7.086614173228347,"y":1.062992040944882},"svg-mark-flow":{"x":655.9848283464568,"y":1.0628233228346458},"svg-mark-ladder":{"x":600.4855842519686,"y":1.0628233228346458},"svg-moderate-active":{"x":762.7586173228348,"y":1.0628233228346458},"svg-moderate-inactive":{"x":763.2376157480315,"y":1.062905102362205}},"pageDims":{"check":{"width":111.55415811023623,"height":883.3464566929134,"dynamicWidth":false},"mark":{"width":763.2376157480315,"height":883.3464566929134,"dynamicWidth":false},"moderate-active":{"width":899.7675590551182,"height":883.3464566929134,"dynamicWidth":false},"moderate-inactive":{"width":786.7112314960631,"height":883.3464566929134,"dynamicWidth":false},"width-moderate":{"width":1.417039398425197,"height":881.5748031496064,"dynamicWidth":true}},"filenames":{"mark-header":"./test/ladders-a4-portrait-header","svg-check-flow":"./test/sidebar-312pt-check-flow","svg-mark-flow":"./test/sidebar-312pt-mark-flow","svg-mark-ladder":"./test/sidebar-312pt-mark-ladder","svg-moderate-active":"./test/sidebar-312pt-moderate-flow-comment-active","svg-moderate-inactive":"./test/sidebar-312pt-moderate-inactive"},"ImageDims":{"mark-header":{"width":592.4409448818898,"height":39.68503937007874,"dynamicWidth":false},"previous-check":{"width":1.417039398425197,"height":881.5748031496064,"dynamicWidth":true},"previous-mark":{"width":595.2755905511812,"height":839.0551181102363,"dynamicWidth":false},"previous-moderate":{"width":763.2376157480315,"height":881.5748031496064,"dynamicWidth":false}}}`
@@ -469,6 +493,10 @@ func TestRenderSpreadMark(t *testing.T) {
 
 	pdfOutputPath := "./test/render-mark-spread.pdf"
 
+	expectedPdf := "./expected/render-mark-spread.pdf"
+
+	diffPdf := "./test/render-mark-spread-diff.pdf"
+
 	previousImagePath := "./test/script.jpg"
 
 	spreadName := "mark"
@@ -480,6 +508,10 @@ func TestRenderSpreadMark(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	result, err := visuallyIdenticalPDF(pdfOutputPath, expectedPdf, diffPdf)
+	assert.NoError(t, err)
+	assert.True(t, result)
 
 }
 
@@ -540,9 +572,12 @@ func TestRenderSpreadMarkOldAndNewComments(t *testing.T) {
 	}
 
 	err := RenderSpreadExtra(contents)
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
+
+	result, err := visuallyIdenticalPDF(pdfOutputPath, "./expected/render-mark-spread-old-and-new-commments.pdf", "./test/render-mark-spread-old-and-new-commments-diff.pdf")
+
+	assert.NoError(t, err)
+	assert.True(t, result)
 
 }
 
@@ -576,9 +611,13 @@ func TestRenderSpreadMarkComment(t *testing.T) {
 	}
 
 	err := RenderSpreadExtra(contents)
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
+
+	result, err := visuallyIdenticalPDF(pdfOutputPath, "./expected/render-mark-spread-commments.pdf",
+		"./test/render-mark-spread-commments-diff.pdf")
+
+	assert.NoError(t, err)
+	assert.True(t, result)
 
 }
 
@@ -587,6 +626,8 @@ func TestRenderSpreadModerate(t *testing.T) {
 	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
 
 	pdfOutputPath := "./test/render-moderate-active-spread.pdf"
+	expectedPdf := "./expected/render-moderate-active-spread.pdf"
+	diffPdf := "./test/render-moderate-active-spread-diff.pdf"
 
 	previousImagePath := "./test/mark-spread-gs.jpg"
 
@@ -599,7 +640,9 @@ func TestRenderSpreadModerate(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
+	result, err := visuallyIdenticalPDF(pdfOutputPath, expectedPdf, diffPdf)
+	assert.NoError(t, err)
+	assert.True(t, result)
 }
 
 func TestRenderSpreadCheck(t *testing.T) {
@@ -607,6 +650,8 @@ func TestRenderSpreadCheck(t *testing.T) {
 	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
 
 	pdfOutputPath := "./test/render-check-spread.pdf"
+	expectedPdf := "./expected/render-check-spread.pdf"
+	diffPdf := "./test/render-check-spread-diff.pdf"
 
 	previousImagePath := "./test/moderate-active-gs.jpg"
 
@@ -619,7 +664,9 @@ func TestRenderSpreadCheck(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
+	result, err := visuallyIdenticalPDF(pdfOutputPath, expectedPdf, diffPdf)
+	assert.NoError(t, err)
+	assert.True(t, result)
 }
 
 func TestRenderSpreadCheckAfterInactive(t *testing.T) {
@@ -627,6 +674,8 @@ func TestRenderSpreadCheckAfterInactive(t *testing.T) {
 	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
 
 	pdfOutputPath := "./test/render-check-after-inactive-spread.pdf"
+	expectedPdf := "./expected/render-check-after-inactive-spread.pdf"
+	diffPdf := "./test/render-check-after-inactive-spread-diff.pdf"
 
 	previousImagePath := "./test/moderate-inactive-spread-gs.jpg"
 
@@ -639,6 +688,9 @@ func TestRenderSpreadCheckAfterInactive(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	result, err := visuallyIdenticalPDF(pdfOutputPath, expectedPdf, diffPdf)
+	assert.NoError(t, err)
+	assert.True(t, result)
 
 }
 
