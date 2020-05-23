@@ -49,9 +49,9 @@ checked
 rechecked`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		exam := os.Args[2]
+		exam := os.Args[3]
 
-		stage := os.Args[3]
+		stage := os.Args[2]
 
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>

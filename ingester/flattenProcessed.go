@@ -1,9 +1,12 @@
 package ingester
 
 import (
-	"errors"
 	"fmt"
 	"strings"
+	"time"
+
+	"github.com/timdrysdale/chmsg"
+	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
 // This file is to be like add bars ....
@@ -43,8 +46,47 @@ func (g *Ingester) FlattenProcessedPapers(exam, stage string) error {
 		return err
 	}
 
-	fmt.Printf("%s->%s\n", fromDir, toDir)
+	mc := chmsg.MessagerConf{
+		ExamName:     exam,
+		FunctionName: "overlay",
+		TaskName:     "flatten-processed-papers",
+	}
 
-	return errors.New("not implemented yet")
+	cm := chmsg.New(mc, g.msgCh, g.timeout)
+
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
+		UnixTime: time.Now().UnixNano(),
+		Name:     "flatten-processed-papers",
+		By:       "gradex-cli",
+		ToDo:     "further-processing",
+		For:      "ingester",
+	}
+
+	oc := OverlayCommand{
+		FromPath:      fromDir,
+		ToPath:        toDir,
+		ExamName:      exam,
+		TemplatePath:  g.OverlayLayoutSVG(),
+		SpreadName:    "flatten-processed",
+		ProcessDetail: procDetail,
+		Msg:           cm,
+	}
+
+	err = g.OverlayPapers(oc, &logger)
+
+	if err == nil {
+		cm.Send(fmt.Sprintf("Finished Processing flatten-processed-paper UUID=%s\n", procDetail.UUID))
+		logger.Info().
+			Str("UUID", procDetail.UUID).
+			Msg("Finished flatten-processed-paper")
+	} else {
+		logger.Error().
+			Str("UUID", procDetail.UUID).
+			Str("error", err.Error()).
+			Msg("Error flatten-processed-paper")
+	}
+
+	return err
 
 }
