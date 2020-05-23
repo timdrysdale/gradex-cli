@@ -17,7 +17,7 @@ func TestRenderImagePrefillBackwardsCompatibility(t *testing.T) {
 
 	comments[2] = []comment.Comment{c20, c21}
 
-	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
+	svgLayoutPath := "./test/layout-312pt.svg"
 
 	pdfOutputPath := "./test/render-mark-spread-commments-backwards-compatibility.pdf"
 
@@ -32,12 +32,13 @@ func TestRenderImagePrefillBackwardsCompatibility(t *testing.T) {
 	pageNumber := int(1)
 
 	contents := SpreadContents{
-		SvgLayoutPath:     svgLayoutPath,
-		SpreadName:        spreadName,
-		PreviousImagePath: previousImagePath,
-		PageNumber:        pageNumber,
-		PdfOutputPath:     pdfOutputPath,
-		Comments:          comments,
+		SvgLayoutPath:         svgLayoutPath,
+		SpreadName:            spreadName,
+		PreviousImagePath:     previousImagePath,
+		PageNumber:            pageNumber,
+		PdfOutputPath:         pdfOutputPath,
+		Comments:              comments,
+		TemplatePathsRelative: true,
 	}
 
 	err := RenderSpreadExtra(contents)
@@ -48,45 +49,6 @@ func TestRenderImagePrefillBackwardsCompatibility(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, result)
 
-}
-func TestRenderImagePrefillNoPreviousImage(t *testing.T) {
-
-	var comments = make(map[int][]comment.Comment)
-
-	comments[0] = []comment.Comment{c00}
-
-	comments[1] = []comment.Comment{c10, c11}
-
-	comments[2] = []comment.Comment{c20, c21}
-
-	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
-
-	pdfOutputPath := "./test/render-mark-spread-commments-no-previous-image.pdf"
-	expectedPdf := "./expected/render-mark-spread-commments-no-previous-image.pdf"
-	diffPdf := "./test/render-mark-spread-commments-no-previous-image-diff.pdf"
-
-	previousImagePath := ""
-
-	spreadName := "mark"
-
-	pageNumber := int(1)
-
-	contents := SpreadContents{
-		SvgLayoutPath:     svgLayoutPath,
-		SpreadName:        spreadName,
-		PreviousImagePath: previousImagePath,
-		PageNumber:        pageNumber,
-		PdfOutputPath:     pdfOutputPath,
-		Comments:          comments,
-	}
-
-	err := RenderSpreadExtra(contents)
-	if err != nil {
-		t.Error(err)
-	}
-	result, err := visuallyIdenticalPDF(pdfOutputPath, expectedPdf, diffPdf)
-	assert.NoError(t, err)
-	assert.True(t, result)
 }
 
 func TestRenderImagePrefillReplaceImage(t *testing.T) {
@@ -99,13 +61,13 @@ func TestRenderImagePrefillReplaceImage(t *testing.T) {
 
 	comments[2] = []comment.Comment{c20, c21}
 
-	svgLayoutPath := "./test/layout-312pt-static-mark-dynamic-moderate-comment-static-check.svg"
+	svgLayoutPath := "./test/layout-312pt.svg"
 
 	pdfOutputPath := "./test/render-mark-spread-commments-prefill-header.pdf"
 	expectedPdf := "./expected/render-mark-spread-commments-prefill-header.pdf"
 	diffPdf := "./test/render-mark-spread-commments-prefill-header-diff.pdf"
 
-	previousImagePath := ""
+	previousImagePath := "./img/a4-page.jpg"
 
 	prefillImagePaths := make(map[string]string)
 
@@ -117,13 +79,14 @@ func TestRenderImagePrefillReplaceImage(t *testing.T) {
 	pageNumber := int(1)
 
 	contents := SpreadContents{
-		SvgLayoutPath:     svgLayoutPath,
-		SpreadName:        spreadName,
-		PreviousImagePath: previousImagePath,
-		PageNumber:        pageNumber,
-		PdfOutputPath:     pdfOutputPath,
-		Comments:          comments,
-		PrefillImagePaths: prefillImagePaths,
+		SvgLayoutPath:         svgLayoutPath,
+		SpreadName:            spreadName,
+		PreviousImagePath:     previousImagePath,
+		PageNumber:            pageNumber,
+		PdfOutputPath:         pdfOutputPath,
+		Comments:              comments,
+		PrefillImagePaths:     prefillImagePaths,
+		TemplatePathsRelative: true,
 	}
 
 	err := RenderSpreadExtra(contents)
