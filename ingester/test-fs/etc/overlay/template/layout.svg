@@ -4061,11 +4061,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.55352036"
-     inkscape:cx="-14.76046"
-     inkscape:cy="620.40416"
+     inkscape:zoom="0.782796"
+     inkscape:cx="295.66524"
+     inkscape:cy="690.66512"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer6"
+     inkscape:current-layer="layer3"
      showgrid="false"
      inkscape:window-width="1850"
      inkscape:window-height="1136"
@@ -4093,7 +4093,7 @@
      inkscape:groupmode="layer"
      id="layer6"
      inkscape:label="pages"
-     style="display:inline">
+     style="display:none">
     <rect
        ry="0.61828327"
        rx="0.27919975"
@@ -4131,6 +4131,18 @@
          id="title3915">page-dynamic-mark</title>
     </rect>
     <rect
+       style="opacity:1;fill:#abf9ff;fill-opacity:0.3802817;stroke:none;stroke-width:0.51035035;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
+       id="rect3923"
+       width="41"
+       height="311.625"
+       x="0"
+       y="0.37499997"
+       rx="0.22944531"
+       ry="0.61754012">
+      <title
+         id="title3921">page-dynamic-check</title>
+    </rect>
+    <rect
        style="opacity:1;fill:#c5ecbe;fill-opacity:0.55868542;stroke:none;stroke-width:0.18007894;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
        id="rect31453"
        width="9"
@@ -4143,23 +4155,24 @@
          id="title31451">page-dynamic-moderate-inactive</title>
     </rect>
     <rect
-       style="opacity:1;fill:#abf9ff;fill-opacity:0.3802817;stroke:none;stroke-width:0.51035035;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
-       id="rect3923"
-       width="41"
-       height="311.625"
-       x="0"
-       y="0.37499997"
-       rx="0.22944531"
-       ry="0.61754012">
+       ry="0.61828327"
+       rx="5.239019e-09"
+       y="-0.375"
+       x="0.082019597"
+       height="312"
+       width="1e-06"
+       id="rect2738"
+       style="opacity:1;fill:#c5ecbe;fill-opacity:0.55868542;stroke:none;stroke-width:0.18007891;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
+       transform="scale(-1,1)">
       <title
-         id="title3921">page-dynamic-check</title>
+         id="title2736">page-dynamic-flatten-processed</title>
     </rect>
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer4"
      inkscape:label="images"
-     style="display:inline">
+     style="display:none">
     <rect
        style="display:inline;opacity:0.98000004;fill:none;fill-opacity:0.47417842;stroke:#03bb17;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:0.72941176"
        id="rect11652"
@@ -4222,27 +4235,24 @@
       <title
          id="title13676">image-dynamic-previous-label</title>
     </rect>
-  </g>
-  <g
-     inkscape:groupmode="layer"
-     id="layer2"
-     inkscape:label="chrome"
-     style="display:inline">
     <rect
-       style="opacity:1;fill:none;fill-opacity:1;stroke:#ed1a1f;stroke-width:0.10166976;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect16398"
-       width="19.898331"
-       height="311.24832"
-       x="209.9124"
-       y="0.087532476"
-       ry="0"
-       rx="0" />
+       ry="0.16946246"
+       rx="0.046084695"
+       y="0.5"
+       x="0.5"
+       height="311"
+       width="74"
+       id="rect2744"
+       style="display:inline;opacity:0.98000004;fill:none;fill-opacity:0.47417842;stroke:#bb03a4;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:0.72941176">
+      <title
+         id="title2742">image-dynamic-previous-flatten-processed</title>
+    </rect>
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="anchors"
-     style="display:inline">
+     style="display:none">
     <path
        sodipodi:open="true"
        d="M 1.0625134,-21.626979 A 21.634876,21.634876 0 0 1 22.109246,0.39638378 21.634876,21.634876 0 0 1 0.26977577,21.633874 21.634876,21.634876 0 0 1 -21.156866,-0.02005111 21.634876,21.634876 0 0 1 0.30987642,-21.634223"
@@ -4276,6 +4286,21 @@
          id="desc3946">sidebar-312pt-moderate-flow-comment-active</desc>
       <title
          id="title3873">svg-moderate-active</title>
+    </path>
+    <path
+       sodipodi:open="true"
+       d="M 0.94446886,-17.258999 A 17.265629,17.265629 0 0 1 17.740732,0.31665943 17.265629,17.265629 0 0 1 0.31182768,17.265156 17.265629,17.265629 0 0 1 -16.78762,-0.01567482 17.265629,17.265629 0 0 1 0.34382985,-17.264781"
+       sodipodi:end="4.7046179"
+       sodipodi:start="4.7394094"
+       sodipodi:ry="17.265629"
+       sodipodi:rx="17.265629"
+       sodipodi:cy="0.00032687199"
+       sodipodi:cx="0.47800109"
+       sodipodi:type="arc"
+       id="path2748"
+       style="display:inline;opacity:0.81300001;fill:#ed1ad8;fill-opacity:1;stroke:none;stroke-width:0.56061804;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1">
+      <title
+         id="title2746">img-previous-flatten-processed</title>
     </path>
     <path
        sodipodi:open="true"
@@ -4419,9 +4444,4 @@
          id="title13643">img-previous-label</title>
     </path>
   </g>
-  <g
-     inkscape:groupmode="layer"
-     id="layer5"
-     inkscape:label="textfields"
-     style="display:inline" />
 </svg>

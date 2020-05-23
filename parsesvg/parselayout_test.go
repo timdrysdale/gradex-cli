@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"reflect"
 	"strings"
 	"testing"
@@ -15,6 +14,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/gradex-cli/comment"
 	"github.com/timdrysdale/gradex-cli/geo"
+	"github.com/timdrysdale/gradex-cli/image"
+
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/unipdf/v3/annotator"
 	"github.com/timdrysdale/unipdf/v3/creator"
@@ -24,16 +25,7 @@ import (
 
 func visuallyIdenticalPDF(pdf1, pdf2, diff string) (bool, error) {
 
-	out, err := exec.Command("compare", "-metric", "ae", pdf1, pdf2, diff).CombinedOutput()
-
-	result := false
-
-	if string(out) == "0" {
-		result = true
-
-	}
-
-	return result, err
+	return image.VisuallyIdenticalMultiPagePDF(pdf1, pdf2)
 }
 
 func TestRenderComboBox(t *testing.T) {
