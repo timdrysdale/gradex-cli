@@ -366,7 +366,7 @@ func TestAddBars(t *testing.T) {
 		"./tmp-delete-me/usr/exam/Practice/05-anonymous-papers/Practice-B999999.pdf",
 		"./tmp-delete-me/usr/exam/Practice/20-marker-ready/TDD/Practice-B999999-maTDD.pdf",
 		"./tmp-delete-me/usr/exam/Practice/32-moderator-ready/ABC/Practice-B999995-maTDD-moABC.pdf",
-		"./tmp-delete-me/usr/exam/Practice/35-moderate-inactive-back/Practice-B999999-maTDD-moX.pdf",
+		"./tmp-delete-me/usr/exam/Practice/34-moderator-back/inactive/Practice-B999999-maTDD-moX.pdf",
 		"./tmp-delete-me/usr/exam/Practice/40-checker-ready/LD/Practice-B999995-maTDD-moABC-cLD.pdf",
 		"./tmp-delete-me/usr/exam/Practice/40-checker-ready/LD/Practice-B999999-maTDD-moX-cLD.pdf",
 	}

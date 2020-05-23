@@ -90,7 +90,6 @@ var (
 		moderatedPruned,
 		moderatedReady,
 		moderateInActive,
-		moderateInActiveBack,
 		checkerReady,
 		checkerSent,
 		checkerBack,

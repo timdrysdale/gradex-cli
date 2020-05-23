@@ -43,13 +43,10 @@ Possible stages to flatten
 
 new
 marked
-remarked*
-moderated*
-checked*
-rechecked*
-
-* not implemented yet
-`,
+remarked
+moderated
+checked
+rechecked`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		exam := os.Args[2]
@@ -106,13 +103,13 @@ rechecked*
 
 			err = g.FlattenNewPapers(exam)
 
-		case "marked":
+		case "marked", "remarked", "moderated", "checked", "rechecked":
 
-			err = g.FlattenMarkedPapers(exam)
+			err = g.FlattenProcessedPapers(exam, stage)
 
 		default:
 
-			fmt.Printf("Stage [%s] not known;  try\nnew\nmarked\n", stage)
+			fmt.Printf("Stage [%s] not known\n", stage)
 
 		}
 
