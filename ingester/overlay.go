@@ -110,15 +110,14 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 		fieldsMapByPage, err := extract.ExtractTextFieldsFromPDF(inPath)
 
+		newFieldMap := make(map[int][]pagedata.Field)
+
 		if err == nil {
 
 			for page, fields := range fieldsMapByPage {
 				//https: //stackoverflow.com/questions/17438253/accessing-struct-fields-inside-a-map-value-without-copying
-				pd := pageDataMap[page]
 
 				var data []pagedata.Field
-
-				data = pd.Current.Data
 
 				for key, value := range fields {
 
@@ -129,8 +128,8 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 								Value: value,
 							})
 				}
-				pd.Current.Data = data
-				pageDataMap[page] = pd
+
+				newFieldMap[page] = data
 			}
 
 		} else {
@@ -141,6 +140,8 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 				Msg("Expected text fields but couldn't get them")
 
 		}
+
+		//NewFieldMap    map[int][]pagedata.Field
 
 		// this is a file-level task, so we we will sort per-page updates
 		// to pageData at the child step
@@ -153,6 +154,7 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 			//NewProcessing: oc.ProcessingDetails, //do dynamic update when processing
 			//NewQuestion:   oc.QuestionDetails,   //do dynamic update when processing
 			ProcessDetail:  oc.ProcessDetail,
+			NewFieldMap:    newFieldMap,
 			OldPageDataMap: pageDataMap,
 			OutputPath:     g.OutputPath(oc.ToPath, inPath, oc.PathDecoration),
 			SpreadName:     oc.SpreadName,
@@ -367,6 +369,22 @@ OUTER:
 		// TODO - do we need to update Own? Host?
 
 		thisPageData.Current = newThisPageDataCurrent
+
+		// Add the new field data to the current page
+
+		var data []pagedata.Field
+
+		data = thisPageData.Current.Data
+
+		for _, item := range ot.NewFieldMap[imgIdx] { //CHECK IF PAGENUMER INSTEAD!
+
+			data = append(data, item)
+
+		}
+
+		thisPageData.Current.Data = data
+
+		//___________________________________________
 
 		headerPrefills := parsesvg.DocPrefills{}
 
