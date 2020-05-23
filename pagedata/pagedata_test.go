@@ -11,6 +11,7 @@ import (
 
 	"github.com/mattetti/filebuffer"
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/gradex-cli/merge"
 	"github.com/timdrysdale/unipdf/v3/annotator"
 	"github.com/timdrysdale/unipdf/v3/creator"
 	"github.com/timdrysdale/unipdf/v3/model"
@@ -40,6 +41,132 @@ func TestGetLen(t *testing.T) {
 	c.Draw(p)
 
 */
+
+func TestSurviveAdvancedMerge(t *testing.T) {
+
+	// write two files with pagedata
+	// merge
+	// check pagedata ok
+	outputPath1 := "./test/merge-test-page-1.pdf"
+	outputPath2 := "./test/merge-test-page-2.pdf"
+	mergePath := "./test/merge-test-merged.pdf"
+	// write page 1
+	c := creator.New()
+	c.SetPageMargins(0, 0, 0, 0) // we're not printing so use the whole page
+	c.SetPageSize(creator.PageSizeA4)
+
+	c.NewPage()
+
+	p := c.NewParagraph("Test page for github.com/timdrysdale/pdfpagedata PAGE 1")
+	p.SetFontSize(12)
+	p.SetPos(200, 10)
+	c.Draw(p)
+
+	pd1 := PageData{
+		Current: PageDetail{
+			Is:   IsPage,
+			UUID: "69197384-fd15-42ac-ac16-82dbe4d52dd0",
+		},
+		Previous: []PageDetail{
+			PageDetail{
+				Is:   IsPage,
+				UUID: "69197384-fd15-42ac-ac16-82dbe4d52dd0",
+				Data: []Field{
+					Field{
+						Key:   "key",
+						Value: "value",
+					},
+				},
+			},
+		},
+	}
+
+	MarshalOneToCreator(c, &pd1)
+
+	of, err := os.Create(outputPath1)
+	if err != nil {
+		t.Error(err)
+	}
+
+	c.SetOptimizer(optimize.New(optimize.Options{
+		CombineDuplicateDirectObjects:   true,
+		CombineIdenticalIndirectObjects: true,
+		CombineDuplicateStreams:         true,
+		CompressStreams:                 true,
+		UseObjectStreams:                true,
+		ImageQuality:                    90,
+		ImageUpperPPI:                   150,
+	}))
+
+	c.Write(of)
+	of.Close()
+
+	//write page 2
+	c = creator.New()
+	c.SetPageMargins(0, 0, 0, 0) // we're not printing so use the whole page
+	c.SetPageSize(creator.PageSizeA4)
+
+	c.NewPage()
+
+	p = c.NewParagraph("Test page for github.com/timdrysdale/pdfpagedata PAGE 1")
+	p.SetFontSize(12)
+	p.SetPos(200, 10)
+	c.Draw(p)
+
+	pd2 := PageData{
+		Current: PageDetail{
+			Is:   IsPage,
+			UUID: "062510b9-bb95-40b3-bce8-455406f730df",
+		},
+		Previous: []PageDetail{
+			PageDetail{
+				Is:   IsPage,
+				UUID: "37f631b2-5707-40a9-a2cb-bd08dd830b9e",
+				Data: []Field{
+					Field{
+						Key:   "foo",
+						Value: "bar",
+					},
+				},
+			},
+		},
+	}
+
+	MarshalOneToCreator(c, &pd2)
+
+	of, err = os.Create(outputPath2)
+	if err != nil {
+		t.Error(err)
+	}
+
+	c.SetOptimizer(optimize.New(optimize.Options{
+		CombineDuplicateDirectObjects:   true,
+		CombineIdenticalIndirectObjects: true,
+		CombineDuplicateStreams:         true,
+		CompressStreams:                 true,
+		UseObjectStreams:                true,
+		ImageQuality:                    90,
+		ImageUpperPPI:                   150,
+	}))
+
+	c.Write(of)
+	of.Close()
+
+	// merge
+	inputPaths := []string{outputPath1, outputPath2}
+	err = merge.PDF(inputPaths, mergePath)
+	assert.NoError(t, err)
+
+	// check
+
+	pdMap, err := UnMarshalAllFromFile(mergePath)
+
+	assert.Equal(t, 2, len(pdMap))
+	assert.Equal(t, pd1, pdMap[1])
+	assert.Equal(t, pd2, pdMap[2])
+
+}
+
 func TestWriteRead(t *testing.T) {
 
 	c := creator.New()

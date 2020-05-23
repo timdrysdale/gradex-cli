@@ -1,7 +1,6 @@
 package ingester
 
 import (
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -52,10 +51,3 @@ func (g *Ingester) SetUseFullAssignmentName() {
 
 	return g, err
 }*/
-
-func limit(initials string, N int) string {
-	if len(initials) < 3 {
-		N = len(initials)
-	}
-	return strings.ToUpper(initials[0:N])
-}

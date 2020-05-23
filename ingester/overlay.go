@@ -110,11 +110,6 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 		fieldsMapByPage, err := extract.ExtractTextFieldsFromPDF(inPath)
 
-		// TODO Capture optical check box values here - Fairly expensive process,
-		// so trigger if there are no marks in the whole doc?
-		// anyone marking half and half we will just end up flagging due to "surprise" missing data
-		logger.Warn().Msg("NOT CAPTURING OPTICAL CHECK BOX DATA AT THIS TIME!!")
-
 		if err == nil {
 
 			for page, fields := range fieldsMapByPage {
@@ -335,14 +330,6 @@ OUTER:
 		pageFilename := fmt.Sprintf(pageFileOption, imgIdx)
 
 		pageNumber := imgIdx - 1 //pageNumber starts at zero
-
-		//if len(ot.PageDataMap[imgIdx]) < 1 {
-		//	logger.Error().
-		//		Str("file", ot.InputPath).
-		//		Int("page-number", imgIdx).
-		//		Msg(fmt.Sprintf("Info: no existing page data for file (%s) on page <%d>\n", ot.InputPath, imgIdx))
-		//	ot.Msg.Send(fmt.Sprintf("Info: no existing page data for file (%s) on page <%d>\n", ot.InputPath, imgIdx))
-		//}
 
 		// FOR THIS PAGE INDIVIDUALLY
 		// we take the "current" pagedata loaded with the extracted field data,

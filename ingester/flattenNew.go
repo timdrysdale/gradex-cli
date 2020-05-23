@@ -22,7 +22,7 @@ import (
 
 func (g *Ingester) FlattenNewPapers(exam string) error {
 
-	logger := g.logger.With().Str("process", "flatten").Logger()
+	logger := g.logger.With().Str("process", "flatten-new").Logger()
 
 	//assume someone hits a button to ask us to do this ...
 
@@ -193,7 +193,7 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 		pdataMap := flattenTasks[i].PageDataMap
 
 		newtask := pool.NewTask(func() error {
-			pc, err := g.FlattenOnePDF(inputPath, outputPath, pdataMap, &logger)
+			pc, err := g.FlattenOneNewPDF(inputPath, outputPath, pdataMap, &logger)
 			pcChan <- pc
 			if err == nil {
 				setDone(inputPath, &logger) // so we don't have to do it again
@@ -246,7 +246,7 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 
 }
 
-func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageDataMap map[int]pagedata.PageData, logger *zerolog.Logger) (int, error) {
+func (g *Ingester) FlattenOneNewPDF(inputPath, outputPath string, pageDataMap map[int]pagedata.PageData, logger *zerolog.Logger) (int, error) {
 
 	if strings.ToLower(filepath.Ext(inputPath)) != ".pdf" {
 		logger.Error().

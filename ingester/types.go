@@ -77,7 +77,7 @@ var (
 		markerReady,
 		markerSent,
 		markerBack,
-		markedCombined,
+		markedFlattened,
 		markedMerged,
 		markedPruned,
 		markedReady,
@@ -85,7 +85,7 @@ var (
 		moderatorReady,
 		moderatorSent,
 		moderatorBack,
-		moderatedCombined,
+		moderatedFlattened,
 		moderatedMerged,
 		moderatedPruned,
 		moderatedReady,
@@ -94,7 +94,7 @@ var (
 		checkerReady,
 		checkerSent,
 		checkerBack,
-		checkedCombined,
+		checkedFlattened,
 		checkedMerged,
 		checkedPruned,
 		checkedReady,
@@ -102,14 +102,14 @@ var (
 		reMarkerReady,
 		reMarkerSent,
 		reMarkerBack,
-		reMarkedCombined,
+		reMarkedFlattened,
 		reMarkedMerged,
 		reMarkedPruned,
 		reMarkedReady,
 		reCheckerReady,
 		reCheckerSent,
 		reCheckerBack,
-		reCheckedCombined,
+		reCheckedFlattened,
 		reCheckedMerged,
 		reCheckedPruned,
 		reCheckedReady,
@@ -156,7 +156,7 @@ const (
 	markerReady          = "20-marker-ready"
 	markerSent           = "21-marker-sent"
 	markerBack           = "22-marker-back"
-	markedCombined       = "23-marked-combined"
+	markedFlattened      = "23-marked-flattened"
 	markedMerged         = "24-marked-merged"
 	markedPruned         = "25-marked-pruned" //whatever gets trimmed goes here for potential audit
 	markedReady          = "26-marked-ready"
@@ -166,35 +166,35 @@ const (
 	moderatorSent        = "33-moderator-sent"
 	moderatorBack        = "34-moderator-back"
 	moderateInActiveBack = "35-moderate-inactive-back"
-	moderatedCombined    = "36-moderated-combined"
+	moderatedFlattened   = "36-moderated-flattened"
 	moderatedMerged      = "37-moderated-merged"
 	moderatedPruned      = "38-moderated-pruned"
 	moderatedReady       = "39-moderated-ready"
 
-	checkerReady    = "40-checker-ready"
-	checkerSent     = "41-checker-sent"
-	checkerBack     = "42-checker-back"
-	checkedCombined = "43-checked-combined"
-	checkedMerged   = "44-checked-merged"
-	checkedPruned   = "45-checked-pruned"
-	checkedReady    = "46-checked-ready"
-	reports         = "99-reports"
+	checkerReady     = "40-checker-ready"
+	checkerSent      = "41-checker-sent"
+	checkerBack      = "42-checker-back"
+	checkedFlattened = "43-checked-flattened"
+	checkedMerged    = "44-checked-merged"
+	checkedPruned    = "45-checked-pruned"
+	checkedReady     = "46-checked-ready"
+	reports          = "99-reports"
 
-	reMarkerReady    = "50-remarker-ready"
-	reMarkerSent     = "51-remarker-sent"
-	reMarkerBack     = "52-remarker-back"
-	reMarkedCombined = "53-marked-combined"
-	reMarkedMerged   = "54-marked-merged"
-	reMarkedPruned   = "55-marked-pruned" //whatever gets trimmed goes here for potential audit
-	reMarkedReady    = "56-marked-ready"
+	reMarkerReady     = "50-remarker-ready"
+	reMarkerSent      = "51-remarker-sent"
+	reMarkerBack      = "52-remarker-back"
+	reMarkedFlattened = "53-remarked-flattened"
+	reMarkedMerged    = "54-remarked-merged"
+	reMarkedPruned    = "55-remarked-pruned" //whatever gets trimmed goes here for potential audit
+	reMarkedReady     = "56-remarked-ready"
 
-	reCheckerReady    = "60-rechecker-ready"
-	reCheckerSent     = "61-rechecker-sent"
-	reCheckerBack     = "62-rechecker-back"
-	reCheckedCombined = "63-rechecked-combined"
-	reCheckedMerged   = "64-rechecked-merged"
-	reCheckedPruned   = "65-rechecked-pruned"
-	reCheckedReady    = "66-rechecked-ready"
+	reCheckerReady     = "60-rechecker-ready"
+	reCheckerSent      = "61-rechecker-sent"
+	reCheckerBack      = "62-rechecker-back"
+	reCheckedFlattened = "63-rechecked-flattened"
+	reCheckedMerged    = "64-rechecked-merged"
+	reCheckedPruned    = "65-rechecked-pruned"
+	reCheckedReady     = "66-rechecked-ready"
 
 	N = 3
 )

@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"strings"
 
 	"github.com/timdrysdale/gradex-cli/comment"
@@ -262,11 +261,7 @@ func RenderSpreadExtra(contents SpreadContents) error {
 
 	}
 
-	// put our pagedata in first
-
-	if !reflect.DeepEqual(contents.PageData, pagedata.PageData{}) {
-		pagedata.MarshalOneToCreator(c, &contents.PageData)
-	}
+	// pagedata used to go in here
 
 	for _, v := range spread.Images {
 		img, err := c.NewImageFromFile(v.Filename)
@@ -288,15 +283,39 @@ func RenderSpreadExtra(contents SpreadContents) error {
 		c.Draw(img)
 	}
 
+	updatedComments := contents.PageData.Current.Comments
+
+	// expect our calling function to have pre-loaded any old comments
+	// into the pagedata.Comment array, so we know to print our new
+	// comments above them.
+	numOldComments := len(contents.PageData.Current.Comments)
+
 	// Draw in our flattened comments
 	rowHeight := 12.0
-	numComments := float64(len(comments.GetByPage(pageNumber)))
 	x := 0.3 * rowHeight
-	y := c.Height() - ((0.3 + numComments) * rowHeight)
-	for i, cmt := range comments.GetByPage(pageNumber) {
+	y := c.Height() - rowHeight
+	y = y - float64(numOldComments)*rowHeight
 
-		comment.DrawComment(c, cmt, strconv.Itoa(i), x, y)
-		y = y + rowHeight
+	// figure out who edited last, and hence made any new comments
+	numOldPageDatas := len(contents.PageData.Previous)
+	lastEditor := "" //just show a number if editor not named
+	if numOldPageDatas > 0 {
+		previousPageData := contents.PageData.Previous[numOldPageDatas-1]
+		lastEditor = "-" + limit(previousPageData.Process.For, 3)
+	}
+
+	for i, cmt := range comments.GetByPage(pageNumber) {
+		cmt.Label = fmt.Sprintf("%d%s", i+numOldComments, lastEditor)
+		comment.DrawComment(c, cmt, x, y)
+		y = y - rowHeight
+		updatedComments = append(updatedComments, cmt)
+	}
+
+	// add these comments and labels to the page data
+	contents.PageData.Current.Comments = updatedComments
+
+	if !reflect.DeepEqual(contents.PageData, pagedata.PageData{}) {
+		pagedata.MarshalOneToCreator(c, &contents.PageData)
 	}
 
 	for _, tp := range spread.TextPrefills {
@@ -375,4 +394,11 @@ func RenderSpreadExtra(contents SpreadContents) error {
 
 	c.WriteToFile(pdfOutputPath)
 	return nil
+}
+
+func limit(initials string, N int) string {
+	if len(initials) < 3 {
+		N = len(initials)
+	}
+	return strings.ToUpper(initials[0:N])
 }

@@ -18,9 +18,10 @@ import (
 )
 
 type Comment struct {
-	Pos  geo.Point
-	Text string
-	Page int
+	Pos   geo.Point
+	Text  string
+	Page  int
+	Label string
 }
 
 type Comments map[int][]Comment
@@ -52,7 +53,7 @@ func GetComments(reader *pdf.PdfReader) (Comments, error) {
 							Pos:  geo.Point{X: x, Y: y},
 							Text: annot.Contents.String(),
 							Page: p,
-						}
+						} // we fill in Label at render time
 
 						comments[p] = append(comments[p], newComment)
 
@@ -76,31 +77,32 @@ func (c Comments) GetByPage(page int) []Comment {
 
 }
 
-func DrawMarker(c *creator.Creator, comment Comment, label string) {
+func DrawMarker(c *creator.Creator, comment Comment) {
 
-	r := c.NewRectangle(comment.Pos.X, comment.Pos.Y, 5*creator.PPMM, 5*creator.PPMM)
+	width := ((float64(len(comment.Label)) * 2.1) + 1.9) * creator.PPMM
+	r := c.NewRectangle(comment.Pos.X, comment.Pos.Y, width, 5*creator.PPMM)
 	r.SetBorderColor(creator.ColorYellow)
 	r.SetFillColor(creator.ColorYellow)
 	c.Draw(r)
-	p := c.NewParagraph(fmt.Sprintf("[%s]", label))
+	p := c.NewParagraph(fmt.Sprintf("[%s]", comment.Label))
 	p.SetPos(comment.Pos.X, comment.Pos.Y)
 	c.Draw(p)
 
 }
 
-func DrawText(c *creator.Creator, comment Comment, label string, X, Y float64) {
+func DrawText(c *creator.Creator, comment Comment, X, Y float64) {
 
-	p := c.NewParagraph(fmt.Sprintf("[%s] %s", label, comment.Text))
+	p := c.NewParagraph(fmt.Sprintf("[%s] %s", comment.Label, comment.Text)) //label included to space text past the coloured marker (drawn separately)
 	p.SetPos(X, Y)
 	c.Draw(p)
 
 }
 
-func DrawComment(c *creator.Creator, comment Comment, label string, X, Y float64) {
+func DrawComment(c *creator.Creator, comment Comment, X, Y float64) {
 	comment.Pos.Y = c.Height() - comment.Pos.Y
-	DrawText(c, comment, label, X, Y)
-	DrawMarker(c, comment, label)
+	DrawText(c, comment, X, Y)
+	DrawMarker(c, comment)
 	comment.Pos.X = X
 	comment.Pos.Y = Y
-	DrawMarker(c, comment, label)
+	DrawMarker(c, comment) // we overwrite the text, but it gives us the colour
 }
