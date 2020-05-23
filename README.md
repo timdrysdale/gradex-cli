@@ -41,6 +41,11 @@ Ghostscript downloads can be found [here](https://www.ghostscript.com/download.h
 
 For Windows, choose the 64bit version.
 
+#### For testing
+
+ImageMagick must be [installed](https://imagemagick.org/script/download.php), and on the path, so as to allow visual comparisons of rendered PDFs. 
+
+
 #### Optional
 
 Logging messages can read directly from logging file in ```$GRADEX_CLI_ROOT/var/log/gradex-cli.log```. They're in JSON format, one message per line, with the latest message appearing at the bottom of the file.

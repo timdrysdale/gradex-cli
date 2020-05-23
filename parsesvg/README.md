@@ -9,13 +9,6 @@ parse svg to produce the acroforms needed by **pdf.gradex**™ (an AGPL open sou
 
 If you are coming here from pdf.gradex.io, then welcome to the developer side of things where all the details are. We're working on a user workflow that is a piece of cake, that will automate the fiddly bits. Meanwhile, if you like knowing how things work, feel free to take a look around.
 
-## Installation
-
-you'll need to have image magick available on the path, so that visual comparisons can be done with compare.
-
-These are a bit flakey, so sometimes need to be run a couple of times for all the tests to pass.
-
-
 ## Context
 
 The work of the support tool is combine script images and marking acroforms, at each stage of the process. The render tool take cares of adding the acroforms to the images. We let another tool put this module to use - our concern in this module is the layout of the pages we're producing (and understanding the SVG design that specifies them). If you want to make your own designs, then this is the module README that you need.... mostly these are notes to myself but we'll back fill in the gaps as we identify them.
