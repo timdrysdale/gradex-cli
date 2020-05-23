@@ -21,18 +21,15 @@ type FlattenTask struct {
 }
 
 type OverlayTask struct {
-	InputPath string
-	PageCount int
-	//PreparedFor   string
-	//ToDo          string
-	//NewProcessing pdfpagedata.ProcessingDetails
-	//NewQuestion   pdfpagedata.QuestionDetails
-	ProcessDetail  pagedata.ProcessDetail
+	InputPath      string
+	Msg            *chmsg.Messager
+	NewFieldMap    map[int][]pagedata.Field
 	OldPageDataMap map[int]pagedata.PageData //this has the individual bits filled in?
 	OutputPath     string
+	PageCount      int
+	ProcessDetail  pagedata.ProcessDetail
 	SpreadName     string
 	Template       string
-	Msg            *chmsg.Messager
 	Who            string
 }
 
@@ -90,7 +87,6 @@ var (
 		moderatedPruned,
 		moderatedReady,
 		moderateInActive,
-		moderateInActiveBack,
 		checkerReady,
 		checkerSent,
 		checkerBack,

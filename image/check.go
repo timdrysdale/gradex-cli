@@ -29,12 +29,12 @@ func VisuallyIdenticalMultiPagePDF(pdf1, pdf2 string) (bool, error) {
 	basename := strings.TrimSuffix(filepath.Base(pdf1), filepath.Ext(pdf1))
 	optname := fmt.Sprintf("%s%%04d.jpg", basename)
 	jpegPath1 := filepath.Join(filepath.Dir(pdf1), optname)
-	ConvertPDFToJPEGs(pdf1, "./test", jpegPath1)
+	ConvertPDFToJPEGs(pdf1, filepath.Dir(pdf1), jpegPath1) //"./test"
 
 	basename2 := strings.TrimSuffix(filepath.Base(pdf2), filepath.Ext(pdf1))
 	optname2 := fmt.Sprintf("%s%%04d.jpg", basename2)
 	jpegPath2 := filepath.Join(filepath.Dir(pdf2), optname2)
-	ConvertPDFToJPEGs(pdf2, "./test", jpegPath2)
+	ConvertPDFToJPEGs(pdf2, filepath.Dir(pdf2), jpegPath2)
 
 	// compare each image
 	for imgIdx := 1; imgIdx <= numPages; imgIdx = imgIdx + 1 {

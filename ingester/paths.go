@@ -10,6 +10,67 @@ import (
 	"github.com/timdrysdale/copy"
 )
 
+//>>>>>>>>>>>>>> FLATTEN PROCESSED PAPERS >>>>>>>>>>>>>>>>>>>>>>
+
+func (g *Ingester) FlattenProcessedPapersFromDir(exam, stage string) (string, error) {
+
+	var dir string
+
+	switch stage {
+
+	case "marked":
+		dir = markerBack
+
+	case "remarked":
+		dir = reMarkerBack
+
+	case "moderated":
+		dir = moderatorBack
+
+	case "checked":
+		dir = checkerBack
+
+	case "rechecked":
+		dir = reCheckerBack
+
+	default:
+		return "", fmt.Errorf("unknown stage %s", stage)
+	}
+
+	path := filepath.Join(g.Exam(), exam, dir)
+	g.EnsureDirAll(path)
+	return path, nil
+}
+
+func (g *Ingester) FlattenProcessedPapersToDir(exam, stage string) (string, error) {
+
+	var dir string
+
+	switch stage {
+
+	case "marked":
+		dir = markedFlattened
+
+	case "remarked":
+		dir = reMarkedFlattened
+
+	case "moderated":
+		dir = moderatedFlattened
+
+	case "checked":
+		dir = checkedFlattened
+
+	case "rechecked":
+		dir = reCheckedFlattened
+	default:
+		return "", fmt.Errorf("unknown stage %s", stage)
+	}
+
+	path := filepath.Join(g.Exam(), exam, dir)
+	g.EnsureDirAll(path)
+	return path, nil
+}
+
 //>>>>>>>>>>>>>> ANNOTATE PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 func (g *Ingester) QuestionImages(exam string) string {
@@ -122,7 +183,9 @@ func (g *Ingester) ModerateInActive(exam string) string {
 }
 
 func (g *Ingester) ModeratedInActiveBack(exam string) string {
-	return filepath.Join(g.Exam(), exam, moderateInActiveBack)
+	path := filepath.Join(g.Exam(), exam, moderatorBack, "inactive")
+	g.EnsureDirAll(path)
+	return path
 }
 
 func (g *Ingester) CheckedFlattened(exam string) string {
