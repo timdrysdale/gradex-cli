@@ -14,7 +14,9 @@ import (
 )
 
 func TestFlattenProcessedMarked(t *testing.T) {
-
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	// process a marked paper with keyed entries
 	// check that keyed entries are picked up
 	mch := make(chan chmsg.MessageInfo)
@@ -189,7 +191,9 @@ func TestFlattenProcessedMarked(t *testing.T) {
 }
 
 func TestFlattenProcessedStylus(t *testing.T) {
-
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	// process a marked paper with keyed entries
 	// check that keyed entries are picked up
 	mch := make(chan chmsg.MessageInfo)
