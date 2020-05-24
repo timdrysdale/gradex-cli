@@ -3,9 +3,7 @@ package parsesvg
 import (
 	"errors"
 	"fmt"
-	"image"
 	"io/ioutil"
-	"math"
 	"path/filepath"
 	"strings"
 
@@ -217,7 +215,7 @@ func GetImageBoxesForTextFields(svgLayoutPath, spreadName string, widthPx, heigh
 		box := optical.Box{
 			Vanilla: vanilla,
 			ID:      tf.ID,
-			Bounds:  ConvertToImageRectangle(tf.Rect),
+			Bounds:  geo.ConvertToImageRectangle(tf.Rect),
 		}
 
 		boxes = append(boxes, box)
@@ -225,24 +223,5 @@ func GetImageBoxesForTextFields(svgLayoutPath, spreadName string, widthPx, heigh
 	}
 
 	return boxes, nil
-
-}
-
-// TODO consider shifting to geo once tested
-func ConvertToImageRectangle(rect geo.Rect) image.Rectangle {
-
-	ir := image.Rectangle{
-		Min: image.Point{
-			X: int(math.Round(rect.Corner.X)),
-			Y: int(math.Round(rect.Corner.Y)),
-		},
-
-		Max: image.Point{
-			X: int(math.Round(rect.Corner.X + rect.Dim.Width)),
-			Y: int(math.Round(rect.Corner.Y + rect.Dim.Height)),
-		},
-	}
-
-	return ir
 
 }

@@ -1,7 +1,6 @@
 package parsesvg
 
 import (
-	"errors"
 	"image"
 	"image/jpeg"
 	"log"
@@ -118,8 +117,8 @@ func TestGetImageBoxes(t *testing.T) {
 		boxMap["page-ok"],
 	}
 
-	expandBound(&pageBoxes[0], -2)
-	expandBound(&pageBoxes[1], -2)
+	optical.ExpandBound(&pageBoxes[0], -2)
+	optical.ExpandBound(&pageBoxes[1], -2)
 
 	reader, err := os.Open("./img/stylus-1.jpg")
 	if err != nil {
@@ -179,19 +178,4 @@ func TestGetImageBoxes(t *testing.T) {
 	assert.Equal(t, []bool{false, true}, results)
 
 	//PrettyPrintStruct(boxes)
-}
-
-func expandBound(box *optical.Box, extra int) error {
-
-	if box == nil {
-		return errors.New("nil pointer to box")
-	}
-
-	(*box).Bounds.Min.X = (*box).Bounds.Min.X - extra
-	(*box).Bounds.Min.Y = (*box).Bounds.Min.Y - extra
-	(*box).Bounds.Max.X = (*box).Bounds.Max.X + extra
-	(*box).Bounds.Max.Y = (*box).Bounds.Max.Y + extra
-
-	return nil
-
 }

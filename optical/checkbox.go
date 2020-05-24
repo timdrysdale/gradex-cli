@@ -1,6 +1,7 @@
 package optical
 
 import (
+	"errors"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -12,6 +13,21 @@ type Box struct {
 	Vanilla bool
 	Bounds  image.Rectangle
 	ID      string
+}
+
+func ExpandBound(box *Box, extra int) error {
+
+	if box == nil {
+		return errors.New("nil pointer to box")
+	}
+
+	(*box).Bounds.Min.X = (*box).Bounds.Min.X - extra
+	(*box).Bounds.Min.Y = (*box).Bounds.Min.Y - extra
+	(*box).Bounds.Max.X = (*box).Bounds.Max.X + extra
+	(*box).Bounds.Max.Y = (*box).Bounds.Max.Y + extra
+
+	return nil
+
 }
 
 func CheckBoxFile(inputPath string, boxes []Box) ([]bool, error) {
