@@ -6,6 +6,7 @@ import (
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
+	"math"
 	"os"
 )
 
@@ -13,6 +14,20 @@ type Box struct {
 	Vanilla bool
 	Bounds  image.Rectangle
 	ID      string
+}
+
+// https://gist.github.com/sergiotapia/7882944
+func GetImageDimension(imagePath string) (int, int, error) {
+	file, err := os.Open(imagePath)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	image, _, err := image.DecodeConfig(file)
+	if err != nil {
+		return 0, 0, err
+	}
+	return image.Width, image.Height, nil
 }
 
 func ExpandBound(box *Box, extra int) error {
@@ -98,70 +113,42 @@ func CheckBoxDebug(im image.Image, box Box) (bool, image.Image, float64) {
 	cum := uint32(0)
 	bounds := checkImage.Bounds()
 
+	vanillaThreshold := uint32(math.Round(0.99 * 3 * 65535))
+	chocolateThreshold := uint32(math.Round(0.01 * 3 * 65535))
+
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			r, g, b, _ := checkImage.At(x, y).RGBA()
-			cum = cum + r>>11 + g>>11 + b>>11
+			luminosity := r + g + b
+
+			if box.Vanilla && luminosity < vanillaThreshold {
+				cum++ // count non-vanilla pixels, on vanilla background)
+			}
+			if !box.Vanilla && luminosity > chocolateThreshold {
+				cum++ // count non-chocolate pixels, on chocolate background
+			}
 		}
 	}
 
 	colourCount := 3
 	pixelCount := colourCount * (bounds.Max.X - bounds.Min.X) * (bounds.Max.Y - bounds.Min.Y)
-	averagePixelValue := float64(cum / uint32(pixelCount))
-
-	if box.Vanilla {
-		return averagePixelValue < 30.0, checkImage, averagePixelValue
-	} else {
-		return averagePixelValue > 1.0, checkImage, averagePixelValue
-	}
+	markedPixelFraction := float64(cum) / float64(pixelCount)
+	thresh := 0.02
+	return markedPixelFraction > thresh, checkImage, markedPixelFraction
 }
 
 func CheckBox(im image.Image, box Box) bool {
 
-	checkImage := im.(SubImager).SubImage(box.Bounds)
-	cum := uint32(0)
-	bounds := checkImage.Bounds()
+	result, _, _ := CheckBoxDebug(im, box)
 
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			r, g, b, _ := checkImage.At(x, y).RGBA()
-			cum = cum + r>>11 + g>>11 + b>>11
-		}
-	}
-
-	colourCount := 3
-	pixelCount := colourCount * (bounds.Max.X - bounds.Min.X) * (bounds.Max.Y - bounds.Min.Y)
-	averagePixelValue := float64(cum / uint32(pixelCount))
-
-	if box.Vanilla {
-		return averagePixelValue < 30.0
-	} else {
-		return averagePixelValue > 1.0
-	}
+	return result
 }
 
 // This will do handwriting recognition in future (wishlist!)
 func DataBox(im image.Image, box Box) (bool, image.Image) {
 
-	checkImage := im.(SubImager).SubImage(box.Bounds)
-	cum := uint32(0)
-	bounds := checkImage.Bounds()
+	result, img, _ := CheckBoxDebug(im, box)
 
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			r, g, b, _ := checkImage.At(x, y).RGBA()
-			cum = cum + r>>11 + g>>11 + b>>11
-		}
-	}
-
-	colourCount := 3
-	pixelCount := colourCount * (bounds.Max.X - bounds.Min.X) * (bounds.Max.Y - bounds.Min.Y)
-	averagePixelValue := float64(cum / uint32(pixelCount))
-
-	if box.Vanilla {
-		return averagePixelValue < 30.0, checkImage
-	} else {
-		return averagePixelValue > 1.0, checkImage
-	}
+	return result, img
 
 }
