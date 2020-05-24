@@ -11,6 +11,7 @@ import (
 	"github.com/timdrysdale/chmsg"
 	"github.com/timdrysdale/gradex-cli/count"
 	"github.com/timdrysdale/gradex-cli/pagedata"
+	"github.com/timdrysdale/gradex-cli/parsesvg"
 )
 
 func TestFlattenProcessedMarked(t *testing.T) {
@@ -78,7 +79,7 @@ func TestFlattenProcessedMarked(t *testing.T) {
 		t.Error(err)
 	}
 
-	//parsesvg.PrettyPrintStruct(pdMap)
+	parsesvg.PrettyPrintStruct(pdMap)
 
 	// check question values, and comments on page 1 in currentData
 	// check previousData has one set, with null values for comments and values
