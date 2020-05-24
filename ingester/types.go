@@ -59,11 +59,12 @@ type OverlayCommand struct {
 }
 
 var (
-	markDetected  = "mark-detected"
-	opticalSuffix = "-optical"
-	isTesting     bool
-	testroot      = "./tmp-delete-me"
-	ExamStage     = []string{
+	textFieldPrefix = "tf-"
+	markDetected    = "mark-detected"
+	opticalSuffix   = "-optical"
+	isTesting       bool
+	testroot        = "./tmp-delete-me"
+	ExamStage       = []string{
 		config,
 		pageBad,
 		acceptedPapers,

@@ -125,7 +125,7 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 					data =
 						append(data,
 							pagedata.Field{
-								Key:   key,
+								Key:   textFieldPrefix + key,
 								Value: value,
 							})
 				}
@@ -452,7 +452,7 @@ OUTER:
 										val = markDetected
 									}
 									item := pagedata.Field{
-										Key:   boxes[i].ID + opticalSuffix,
+										Key:   textFieldPrefix + boxes[i].ID + opticalSuffix,
 										Value: val,
 									}
 

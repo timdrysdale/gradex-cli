@@ -12,7 +12,8 @@ import (
 // This file is to be like add bars ....
 
 // initial sanity check on stage that has been specified
-func validStageForFlattenProcessPapers(stage string) bool {
+// also used by merge "half" of the process (see merge.go)
+func validStageForProcessedPapers(stage string) bool {
 
 	switch strings.ToLower(stage) {
 
@@ -48,7 +49,7 @@ func (g *Ingester) FlattenProcessedPapers(exam, stage string) error {
 
 	stage = strings.ToLower(stage)
 
-	if !validStageForFlattenProcessPapers(stage) {
+	if !validStageForProcessedPapers(stage) {
 		logger.Error().Msg("Is not a valid stage")
 		return fmt.Errorf("%s is not a valid stage for flatten-processed\n", stage)
 	}
