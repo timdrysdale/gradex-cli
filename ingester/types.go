@@ -21,16 +21,18 @@ type FlattenTask struct {
 }
 
 type OverlayTask struct {
-	InputPath      string
-	Msg            *chmsg.Messager
-	NewFieldMap    map[int][]pagedata.Field
-	OldPageDataMap map[int]pagedata.PageData //this has the individual bits filled in?
-	OutputPath     string
-	PageCount      int
-	ProcessDetail  pagedata.ProcessDetail
-	SpreadName     string
-	Template       string
-	Who            string
+	InputPath        string
+	Msg              *chmsg.Messager
+	NewFieldMap      map[int][]pagedata.Field
+	OldPageDataMap   map[int]pagedata.PageData //this has the individual bits filled in?
+	OutputPath       string
+	PageCount        int
+	ProcessDetail    pagedata.ProcessDetail
+	SpreadName       string
+	Template         string
+	Who              string
+	OpticalBoxSpread string
+	ReadOpticalBoxes bool
 }
 
 // Overlay command struct - for backwards compatability
@@ -50,14 +52,18 @@ type OverlayCommand struct {
 	//ToDo              string
 	//ProcessingDetails pdfpagedata.ProcessingDetails
 	//QuestionDetails   pdfpagedata.QuestionDetails
-	Msg            *chmsg.Messager
-	PathDecoration string //this is the "-ma1" for marker1, "mo2" for moderator 2, "d" for done etc
+	Msg              *chmsg.Messager
+	PathDecoration   string //this is the "-ma1" for marker1, "mo2" for moderator 2, "d" for done etc
+	OpticalBoxSpread string
+	ReadOpticalBoxes bool
 }
 
 var (
-	isTesting bool
-	testroot  = "./tmp-delete-me"
-	ExamStage = []string{
+	markDetected  = "mark-detected"
+	opticalSuffix = "-optical"
+	isTesting     bool
+	testroot      = "./tmp-delete-me"
+	ExamStage     = []string{
 		config,
 		pageBad,
 		acceptedPapers,

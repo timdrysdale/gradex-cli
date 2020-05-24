@@ -52,12 +52,26 @@ var expectedBox = []bool{
 }
 
 var testCheckBoxesStylus = []Box{
-	{Vanilla: true, Bounds: image.Rect(7, 43, 60, 95)},
+	{Vanilla: true, Bounds: image.Rect(8, 43, 60, 95)},
 	{Vanilla: true, Bounds: image.Rect(78, 42, 131, 94)},
+	{Vanilla: true, Bounds: image.Rect(150, 8, 238, 96)},
+	{Vanilla: true, Bounds: image.Rect(261, 8, 350, 97)},
+	{Vanilla: true, Bounds: image.Rect(374, 8, 463, 97)},
+	{Vanilla: true, Bounds: image.Rect(486, 10, 572, 96)},
+	{Vanilla: true, Bounds: image.Rect(591, 9, 783, 95)},
+	{Vanilla: true, Bounds: image.Rect(797, 9, 989, 94)},
+	{Vanilla: true, Bounds: image.Rect(1008, 9, 1200, 95)},
 }
 var expectedBoxStylus = []bool{
 	false,
 	true,
+	true,
+	false,
+	true,
+	true,
+	true,
+	true,
+	false,
 }
 
 func TestCheckBoxDebug(t *testing.T) {

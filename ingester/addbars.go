@@ -232,7 +232,7 @@ func (g *Ingester) AddModerateInActiveBar(exam string) error {
 	procDetail := pagedata.ProcessDetail{
 		UUID:     safeUUID(),
 		UnixTime: time.Now().UnixNano(),
-		Name:     "moderate-active-bar",
+		Name:     "moderate-inactive-bar",
 		By:       "gradex-cli",
 		ToDo:     "moderating",
 		For:      "X",

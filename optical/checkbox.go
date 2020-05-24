@@ -131,9 +131,20 @@ func CheckBoxDebug(im image.Image, box Box) (bool, image.Image, float64) {
 	}
 
 	colourCount := 3
-	pixelCount := colourCount * (bounds.Max.X - bounds.Min.X) * (bounds.Max.Y - bounds.Min.Y)
+	sizeX := bounds.Max.X - bounds.Min.X
+	sizeY := bounds.Max.Y - bounds.Min.Y
+	pixelCount := colourCount * sizeX * sizeY
+
 	markedPixelFraction := float64(cum) / float64(pixelCount)
-	thresh := 0.02
+
+	thresh := 0.02 // this is a "good" thresh for a square, in practice
+
+	// we "derate" the threshold for a wide, or tall, box
+
+	aspectRatio := math.Min(float64(sizeX), float64(sizeY)) / math.Max(float64(sizeX), float64(sizeY))
+
+	thresh = thresh * aspectRatio
+
 	return markedPixelFraction > thresh, checkImage, markedPixelFraction
 }
 
