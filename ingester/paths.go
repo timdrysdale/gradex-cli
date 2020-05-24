@@ -10,6 +10,41 @@ import (
 	"github.com/timdrysdale/copy"
 )
 
+//>>>>>>>>>>>>>> MERGE PROCESSED PAPERS >>>>>>>>>>>>>>>>>>>>>>
+
+func (g *Ingester) MergeProcessedPapersFromDir(exam, stage string) (string, error) {
+	return g.FlattenProcessedPapersToDir(exam, stage)
+}
+
+func (g *Ingester) MergeProcessedPapersToDir(exam, stage string) (string, error) {
+
+	var dir string
+
+	switch stage {
+
+	case "marked":
+		dir = markedReady
+
+	case "remarked":
+		dir = reMarkedReady
+
+	case "moderated":
+		dir = moderatedReady
+
+	case "checked":
+		dir = checkedReady
+
+	case "rechecked":
+		dir = reCheckedReady
+	default:
+		return "", fmt.Errorf("unknown stage %s", stage)
+	}
+
+	path := filepath.Join(g.Exam(), exam, dir)
+	g.EnsureDirAll(path)
+	return path, nil
+}
+
 //>>>>>>>>>>>>>> FLATTEN PROCESSED PAPERS >>>>>>>>>>>>>>>>>>>>>>
 
 func (g *Ingester) FlattenProcessedPapersFromDir(exam, stage string) (string, error) {
