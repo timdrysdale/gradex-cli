@@ -179,7 +179,7 @@ func ScaleTextFieldGeometry(spread *Spread, scaleFactor float64) error {
 
 }
 
-func GetImageBoxesForTextFields(svgLayoutPath, spreadName string, widthPx, heightPx int, vanilla bool) ([]optical.Box, error) {
+func GetImageBoxesForTextFields(svgLayoutPath, spreadName string, widthPx, heightPx int, vanilla bool, expand int) ([]optical.Box, error) {
 
 	boxes := []optical.Box{}
 
@@ -217,6 +217,8 @@ func GetImageBoxesForTextFields(svgLayoutPath, spreadName string, widthPx, heigh
 			ID:      tf.ID,
 			Bounds:  geo.ConvertToImageRectangle(tf.Rect),
 		}
+
+		optical.ExpandBound(&box, expand)
 
 		boxes = append(boxes, box)
 
