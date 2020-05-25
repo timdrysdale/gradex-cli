@@ -328,6 +328,14 @@ func RenderSpreadExtra(contents SpreadContents) error {
 
 		p.SetFontSize(tp.Text.TextSize)
 
+		if tp.Text.Angle != 0 {
+			p.SetAngle(tp.Text.Angle)
+		}
+
+		if tp.Text.WrapWidth != 0 {
+			p.SetWidth(tp.Text.WrapWidth)
+		}
+
 		p.SetPos(tp.Rect.Corner.X, tp.Rect.Corner.Y)
 
 		c.Draw(p)
