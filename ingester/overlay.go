@@ -149,13 +149,8 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 		// this is a file-level task, so we we will sort per-page updates
 		// to pageData at the child step
 		overlayTasks = append(overlayTasks, OverlayTask{
-			InputPath: inPath,
-			PageCount: count,
-			// These now in SharedPD
-			//PreparedFor:   oc.PreparedFor,
-			//ToDo:          oc.ToDo,
-			//NewProcessing: oc.ProcessingDetails, //do dynamic update when processing
-			//NewQuestion:   oc.QuestionDetails,   //do dynamic update when processing
+			InputPath:        inPath,
+			PageCount:        count,
 			ProcessDetail:    oc.ProcessDetail,
 			NewFieldMap:      newFieldMap,
 			OldPageDataMap:   pageDataMap,
@@ -254,9 +249,11 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 	return nil
 }
 
+//-----------------------------OverlayOnePDF-----------------------------------------
 // do one file, dynamically assembling the data we need make the latest pagedata
 // from what we get in the OverlayTask struct
 // return the number of pages
+//-----------------------------------------------------------------------------------
 func (g *Ingester) OverlayOnePDF(ot OverlayTask, logger *zerolog.Logger) (int, error) {
 
 	// need page count to find the jpeg files again later
@@ -471,7 +468,7 @@ OUTER:
 
 		thisPageData.Current.Data = data
 
-		//___________________________________________
+		//-------------- PREFILLS -------------------------------------------
 
 		headerPrefills := parsesvg.DocPrefills{}
 
@@ -484,6 +481,8 @@ OUTER:
 		headerPrefills[pageNumber]["date"] = thisPageData.Current.Item.When
 
 		headerPrefills[pageNumber]["title"] = thisPageData.Current.Item.What
+
+		headerPrefills[pageNumber]["for"] = thisPageData.Current.Process.For
 
 		contents := parsesvg.SpreadContents{
 			SvgLayoutPath:         ot.Template,

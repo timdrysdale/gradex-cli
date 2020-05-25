@@ -8,6 +8,7 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/gradex-cli/pagedata"
+	"github.com/timdrysdale/gradex-cli/parsesvg"
 )
 
 // merge processed papers to retain duplicate pages only if they contain "work"
@@ -106,15 +107,20 @@ func (g *Ingester) MergeProcessedPapers(exam, stage string) error {
 		return err
 	}
 
-	_ = createPaperMap(pageSummaries)
+	paperMap := createPaperMap(pageSummaries)
+
+	mergePathMap := createMergePathMap(paperMap)
+
+	parsesvg.PrettyPrintStruct(mergePathMap)
+
+	// TODO convert key to output basename (add full path, decoration, find right path?)
+
+	//	for key, Page
+	//					err = merge.PDF(mergePaths, ot.OutputPath)
 
 	return nil
 
 }
-
-//func mapProcessedPapers(paths string) (map[string]map[int]PageCollection, error) {
-//		err = addPagesToPaperMap(&papers, pageDataMap)
-//}
 
 func summariseFiles(paths []string, logger *zerolog.Logger) ([]PageSummary, error) {
 

@@ -4061,9 +4061,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.782796"
-     inkscape:cx="295.66524"
-     inkscape:cy="690.66512"
+     inkscape:zoom="2.2140814"
+     inkscape:cx="-41.720724"
+     inkscape:cy="1192.3732"
      inkscape:document-units="mm"
      inkscape:current-layer="layer3"
      showgrid="false"
@@ -4167,6 +4167,18 @@
       <title
          id="title2736">page-dynamic-flatten-processed</title>
     </rect>
+    <rect
+       ry="0.61828327"
+       rx="0.052390188"
+       y="-0.375"
+       x="0"
+       height="312"
+       width="10"
+       id="rect3767"
+       style="opacity:1;fill:#ecbee7;fill-opacity:0.55868542;stroke:none;stroke-width:0.18007894;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1">
+      <title
+         id="title3765">page-dynamic-merge-sidebar</title>
+    </rect>
   </g>
   <g
      inkscape:groupmode="layer"
@@ -4247,12 +4259,41 @@
       <title
          id="title2742">image-dynamic-previous-flatten-processed</title>
     </rect>
+    <rect
+       ry="0.16946246"
+       rx="0.033629373"
+       y="0.5"
+       x="0.5"
+       height="311"
+       width="54"
+       id="rect3773"
+       style="display:inline;opacity:0.98000004;fill:none;fill-opacity:0.47417842;stroke:#03aebb;stroke-width:0.99999994;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:0.72941176">
+      <desc
+         id="desc3769">this is the size of the page with the merge sidebar</desc>
+      <title
+         id="title3771">image-dynamic-previous-merge-sidebar</title>
+    </rect>
   </g>
   <g
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="anchors"
-     style="display:none">
+     style="display:inline">
+    <path
+       sodipodi:open="true"
+       d="M 1.1043509,-23.175317 A 23.18343,23.18343 0 0 1 23.657539,0.42440562 23.18343,23.18343 0 0 1 0.25487168,23.182006 23.18343,23.18343 0 0 1 -22.705419,-0.02183631 23.18343,23.18343 0 0 1 0.29784261,-23.18308"
+       sodipodi:end="4.7046179"
+       sodipodi:start="4.7394094"
+       sodipodi:ry="23.18343"
+       sodipodi:rx="23.18343"
+       sodipodi:cy="-0.00035003808"
+       sodipodi:cx="0.47800109"
+       sodipodi:type="arc"
+       id="path3777"
+       style="display:inline;opacity:0.53800001;fill:#1ad2ed;fill-opacity:1;stroke:none;stroke-width:0.56061804;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1">
+      <title
+         id="title3775">img-previous-merge-sidebar</title>
+    </path>
     <path
        sodipodi:open="true"
        d="M 1.0625134,-21.626979 A 21.634876,21.634876 0 0 1 22.109246,0.39638378 21.634876,21.634876 0 0 1 0.26977577,21.633874 21.634876,21.634876 0 0 1 -21.156866,-0.02005111 21.634876,21.634876 0 0 1 0.30987642,-21.634223"
