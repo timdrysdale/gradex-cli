@@ -284,11 +284,11 @@ func (g *Ingester) ReCheckerBack(exam, checker string) string {
 }
 
 func (g *Ingester) FlattenLayoutSVG() string {
-	return filepath.Join(g.IngestTemplate(), "layout-flatten-312pt.svg")
+	return filepath.Join(g.IngestTemplate(), g.ingestTemplatePath)
 }
 
 func (g *Ingester) OverlayLayoutSVG() string {
-	return filepath.Join(g.OverlayTemplate(), "layout.svg")
+	return filepath.Join(g.OverlayTemplate(), g.overlayTemplatePath)
 }
 
 func (g *Ingester) AcceptedPapers(exam string) string {
