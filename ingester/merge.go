@@ -2,6 +2,7 @@ package ingester
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/looplab/fsm"
@@ -245,22 +246,30 @@ func createMergePathMap(paperMap map[string]map[int]PageCollection) map[string][
 	// order the pages for each file
 	mergePathMap := make(map[string][]Page) //sorted list for each file
 
-	/*	Get list of pageNumbers, sort, then iterate over to form final list
+	for key, pageMap := range mergePageMap {
 
-		         for N, _ := range pageset {
-						//fmt.Printf("K:%v\n", K)
-						//fmt.Printf("V:%v\n", V)
-						pageNums = append(pageNums, N) // identify all the pagenumbers for this Q
-					}
-					//fmt.Println(pageNums)
-					sort.Ints(pageNums) // sort page numbers into order
-					//fmt.Println(pageNums)
+		pageNumbers := []int{}
 
-					for _, N := range pageNums {
-						pagePaths = append(pagePaths, pageset[N])
-						fmt.Printf("%d: %s\n", N, pageset[N])
-					}
-	*/
+		for pageNumber, _ := range pageMap {
+			pageNumbers = append(pageNumbers, pageNumber)
+		}
+
+		sort.Ints(pageNumbers)
+
+		sortedList := []Page{}
+
+		for _, pageNumber := range pageNumbers { //go by page number
+
+			for _, page := range pageMap[pageNumber] { // collect all copies of this page
+				sortedList = append(sortedList, page)
+			}
+
+		}
+
+		mergePathMap[key] = sortedList
+
+	}
+
 	return mergePathMap
 
 }

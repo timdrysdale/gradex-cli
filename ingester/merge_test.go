@@ -435,3 +435,28 @@ func TestCreatePageList(t *testing.T) {
 	assert.Equal(t, "B2-DEF.pdf", pageList2[1].Path)
 
 }
+
+func TestCreateMergePathMap(t *testing.T) {
+
+	paperMap := makePaperMap1()
+
+	pathMap := createMergePathMap(paperMap)
+
+	assert.Equal(t, 1, len(pathMap["A"]))
+	assert.Equal(t, "A1-ABC.pdf", pathMap["A"][0].Path)
+
+	assert.Equal(t,
+		"This page marked by ABC\nMarked: ABC\nBad:\nSeen: DEF\nSkipped:",
+		pathMap["A"][0].Message)
+	assert.Equal(t, 3, len(pathMap["B"]))
+	assert.Equal(t, "B1-ABC.pdf", pathMap["B"][0].Path)
+	assert.Equal(t,
+		"This page marked by ABC\nMarked: ABC\nBad:\nSeen: DEF\nSkipped:",
+		pathMap["B"][0].Message)
+	assert.Equal(t, "B2-ABC.pdf", pathMap["B"][1].Path)
+	assert.Equal(t, "B2-DEF.pdf", pathMap["B"][2].Path)
+	assert.Equal(t,
+		"This page marked by DEF\nMarked: ABC DEF\nBad:\nSeen:\nSkipped:",
+		pathMap["B"][2].Message)
+
+}
