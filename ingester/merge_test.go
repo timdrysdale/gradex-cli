@@ -340,3 +340,61 @@ func TestSummarisePageMarked(t *testing.T) {
 	assert.Equal(t, pageNumber, summary.PageNumber)
 
 }
+
+func TestCreatePaperMap(t *testing.T) {
+
+	summaries := []PageSummary{
+		PageSummary{
+			Original:   "A",
+			PageNumber: 1,
+			OwnPath:    "A1-ABC.pdf",
+			Status:     statusMarked,
+			WasFor:     "ABC",
+		},
+		PageSummary{
+			Original:   "A",
+			PageNumber: 1,
+			OwnPath:    "A1-DEF.pdf",
+			Status:     statusSeen,
+			WasFor:     "DEF",
+		},
+		PageSummary{
+			Original:   "B",
+			PageNumber: 1,
+			OwnPath:    "B1-ABC.pdf",
+			Status:     statusMarked,
+			WasFor:     "ABC",
+		},
+		PageSummary{
+			Original:   "B",
+			PageNumber: 1,
+			OwnPath:    "B1-DEF.pdf",
+			Status:     statusSeen,
+			WasFor:     "DEF",
+		},
+		PageSummary{
+			Original:   "B",
+			PageNumber: 2,
+			OwnPath:    "B2-ABC.pdf",
+			Status:     statusMarked,
+			WasFor:     "ABC",
+		},
+		PageSummary{
+			Original:   "B",
+			PageNumber: 2,
+			OwnPath:    "B2-DEF.pdf",
+			Status:     statusMarked,
+			WasFor:     "DEF",
+		},
+	}
+
+	paperMap := createPaperMap(summaries)
+
+	assert.Equal(t, 1, len(paperMap["A"][1].Seen))
+	assert.Equal(t, 1, len(paperMap["A"][1].Marked))
+	assert.Equal(t, 1, len(paperMap["B"][1].Seen))
+	assert.Equal(t, 1, len(paperMap["B"][1].Marked))
+	assert.Equal(t, 2, len(paperMap["B"][2].Marked))
+	assert.Equal(t, 0, len(paperMap["B"][2].Seen))
+
+}

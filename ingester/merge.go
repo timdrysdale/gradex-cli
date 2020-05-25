@@ -150,8 +150,6 @@ func summariseFiles(paths []string, logger *zerolog.Logger) ([]PageSummary, erro
 	return summaries, lastError
 }
 
-//"<gradex-pagedata>{"current":{"is":"page","own":{"path":"/usr/local/gradex/usr/exam/MECE11016 Advanced Composite Materials 5 - Exam Dropbox/04-temporary-pages/MECE11016 Advanced Composite Materials 5 - Exam Dropbox_s1518636_attempt_2020-04-29-20-42-31_MECE11016-B0871560015.pdf","UUID":"490aec82-df2b-4776-bf62-1bbb63bab63b","number":15,"of":15},"original":{"path":"/usr/local/gradex/usr/exam/MECE11016 Advanced Composite Materials 5 - Exam Dropbox/03-accepted-papers/MECE11016 Advanced Composite Materials 5 - Exam Dropbox_s1518636_attempt_2020-04-29-20-42-31_MECE11016-B087156.pdf","UUID":"c85d0369-6cb0-4a91-bdf8-c059a7dd8c37","number":15,"of":15},"current":{"path":"","UUID":"","number":0,"of":0},"item":{"what":"MECE11016 Advanced Composite Materials 5 - Exam Dropbox","when":"29-Apr-2020","who":"B087156","UUID":"","whoType":"anonymous"},"process":{"name":"mark-bar","UUID":"f8a76765-d6d2-4ac9-a729-813d2b3900fc","unixTime":1588682003585183986,"for":"DR","toDo":"marking","by":"gradex-cli","data":null},"UUID":"4c4b2944-1aa4-4e7a-921a-150b87aaf6a9","follows":"7ca27a4f-2098-4a1a-aadf-7ca0e2fa9a10","revision":0,"data":null},"previous":[{"is":"page","own":{"path":"/usr/local/gradex/usr/exam/MECE11016 Advanced Composite Materials 5 - Exam Dropbox/04-temporary-pages/MECE11016 Advanced Composite Materials 5 - Exam Dropbox_s1518636_attempt_2020-04-29-20-42-31_MECE11016-B0871560015.pdf","UUID":"490aec82-df2b-4776-bf62-1bbb63bab63b","number":15,"of":15},"original":{"path":"/usr/local/gradex/usr/exam/MECE11016 Advanced Composite Materials 5 - Exam Dropbox/03-accepted-papers/MECE11016 Advanced Composite Materials 5 - Exam Dropbox_s1518636_attempt_2020-04-29-20-42-31_MECE11016-B087156.pdf","UUID":"c85d0369-6cb0-4a91-bdf8-c059a7dd8c37","number":15,"of":15},"current":{"path":"","UUID":"","number":0,"of":0},"item":{"what":"MECE11016 Advanced Composite Materials 5 - Exam Dropbox","when":"29-Apr-2020","who":"B087156","UUID":"","whoType":"anonymous"},"process":{"name":"flatten","UUID":"b86b96eb-a192-4d63-9e8d-e451d016835e","unixTime":1588680034255432373,"for":"ingester","toDo":"prepare-for-marking","by":"gradex-cli","data":null},"UUID":"7ca27a4f-2098-4a1a-aadf-7ca0e2fa9a10","follows":"","revision":0,"data":null}]}</gradex-pagedata><hash>1640479646</hash>
-
 func summarisePage(pageData pagedata.PageData) PageSummary {
 
 	pageFSM := newPageFSM()
@@ -182,6 +180,40 @@ func summarisePage(pageData pagedata.PageData) PageSummary {
 	}
 
 	return summary
+}
+
+func createPaperMap(summaries []PageSummary) map[string]map[int]PageCollection {
+
+	paperMap := make(map[string]map[int]PageCollection)
+
+	for _, summary := range summaries {
+
+		if _, ok := paperMap[summary.Original]; !ok {
+			paperMap[summary.Original] = make(map[int]PageCollection)
+		}
+
+		if _, ok := paperMap[summary.Original][summary.PageNumber]; !ok {
+			var emptyPC PageCollection
+			paperMap[summary.Original][summary.PageNumber] = emptyPC
+		}
+
+		pc := paperMap[summary.Original][summary.PageNumber]
+		switch summary.Status {
+		case statusBad:
+			pc.Bad = append(pc.Bad, summary)
+		case statusMarked:
+			pc.Marked = append(pc.Marked, summary)
+		case statusSeen:
+			pc.Seen = append(pc.Seen, summary)
+		case statusSkipped:
+			pc.Skipped = append(pc.Skipped, summary)
+		}
+
+		paperMap[summary.Original][summary.PageNumber] = pc
+	}
+
+	return paperMap
+
 }
 
 //func addPagesToPaperMap(paperMap *map[string]map[int]PageCollection, pageDataMap map[int]pagedata.PageData) error {
