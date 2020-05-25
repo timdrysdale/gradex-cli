@@ -341,7 +341,7 @@ func TestSummarisePageMarked(t *testing.T) {
 
 }
 
-func TestCreatePaperMap(t *testing.T) {
+func makePaperMap1() map[string]map[int]PageCollection {
 
 	summaries := []PageSummary{
 		PageSummary{
@@ -388,7 +388,13 @@ func TestCreatePaperMap(t *testing.T) {
 		},
 	}
 
-	paperMap := createPaperMap(summaries)
+	return createPaperMap(summaries)
+
+}
+
+func TestCreatePaperMap(t *testing.T) {
+
+	paperMap := makePaperMap1()
 
 	assert.Equal(t, 1, len(paperMap["A"][1].Seen))
 	assert.Equal(t, 1, len(paperMap["A"][1].Marked))
@@ -396,5 +402,36 @@ func TestCreatePaperMap(t *testing.T) {
 	assert.Equal(t, 1, len(paperMap["B"][1].Marked))
 	assert.Equal(t, 2, len(paperMap["B"][2].Marked))
 	assert.Equal(t, 0, len(paperMap["B"][2].Seen))
+
+}
+
+func TestCreatePageItem(t *testing.T) {
+
+	paperMap := makePaperMap1()
+
+	page := createPageItem(paperMap["B"][1], paperMap["B"][1].Seen[0])
+
+	message := `This page seen by DEF
+Marked: ABC
+Bad:
+Seen: DEF
+Skipped:`
+
+	assert.Equal(t, "B1-DEF.pdf", page.Path)
+	assert.Equal(t, message, page.Message)
+}
+
+func TestCreatePageList(t *testing.T) {
+
+	paperMap := makePaperMap1()
+
+	pageList1 := createPageList(paperMap["B"][1])
+	assert.Equal(t, 1, len(pageList1))
+	assert.Equal(t, "B1-ABC.pdf", pageList1[0].Path)
+
+	pageList2 := createPageList(paperMap["B"][2])
+	assert.Equal(t, 2, len(pageList2))
+	assert.Equal(t, "B2-ABC.pdf", pageList2[0].Path)
+	assert.Equal(t, "B2-DEF.pdf", pageList2[1].Path)
 
 }

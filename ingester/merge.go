@@ -18,6 +18,11 @@ var (
 	statusSkipped = "status-skipped"
 )
 
+type Page struct {
+	Path    string
+	Message string
+}
+
 type PageSummary struct {
 	Original   string //unique key (e.g. original path)
 	PageNumber int
@@ -100,7 +105,7 @@ func (g *Ingester) MergeProcessedPapers(exam, stage string) error {
 		return err
 	}
 
-	fmt.Println(pageSummaries)
+	_ = createPaperMap(pageSummaries)
 
 	return nil
 
@@ -216,30 +221,118 @@ func createPaperMap(summaries []PageSummary) map[string]map[int]PageCollection {
 
 }
 
-//func addPagesToPaperMap(paperMap *map[string]map[int]PageCollection, pageDataMap map[int]pagedata.PageData) error {
-//
-//	if paperMap == nil {
-//		return errors.New("Nil pointer to paperMap")
-//	}
-//
-//	for pageNumber, pageData := range pageDataMap {
-//
-//		//assume pages in doc could have come from anywhere, so get original for each page
-//
-//		key := getOriginalKey(pageData)
-//
-//		if _, ok := paperMap[key]; !ok { // check if first entry for this doc
-//			paperMap[key] = make(map[int]PageCollection)
-//		}
-//
-//		pageMap := paperMap[key]
-//
-//		pageMap[pageNumber]
-//	}
-//
-//	return nil
-//
-//}
+func createMergePathMap(paperMap map[string]map[int]PageCollection) map[string][]Page {
+
+	// make decisions about what to keep
+	mergePageMap := make(map[string]map[int][]Page) // map by page
+
+	for key, collectionMap := range paperMap {
+
+		if _, ok := mergePageMap[key]; !ok {
+			mergePageMap[key] = make(map[int][]Page)
+		}
+
+		for pageNumber, pageCollection := range collectionMap {
+
+			pageList := createPageList(pageCollection)
+
+			mergePageMap[key][pageNumber] = pageList
+
+		}
+
+	}
+
+	// order the pages for each file
+	mergePathMap := make(map[string][]Page) //sorted list for each file
+
+	/*	Get list of pageNumbers, sort, then iterate over to form final list
+
+		         for N, _ := range pageset {
+						//fmt.Printf("K:%v\n", K)
+						//fmt.Printf("V:%v\n", V)
+						pageNums = append(pageNums, N) // identify all the pagenumbers for this Q
+					}
+					//fmt.Println(pageNums)
+					sort.Ints(pageNums) // sort page numbers into order
+					//fmt.Println(pageNums)
+
+					for _, N := range pageNums {
+						pagePaths = append(pagePaths, pageset[N])
+						fmt.Printf("%d: %s\n", N, pageset[N])
+					}
+	*/
+	return mergePathMap
+
+}
+
+// TODO summarise pageCollection on each page's message
+func createPageItem(pageCollection PageCollection, thisPage PageSummary) Page {
+
+	message := "This page " + strings.TrimPrefix(thisPage.Status, "status-") + " by " + thisPage.WasFor + "\nMarked:"
+
+	for _, summary := range pageCollection.Marked {
+		message = message + " " + summary.WasFor
+	}
+
+	message = message + "\nBad:"
+	for _, summary := range pageCollection.Bad {
+		message = message + " " + summary.WasFor
+	}
+
+	message = message + "\nSeen:"
+	for _, summary := range pageCollection.Seen {
+		message = message + " " + summary.WasFor
+	}
+
+	message = message + "\nSkipped:"
+	for _, summary := range pageCollection.Skipped {
+		message = message + " " + summary.WasFor
+	}
+
+	return Page{
+		Path:    thisPage.OwnPath,
+		Message: message,
+	}
+
+}
+
+func createPageList(pageCollection PageCollection) []Page {
+
+	pageList := []Page{}
+
+	for _, summary := range pageCollection.Marked {
+		pageList = append(pageList, createPageItem(pageCollection, summary))
+	}
+
+	// the pageList.Message summarises everything else we need to know
+	if len(pageList) > 0 {
+		return pageList
+	}
+
+	// return a single page from any other list of pages
+	if len(pageCollection.Bad) > 0 {
+		for _, summary := range pageCollection.Bad {
+			pageList = append(pageList, createPageItem(pageCollection, summary))
+			return pageList
+		}
+	}
+
+	if len(pageCollection.Seen) > 0 {
+		for _, summary := range pageCollection.Seen {
+			pageList = append(pageList, createPageItem(pageCollection, summary))
+			return pageList
+		}
+	}
+
+	if len(pageCollection.Skipped) > 0 {
+		for _, summary := range pageCollection.Skipped {
+			pageList = append(pageList, createPageItem(pageCollection, summary))
+			return pageList
+		}
+	}
+
+	return pageList
+}
 
 func getOriginalKey(pageData pagedata.PageData) string {
 	return pageData.Current.Original.Path
