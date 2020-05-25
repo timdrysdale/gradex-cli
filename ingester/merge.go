@@ -2,8 +2,10 @@ package ingester
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/looplab/fsm"
 	"github.com/rs/zerolog"
@@ -70,13 +72,11 @@ func (g *Ingester) MergeProcessedPapers(exam, stage string) error {
 		return err
 	}
 
-	/*
-		    toDir, err := g.MergeProcessedPapersToDir(exam, stage)
-			if err != nil {
-				logger.Error().Msg("Could not get MergeProcessedPapersToDir")
-				return err
-			}
-	*/
+	toDir, err := g.MergeProcessedPapersToDir(exam, stage)
+	if err != nil {
+		logger.Error().Msg("Could not get MergeProcessedPapersToDir")
+		return err
+	}
 
 	// get all pdf files in the FromDir
 	// load pagedata from each file
@@ -113,10 +113,39 @@ func (g *Ingester) MergeProcessedPapers(exam, stage string) error {
 
 	parsesvg.PrettyPrintStruct(mergePathMap)
 
-	// TODO convert key to output basename (add full path, decoration, find right path?)
+	mergeFiles := []MergeFile{}
 
-	//	for key, Page
-	//					err = merge.PDF(mergePaths, ot.OutputPath)
+	for key, pages := range mergePathMap {
+
+		outputPath := strings.TrimSuffix(filepath.Base(key), filepath.Ext(key)) + "-merge.pdf"
+
+		mergeFile := MergeFile{
+			OutputPath: outputPath,
+			InputPages: pages,
+		}
+
+		mergeFiles = append(mergeFiles, mergeFile)
+
+	}
+
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
+		UnixTime: time.Now().UnixNano(),
+		Name:     "merge",
+		By:       "gradex-cli",
+		ToDo:     "further-processing",
+		For:      "ingester",
+	}
+
+	mc := MergeCommand{
+		MergeFiles:    mergeFiles,
+		ToDir:         toDir,
+		Template:      g.OverlayLayoutSVG(),
+		SpreadName:    "merge",
+		ProcessDetail: procDetail,
+	}
+
+	err = g.MergeOverlayPapers(mc, &logger)
 
 	return nil
 

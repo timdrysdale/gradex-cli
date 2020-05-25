@@ -362,6 +362,10 @@ OUTER:
 		// now add in things we can only know now
 		// like page number, UUID etc.
 
+		// TODO update the UUID etc in Own/Original (with what?)
+		newThisPageDataCurrent.Own.Path = pageFilename //so we can keep track of _this_ version
+		newThisPageDataCurrent.Original.Path = ot.InputPath
+
 		newThisPageDataCurrent.UUID = safeUUID()
 
 		newThisPageDataCurrent.Follows = oldThisPageDataCurrent.UUID

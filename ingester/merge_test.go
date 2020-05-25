@@ -1,9 +1,13 @@
 package ingester
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/chmsg"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
@@ -458,5 +462,74 @@ func TestCreateMergePathMap(t *testing.T) {
 	assert.Equal(t,
 		"This page marked by DEF\nMarked: ABC DEF\nBad:\nSeen:\nSkipped:",
 		pathMap["B"][2].Message)
+
+}
+
+func TestMergeOverlay(t *testing.T) {
+
+	if testing.Short() {
+		//t.Skip("skipping test in short mode.")
+	}
+	// process a marked paper with keyed entries
+	// check that keyed entries are picked up
+	mch := make(chan chmsg.MessageInfo)
+
+	logFile := "./merge-process-testing.log"
+
+	f, err := os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0755)
+	assert.NoError(t, err)
+
+	defer f.Close()
+
+	logger := zerolog.New(f).With().Timestamp().Logger()
+
+	g, err := New("./tmp-delete-me", mch, &logger)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, "./tmp-delete-me", g.Root())
+
+	os.RemoveAll("./tmp-delete-me")
+
+	g.EnsureDirectoryStructure()
+
+	templateFiles, err := g.GetFileList("./test-fs/etc/overlay/template")
+	assert.NoError(t, err)
+
+	for _, file := range templateFiles {
+		destination := filepath.Join(g.OverlayTemplate(), filepath.Base(file))
+		err := Copy(file, destination)
+		assert.NoError(t, err)
+	}
+
+	exam := "Practice"
+	stage := "marked"
+
+	err = g.SetupExamPaths(exam)
+
+	assert.NoError(t, err)
+
+	source := "./test-flatten/Practice-B999999-maTDD-marked-comments.pdf"
+
+	destinationDir := g.Ingest()
+
+	assert.NoError(t, err)
+
+	err = g.CopyToDir(source, destinationDir)
+
+	assert.NoError(t, err)
+
+	//destinationDir, err := g.FlattenProcessedPapersFromDir(exam, stage)
+	err = g.StageFromIngest()
+	assert.NoError(t, err)
+
+	err = g.FlattenProcessedPapers(exam, stage)
+	assert.NoError(t, err)
+
+	err = g.MergeProcessedPapers(exam, stage)
+
+	os.Exit(1)
+
+	os.RemoveAll("./tmp-delete-me")
 
 }

@@ -169,6 +169,34 @@ func (g *Ingester) MergeOverlayOnePDF(mt MergeTask, logger *zerolog.Logger) (int
 
 		thisPageData := pageDataMap[1]
 
+		//-------------- Update PageData --------------
+
+		oldThisPageDataCurrent := thisPageData.Current
+
+		previousPageData := thisPageData.Previous
+
+		previousPageData = append(previousPageData, oldThisPageDataCurrent)
+
+		thisPageData.Previous = previousPageData
+
+		// Now we CONSTRUCT the NEW current PageData
+		// copy over what we had, first:
+
+		newThisPageDataCurrent := oldThisPageDataCurrent
+
+		// now add in things we can only know now
+		// like page number, UUID etc.
+
+		newThisPageDataCurrent.UUID = safeUUID()
+
+		newThisPageDataCurrent.Follows = oldThisPageDataCurrent.UUID
+
+		newThisPageDataCurrent.Process = mt.ProcessDetail
+
+		thisPageData.Current = newThisPageDataCurrent
+
+		//----------------------------------------
+
 		// sort out filenames for previousImage, and the new single page PDF we render now
 		jpegPath := strings.Replace(inPath, tempPages, tempImages, 1)
 
@@ -209,17 +237,19 @@ func (g *Ingester) MergeOverlayOnePDF(mt MergeTask, logger *zerolog.Logger) (int
 
 	} //for
 
-	err := merge.PDF(mergePaths, mt.MergeFile.OutputPath)
+	outputPath := filepath.Join(mt.ToDir, mt.MergeFile.OutputPath)
+
+	err := merge.PDF(mergePaths, outputPath)
 	if err != nil {
 		logger.Error().
-			Str("file", mt.MergeFile.OutputPath).
+			Str("file", outputPath).
 			Str("error", err.Error()).
 			Msg(fmt.Sprintf("Error merging processed pages for (%s) because %v\n", mt.MergeFile.OutputPath, err))
 		return 0, err
 	}
 
 	logger.Info().
-		Str("file", mt.MergeFile.OutputPath).
+		Str("file", outputPath).
 		Int("page-count", len(mergePaths)).
 		Str("spread-name", mt.SpreadName).
 		Msg(fmt.Sprintf("Finished rendering merge-overlay for (%s) which had <%d> pages\n", mt.MergeFile.OutputPath, len(mergePaths)))
