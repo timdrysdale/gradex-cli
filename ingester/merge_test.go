@@ -1,6 +1,7 @@
 package ingester
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -415,12 +416,7 @@ func TestCreatePageItem(t *testing.T) {
 
 	page := createPageItem(paperMap["B"][1], paperMap["B"][1].Seen[0])
 
-	message := `This page seen by DEF
-Marked: ABC
-Bad:
-Seen: DEF
-Skipped:`
-
+	message := "This page seen by DEF. Marked:[ ABC] Bad:[] Seen:[ DEF] Skipped:[]"
 	assert.Equal(t, "B1-DEF.pdf", page.Path)
 	assert.Equal(t, message, page.Message)
 }
@@ -450,17 +446,17 @@ func TestCreateMergePathMap(t *testing.T) {
 	assert.Equal(t, "A1-ABC.pdf", pathMap["A"][0].Path)
 
 	assert.Equal(t,
-		"This page marked by ABC\nMarked: ABC\nBad:\nSeen: DEF\nSkipped:",
+		"This page marked by ABC. Marked:[ ABC] Bad:[] Seen:[ DEF] Skipped:[]",
 		pathMap["A"][0].Message)
 	assert.Equal(t, 3, len(pathMap["B"]))
 	assert.Equal(t, "B1-ABC.pdf", pathMap["B"][0].Path)
 	assert.Equal(t,
-		"This page marked by ABC\nMarked: ABC\nBad:\nSeen: DEF\nSkipped:",
+		"This page marked by ABC. Marked:[ ABC] Bad:[] Seen:[ DEF] Skipped:[]",
 		pathMap["B"][0].Message)
 	assert.Equal(t, "B2-ABC.pdf", pathMap["B"][1].Path)
 	assert.Equal(t, "B2-DEF.pdf", pathMap["B"][2].Path)
 	assert.Equal(t,
-		"This page marked by DEF\nMarked: ABC DEF\nBad:\nSeen:\nSkipped:",
+		"This page marked by DEF. Marked:[ ABC DEF] Bad:[] Seen:[] Skipped:[]",
 		pathMap["B"][2].Message)
 
 }
@@ -528,7 +524,20 @@ func TestMergeOverlay(t *testing.T) {
 
 	err = g.MergeProcessedPapers(exam, stage)
 
-	os.Exit(1)
+	// visual check (comments, in particular, as well as flattening of typed values)
+	actualPdf := "./tmp-delete-me/usr/exam/Practice/26-marked-ready/Practice-B999999-maTDD-marked-comments-merge.pdf"
+	expectedPdf := "./expected/visual/Practice-B999999-maTDD-marked-comments-merge.pdf"
+
+	_, err = os.Stat(actualPdf)
+	assert.NoError(t, err)
+	_, err = os.Stat(expectedPdf)
+	assert.NoError(t, err)
+	result, err := visuallyIdenticalMultiPagePDF(actualPdf, expectedPdf)
+	assert.NoError(t, err)
+	assert.True(t, result)
+	if !result {
+		fmt.Println(actualPdf)
+	}
 
 	os.RemoveAll("./tmp-delete-me")
 

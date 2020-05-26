@@ -210,6 +210,16 @@ func (g *Ingester) MergeOverlayOnePDF(mt MergeTask, logger *zerolog.Logger) (int
 
 		prefills[idx]["message"] = page.Message
 
+		prefills[idx]["page-number"] = fmt.Sprintf("%d/%d", idx+1, len(mt.MergeFile.InputPages)) //add one we so we get a display pagenumber that starts at one
+
+		prefills[idx]["author"] = thisPageData.Current.Item.Who
+
+		prefills[idx]["date"] = thisPageData.Current.Item.When
+
+		prefills[idx]["title"] = thisPageData.Current.Item.What
+
+		prefills[idx]["for"] = thisPageData.Current.Process.For
+
 		contents := parsesvg.SpreadContents{
 			SvgLayoutPath:         mt.Template,
 			SpreadName:            mt.SpreadName,

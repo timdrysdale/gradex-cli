@@ -10,7 +10,6 @@ import (
 	"github.com/looplab/fsm"
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/gradex-cli/pagedata"
-	"github.com/timdrysdale/gradex-cli/parsesvg"
 )
 
 // merge processed papers to retain duplicate pages only if they contain "work"
@@ -110,8 +109,6 @@ func (g *Ingester) MergeProcessedPapers(exam, stage string) error {
 	paperMap := createPaperMap(pageSummaries)
 
 	mergePathMap := createMergePathMap(paperMap)
-
-	parsesvg.PrettyPrintStruct(mergePathMap)
 
 	mergeFiles := []MergeFile{}
 
@@ -312,26 +309,28 @@ func createMergePathMap(paperMap map[string]map[int]PageCollection) map[string][
 // TODO summarise pageCollection on each page's message
 func createPageItem(pageCollection PageCollection, thisPage PageSummary) Page {
 
-	message := "This page " + strings.TrimPrefix(thisPage.Status, "status-") + " by " + thisPage.WasFor + "\nMarked:"
+	message := "This page " + strings.TrimPrefix(thisPage.Status, "status-") + " by " + thisPage.WasFor + ". Marked:["
 
 	for _, summary := range pageCollection.Marked {
 		message = message + " " + summary.WasFor
 	}
 
-	message = message + "\nBad:"
+	message = message + "] Bad:["
 	for _, summary := range pageCollection.Bad {
 		message = message + " " + summary.WasFor
 	}
 
-	message = message + "\nSeen:"
+	message = message + "] Seen:["
 	for _, summary := range pageCollection.Seen {
 		message = message + " " + summary.WasFor
 	}
 
-	message = message + "\nSkipped:"
+	message = message + "] Skipped:["
 	for _, summary := range pageCollection.Skipped {
 		message = message + " " + summary.WasFor
 	}
+
+	message = message + "]"
 
 	return Page{
 		Path:    thisPage.OwnPath,
@@ -390,5 +389,5 @@ func getOwnPath(pageData pagedata.PageData) string {
 	return pageData.Current.Own.Path
 }
 func getWasFor(pageData pagedata.PageData) string {
-	return (pageData.Previous[len(pageData.Previous)-1]).Process.For
+	return limit((pageData.Previous[len(pageData.Previous)-1]).Process.For, N)
 }
