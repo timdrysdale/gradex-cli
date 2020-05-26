@@ -546,7 +546,7 @@ func TestMergeOverlay(t *testing.T) {
 
 	// visual check (comments, in particular, as well as flattening of typed values)
 	actualPdf := "./tmp-delete-me/usr/exam/Practice/26-marked-ready/Practice-B999999-merge.pdf"
-	expectedPdf := "./expected/visual/Practice-B999999-maTDD-marked-comments-merge.pdf"
+	expectedPdf := "./expected/visual/Practice-B999999-merge.pdf"
 
 	_, err = os.Stat(actualPdf)
 	assert.NoError(t, err)
@@ -558,6 +558,7 @@ func TestMergeOverlay(t *testing.T) {
 	if !result {
 		fmt.Println(actualPdf)
 	}
+
 	os.RemoveAll("./tmp-delete-me")
 
 }

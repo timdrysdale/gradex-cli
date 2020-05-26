@@ -1,6 +1,7 @@
 package ingester
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"runtime"
@@ -195,14 +196,72 @@ func (g *Ingester) MergeOverlayOnePDF(mt MergeTask, logger *zerolog.Logger) (int
 
 		thisPageData.Current = newThisPageDataCurrent
 
-		//----------------------------------------
+		//---------------------------------------WORK OUT COURSE CODE--------------------------
+		// find coursecode in these pages - assume belong SAME assignment. Not true of future bu-page mode
 
-		// sort out filenames for previousImage, and the new single page PDF we render now
-		jpegPath := strings.Replace(inPath, tempPages, tempImages, 1)
+		courseCode := thisPageData.Current.Item.What
 
-		jpegPath = strings.TrimSuffix(jpegPath, filepath.Ext(jpegPath)) + ".jpg"
+		if courseCode == "" {
+			logger.Error().
+				Str("file", inPath).
+				Msg(fmt.Sprintf("Can't figure out the course code for file (%s) - not present in PageData?\n", inPath))
+			return 0, errors.New("Couldn't find a course code")
+		}
 
-		pagePath := strings.TrimSuffix(inPath, filepath.Ext(inPath)) + "-merge.pdf"
+		// flatten the page - seems wasteful, but we can't get the flattened comments unless we do that
+		// the previous image for this flattened page does not contain the comments, because they are added as text
+		//---------------------------------------------------------------------------------------------------
+
+		jpegDir := g.PaperImages(courseCode)
+		basename := strings.TrimSuffix(filepath.Base(inPath), filepath.Ext(inPath))
+		jpegPathOption := fmt.Sprintf("%s/%s-me%%d.jpg", jpegDir, basename)
+
+		//should just be one page, but keep index just in case (but no zero padding)
+		//so that we can see the problem if we look in the temp-images dir
+
+		/*no new comments expected! so leave this commented out for now
+		f, err := os.Open(inPath)
+		if err != nil {
+			logger.Error().
+				Str("file", inPath).
+				Str("error", err.Error()).
+				Msg(fmt.Sprintf("Can't open file (%s) because: %v\n", inPath, err))
+			ot.Msg.Send(fmt.Sprintf("Can't open file (%s) because: %v\n", inPath, err))
+			return 0, err
+		}
+
+		pdfReader, err := pdf.NewPdfReader(f)
+		if err != nil {
+			logger.Error().
+				Str("file", inPath).
+				Str("error", err.Error()).
+				Msg(fmt.Sprintf("Can't read from file (%s) because: %v\n", inPath, err))
+			ot.Msg.Send(fmt.Sprintf("Can't read from file (%s) because: %v\n", inPath, err))
+			return 0, err
+		}
+
+		comments, err := comment.GetComments(pdfReader)
+
+		f.Close()
+		*/
+
+		err = ConvertPDFToJPEGs(inPath, jpegDir, jpegPathOption)
+		if err != nil {
+			logger.Error().
+				Str("file", inPath).
+				Str("error", err.Error()).
+				Msg(fmt.Sprintf("Can't flatten file (%s) to images because: %v\n", inPath, err))
+			return 0, err
+		}
+
+		// convert images to individual pdfs, with form overlay
+
+		pageDir := g.PaperPages(courseCode)
+		pagePathOption := fmt.Sprintf("%s/%s-me%%d.pdf", pageDir, basename)
+
+		pagePath := fmt.Sprintf(pagePathOption, 1) //this is the merge page index -me1, we get the 000n index from the Own.Path
+		jpegPath := fmt.Sprintf(jpegPathOption, 1) //first page starts at 1
+		//----------------------------------------------------------------------------------------------------
 
 		prefills := parsesvg.DocPrefills{}
 
