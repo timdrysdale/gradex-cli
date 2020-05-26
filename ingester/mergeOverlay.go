@@ -219,31 +219,11 @@ func (g *Ingester) MergeOverlayOnePDF(mt MergeTask, logger *zerolog.Logger) (int
 		//should just be one page, but keep index just in case (but no zero padding)
 		//so that we can see the problem if we look in the temp-images dir
 
-		/*no new comments expected! so leave this commented out for now
-		f, err := os.Open(inPath)
-		if err != nil {
-			logger.Error().
-				Str("file", inPath).
-				Str("error", err.Error()).
-				Msg(fmt.Sprintf("Can't open file (%s) because: %v\n", inPath, err))
-			ot.Msg.Send(fmt.Sprintf("Can't open file (%s) because: %v\n", inPath, err))
-			return 0, err
-		}
-
-		pdfReader, err := pdf.NewPdfReader(f)
-		if err != nil {
-			logger.Error().
-				Str("file", inPath).
-				Str("error", err.Error()).
-				Msg(fmt.Sprintf("Can't read from file (%s) because: %v\n", inPath, err))
-			ot.Msg.Send(fmt.Sprintf("Can't read from file (%s) because: %v\n", inPath, err))
-			return 0, err
-		}
-
-		comments, err := comment.GetComments(pdfReader)
-
-		f.Close()
-		*/
+		// no comment reading here because we did it in mandatory flatten stage
+		// that uses the standard Overlay that comes before this.
+		// obviously that is only enforced by the sequence of directories...
+		// but if it changes, here's where to do the comment processing
+		// (remember to get the comments for _this_ particular page only)
 
 		err = ConvertPDFToJPEGs(inPath, jpegDir, jpegPathOption)
 		if err != nil {
@@ -261,7 +241,27 @@ func (g *Ingester) MergeOverlayOnePDF(mt MergeTask, logger *zerolog.Logger) (int
 
 		pagePath := fmt.Sprintf(pagePathOption, 1) //this is the merge page index -me1, we get the 000n index from the Own.Path
 		jpegPath := fmt.Sprintf(jpegPathOption, 1) //first page starts at 1
-		//----------------------------------------------------------------------------------------------------
+
+		// ----------------------- OWN / ORIGINAL --------------------------------------------
+		// Now we know our new filepath, we create a new Own FileDetail for this new page we are creating
+		pageNumber := idx + 1 //add one we so we get a display pagenumber that starts at one
+		pageCount := len(mt.MergeFile.InputPages)
+		newOwn := pagedata.FileDetail{
+			Path:   pagePath,
+			UUID:   safeUUID(), //do this and the top level UUID ever represent something DIFFERENT?
+			Number: pageNumber,
+			Of:     pageCount, //this might be different to the original file's total pagecount
+			// but we might benefit when relating page-decorated textfield indices
+		}
+
+		thisPageData.Current.Own = newOwn
+
+		// our source file's Own FileDetail is now our Original FileDetail
+		// we can track our way back to the great grand parents by following the
+		// sequence of Original FileDetails in thisPageData.Previous
+		thisPageData.Current.Original = oldThisPageDataCurrent.Own
+
+		// ------------------------ PREFILLS ------------------------------------------------
 
 		prefills := parsesvg.DocPrefills{}
 
@@ -269,7 +269,7 @@ func (g *Ingester) MergeOverlayOnePDF(mt MergeTask, logger *zerolog.Logger) (int
 
 		prefills[idx]["message"] = page.Message
 
-		prefills[idx]["page-number"] = fmt.Sprintf("%d/%d", idx+1, len(mt.MergeFile.InputPages)) //add one we so we get a display pagenumber that starts at one
+		prefills[idx]["page-number"] = fmt.Sprintf("%d/%d", pageNumber, pageCount) //add one we so we get a display pagenumber that starts at one
 
 		prefills[idx]["author"] = thisPageData.Current.Item.Who
 

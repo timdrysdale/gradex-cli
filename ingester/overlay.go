@@ -362,9 +362,20 @@ OUTER:
 		// now add in things we can only know now
 		// like page number, UUID etc.
 
-		// TODO update the UUID etc in Own/Original (with what?)
-		newThisPageDataCurrent.Own.Path = pageFilename //so we can keep track of _this_ version
-		newThisPageDataCurrent.Original.Path = ot.InputPath
+		// We need a new Own FileDetail to represent the page we are creating
+		newOwn := pagedata.FileDetail{
+			Path:   pageFilename,
+			UUID:   safeUUID(), //do this and the top level UUID ever represent something DIFFERENT?
+			Number: imgIdx,
+			Of:     numPages, //this might be different to the original file's total pagecount
+			// but we might benefit when relating page-decorated textfield indices
+		}
+		newThisPageDataCurrent.Own = newOwn
+
+		// our source file's Own FileDetail is now our Original FileDetail
+		// we can track our way back to the great grand parents by following the
+		// sequence of Original FileDetails in thisPageData.Previous
+		newThisPageDataCurrent.Original = oldThisPageDataCurrent.Own
 
 		newThisPageDataCurrent.UUID = safeUUID()
 

@@ -484,7 +484,7 @@ func TestCreateMergePathMap(t *testing.T) {
 func TestMergeOverlay(t *testing.T) {
 
 	if testing.Short() {
-		//t.Skip("skipping test in short mode.")
+		t.Skip("skipping test in short mode.")
 	}
 	// process a marked paper with keyed entries
 	// check that keyed entries are picked up
@@ -560,5 +560,50 @@ func TestMergeOverlay(t *testing.T) {
 	}
 
 	os.RemoveAll("./tmp-delete-me")
+
+}
+
+// check that linked list of UUID in pagedata is, in fact, linked
+func TestPageUUIDSequenceIsLinked(t *testing.T) {
+
+	inPath := "./expected/visual/Practice-B999999-merge.pdf"
+
+	pageDataMap, err := pagedata.UnMarshalAllFromFile(inPath)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, 3, pagedata.GetLen(pageDataMap))
+
+	printResults := false
+
+	for pageNumber, pdPage := range pageDataMap {
+
+		pds := []pagedata.PageDetail{}
+
+		// make a list for page 1
+		for _, pd := range pdPage.Previous {
+
+			pds = append(pds, pd)
+		}
+
+		pds = append(pds, pdPage.Current)
+
+		plist := []string{}
+		flist := []string{}
+
+		previous := ""
+		for _, pd := range pds {
+			plist = append(plist, previous)
+			flist = append(flist, pd.Follows)
+			assert.Equal(t, previous, pd.Follows)
+			previous = pd.UUID
+		}
+
+		if printResults {
+
+			fmt.Printf("UUID for page %d (these next two lines should match)\n", pageNumber)
+			fmt.Printf("Previous:%v\nFollows: %v\n\n", plist, flist)
+		}
+	}
 
 }
