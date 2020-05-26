@@ -378,7 +378,7 @@ func createPageList(pageCollection PageCollection) []Page {
 }
 
 func getOriginalKey(pageData pagedata.PageData) string {
-	return pageData.Current.Original.Path
+	return shortenAssignment(pageData.Current.Item.What) + "-" + pageData.Current.Item.Who + ".pdf"
 }
 
 func getPageNumber(pageData pagedata.PageData) int {

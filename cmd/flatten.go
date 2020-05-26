@@ -107,6 +107,13 @@ rechecked`,
 
 			err = g.FlattenProcessedPapers(exam, stage)
 
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			err = g.MergeProcessedPapers(exam, stage)
+
 		default:
 
 			fmt.Printf("Stage [%s] not known\n", stage)

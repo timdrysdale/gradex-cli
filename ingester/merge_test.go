@@ -56,13 +56,18 @@ func TestPageFSM(t *testing.T) {
 
 func TestSummarisePageSkipped(t *testing.T) {
 
-	originalPath := "some/original/path with spaces/file.pdf"
+	original := "EL00-B00.pdf"
+	originalPath := "a/file/some/where.pdf"
 	ownPath := "a/b/c.pdf"
 	pageNumber := 3
 	wasFor := "DEF"
 
 	pageData := pagedata.PageData{
 		Current: pagedata.PageDetail{
+			Item: pagedata.ItemDetail{
+				What: "EL00",
+				Who:  "B00",
+			},
 			Own: pagedata.FileDetail{
 				Path: ownPath,
 			},
@@ -121,7 +126,7 @@ func TestSummarisePageSkipped(t *testing.T) {
 
 	assert.Equal(t, wasFor, summary.WasFor)
 	assert.Equal(t, statusSkipped, summary.Status)
-	assert.Equal(t, originalPath, summary.Original)
+	assert.Equal(t, original, summary.Original)
 	assert.Equal(t, ownPath, summary.OwnPath)
 	assert.Equal(t, pageNumber, summary.PageNumber)
 
@@ -129,13 +134,18 @@ func TestSummarisePageSkipped(t *testing.T) {
 
 func TestSummarisePageSeen(t *testing.T) {
 
-	originalPath := "some/original/path with spaces/file.pdf"
+	original := "EL00-B00.pdf"
+	originalPath := "a/file/some/where.pdf"
 	ownPath := "a/b/c.pdf"
 	pageNumber := 3
 	wasFor := "DEF"
 
 	pageData := pagedata.PageData{
 		Current: pagedata.PageDetail{
+			Item: pagedata.ItemDetail{
+				What: "EL00",
+				Who:  "B00",
+			},
 			Own: pagedata.FileDetail{
 				Path: ownPath,
 			},
@@ -194,7 +204,7 @@ func TestSummarisePageSeen(t *testing.T) {
 
 	assert.Equal(t, wasFor, summary.WasFor)
 	assert.Equal(t, statusSeen, summary.Status)
-	assert.Equal(t, originalPath, summary.Original)
+	assert.Equal(t, original, summary.Original)
 	assert.Equal(t, ownPath, summary.OwnPath)
 	assert.Equal(t, pageNumber, summary.PageNumber)
 
@@ -202,13 +212,18 @@ func TestSummarisePageSeen(t *testing.T) {
 
 func TestSummarisePageBad(t *testing.T) {
 
-	originalPath := "some/original/path with spaces/file.pdf"
+	original := "EL00-B01.pdf"
+	originalPath := "a/file/some/where.pdf"
 	ownPath := "a/b/c.pdf"
 	pageNumber := 3
 	wasFor := "DEF"
 
 	pageData := pagedata.PageData{
 		Current: pagedata.PageDetail{
+			Item: pagedata.ItemDetail{
+				What: "EL00",
+				Who:  "B01",
+			},
 			Own: pagedata.FileDetail{
 				Path: ownPath,
 			},
@@ -267,7 +282,7 @@ func TestSummarisePageBad(t *testing.T) {
 
 	assert.Equal(t, wasFor, summary.WasFor)
 	assert.Equal(t, statusBad, summary.Status)
-	assert.Equal(t, originalPath, summary.Original)
+	assert.Equal(t, original, summary.Original)
 	assert.Equal(t, ownPath, summary.OwnPath)
 	assert.Equal(t, pageNumber, summary.PageNumber)
 
@@ -275,13 +290,18 @@ func TestSummarisePageBad(t *testing.T) {
 
 func TestSummarisePageMarked(t *testing.T) {
 
-	originalPath := "some/original/path with spaces/file.pdf"
+	original := "EL03-B00.pdf"
+	originalPath := "a/file/some/where.pdf"
 	ownPath := "a/b/c.pdf"
 	pageNumber := 3
 	wasFor := "DEF"
 
 	pageData := pagedata.PageData{
 		Current: pagedata.PageDetail{
+			Item: pagedata.ItemDetail{
+				What: "EL03",
+				Who:  "B00",
+			},
 			Own: pagedata.FileDetail{
 				Path: ownPath,
 			},
@@ -340,7 +360,7 @@ func TestSummarisePageMarked(t *testing.T) {
 
 	assert.Equal(t, wasFor, summary.WasFor)
 	assert.Equal(t, statusMarked, summary.Status)
-	assert.Equal(t, originalPath, summary.Original)
+	assert.Equal(t, original, summary.Original)
 	assert.Equal(t, ownPath, summary.OwnPath)
 	assert.Equal(t, pageNumber, summary.PageNumber)
 
@@ -525,7 +545,7 @@ func TestMergeOverlay(t *testing.T) {
 	err = g.MergeProcessedPapers(exam, stage)
 
 	// visual check (comments, in particular, as well as flattening of typed values)
-	actualPdf := "./tmp-delete-me/usr/exam/Practice/26-marked-ready/Practice-B999999-maTDD-marked-comments-merge.pdf"
+	actualPdf := "./tmp-delete-me/usr/exam/Practice/26-marked-ready/Practice-B999999-merge.pdf"
 	expectedPdf := "./expected/visual/Practice-B999999-maTDD-marked-comments-merge.pdf"
 
 	_, err = os.Stat(actualPdf)
@@ -538,7 +558,6 @@ func TestMergeOverlay(t *testing.T) {
 	if !result {
 		fmt.Println(actualPdf)
 	}
-
 	os.RemoveAll("./tmp-delete-me")
 
 }
