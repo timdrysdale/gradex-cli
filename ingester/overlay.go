@@ -412,7 +412,7 @@ OUTER:
 
 				// this benchmarks at around 30ms - but we have to do it everytime to accommodate changing page sizes
 				// note we shrink each box by 2 pixels, assume and white paper - TODO offer as config options
-				boxes, err := parsesvg.GetImageBoxesForTextFields(ot.Template, ot.OpticalBoxSpread, widthPx, heightPx, true, -4)
+				boxes, err := parsesvg.GetImageBoxesForTextFields(ot.Template, ot.OpticalBoxSpread, widthPx, heightPx, true, -6)
 
 				if err != nil {
 					logger.Error().
