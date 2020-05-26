@@ -319,6 +319,7 @@ func RenderSpreadExtra(contents SpreadContents) error {
 	}
 
 	for _, tp := range spread.TextPrefills {
+
 		//update prefill contents from info given
 		if val, ok := contents.Prefills[pageNumber][tp.ID]; ok {
 			tp.Text.Text = val
@@ -335,7 +336,9 @@ func RenderSpreadExtra(contents SpreadContents) error {
 		if tp.Text.WrapWidth != 0 {
 			p.SetWidth(tp.Text.WrapWidth)
 		}
-
+		if spread.Dim.DynamicWidth {
+			tp.Rect.Corner.X = tp.Rect.Corner.X + spread.ExtraWidth
+		}
 		p.SetPos(tp.Rect.Corner.X, tp.Rect.Corner.Y)
 
 		c.Draw(p)
