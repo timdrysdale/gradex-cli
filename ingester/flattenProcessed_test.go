@@ -11,11 +11,12 @@ import (
 	"github.com/timdrysdale/chmsg"
 	"github.com/timdrysdale/gradex-cli/count"
 	"github.com/timdrysdale/gradex-cli/pagedata"
-	"github.com/timdrysdale/gradex-cli/parsesvg"
 )
 
 func TestFlattenProcessedMarked(t *testing.T) {
-
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	// process a marked paper with keyed entries
 	// check that keyed entries are picked up
 	mch := make(chan chmsg.MessageInfo)
@@ -79,7 +80,7 @@ func TestFlattenProcessedMarked(t *testing.T) {
 		t.Error(err)
 	}
 
-	parsesvg.PrettyPrintStruct(pdMap)
+	//parsesvg.PrettyPrintStruct(pdMap)
 
 	// check question values, and comments on page 1 in currentData
 	// check previousData has one set, with null values for comments and values
@@ -107,38 +108,66 @@ func TestFlattenProcessedMarked(t *testing.T) {
 	expectedFields := make(map[int]map[string]string)
 
 	expectedFields[1] = map[string]string{
-
-		"page-bad":    "",
-		"page-ok":     "X",
-		"q1-mark":     "6/12",
-		"q1-number":   "1",
-		"q1-section":  "A",
-		"subtotal-00": "1/2",
-		"subtotal-04": "2/4",
-		"subtotal-09": "3/6",
+		"tf-page-ok":             "X",
+		"tf-q1-mark":             "6/12",
+		"tf-q1-number":           "1",
+		"tf-q1-section":          "A",
+		"tf-subtotal-00":         "1/2",
+		"tf-subtotal-04":         "2/4",
+		"tf-subtotal-09":         "3/6",
+		"tf-page-ok-optical":     markDetected,
+		"tf-q1-mark-optical":     markDetected,
+		"tf-q1-number-optical":   markDetected,
+		"tf-q1-section-optical":  markDetected,
+		"tf-subtotal-00-optical": markDetected,
+		"tf-subtotal-04-optical": markDetected,
+		"tf-subtotal-09-optical": markDetected,
 	}
 
 	expectedFields[2] = map[string]string{
-		"page-bad": "X",
+		"tf-page-bad":         "X",
+		"tf-page-bad-optical": markDetected,
 	}
 
 	expectedFields[3] = map[string]string{
-		"page-ok":     "x",
-		"q1-mark":     "17",
-		"q1-number":   "1",
-		"q1-section":  "B",
-		"subtotal-01": "2",
-		"subtotal-03": "2",
-		"subtotal-06": "1",
-		"subtotal-08": "2",
-		"subtotal-10": "2",
-		"subtotal-11": "3",
-		"subtotal-14": "5",
+		"tf-page-ok":             "x",
+		"tf-q1-mark":             "17",
+		"tf-q1-number":           "1",
+		"tf-q1-section":          "B",
+		"tf-subtotal-01":         "2",
+		"tf-subtotal-03":         "2",
+		"tf-subtotal-06":         "1",
+		"tf-subtotal-08":         "2",
+		"tf-subtotal-10":         "2",
+		"tf-subtotal-11":         "3",
+		"tf-subtotal-14":         "5",
+		"tf-page-ok-optical":     markDetected,
+		"tf-q1-mark-optical":     markDetected,
+		"tf-q1-number-optical":   markDetected,
+		"tf-q1-section-optical":  markDetected,
+		"tf-subtotal-01-optical": markDetected,
+		"tf-subtotal-03-optical": markDetected,
+		"tf-subtotal-06-optical": markDetected,
+		"tf-subtotal-08-optical": markDetected,
+		"tf-subtotal-10-optical": markDetected,
+		"tf-subtotal-11-optical": markDetected,
+		"tf-subtotal-14-optical": markDetected,
 	}
 
-	for page, fields := range expectedFields {
+	// checking by actual field value allows check for false positive optical marks
+	// without specifying all the null fields in the expected values - it is
+	// assumed automatically
+	for page, fields := range actualFields {
 		for k, v := range fields {
-			assert.Equal(t, v, actualFields[page][k])
+			expectedValue := "" //assume MUST BE empty field if not specified
+			if _, ok := expectedFields[page][k]; ok {
+				expectedValue = expectedFields[page][k]
+			}
+			assert.Equal(t, expectedValue, v)
+			if expectedValue != v {
+				fmt.Println(k)
+			}
+
 		}
 	}
 
@@ -156,12 +185,15 @@ func TestFlattenProcessedMarked(t *testing.T) {
 	if !result {
 		fmt.Println(actualPdf)
 	}
+
 	os.RemoveAll("./tmp-delete-me")
 
 }
 
-func testFlattenProcessedMarkedStylus(t *testing.T) {
-
+func TestFlattenProcessedStylus(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	// process a marked paper with keyed entries
 	// check that keyed entries are picked up
 	mch := make(chan chmsg.MessageInfo)
@@ -198,6 +230,8 @@ func testFlattenProcessedMarkedStylus(t *testing.T) {
 	stage := "marked"
 
 	err = g.SetupExamPaths(exam)
+
+	assert.NoError(t, err)
 
 	source := "./test-flatten/Practice-B999999-maTDD-marked-stylus.pdf"
 
@@ -248,25 +282,50 @@ func testFlattenProcessedMarkedStylus(t *testing.T) {
 		actualFields[i] = fieldsForPage
 	}
 
-	//parsesvg.PrettyPrintStruct(actualFields)
-
 	expectedFields := make(map[int]map[string]string)
 
 	expectedFields[1] = map[string]string{
-		"page-ok": "X",
+		"tf-page-ok-optical":     markDetected,
+		"tf-q1-mark-optical":     markDetected,
+		"tf-q1-number-optical":   markDetected,
+		"tf-q1-section-optical":  markDetected,
+		"tf-subtotal-00-optical": markDetected,
+		"tf-subtotal-03-optical": markDetected,
+		"tf-subtotal-05-optical": markDetected,
 	}
 
 	expectedFields[2] = map[string]string{
-		"page-bad": "X",
+		"tf-page-bad-optical": markDetected,
 	}
 
 	expectedFields[3] = map[string]string{
-		"page-ok": "x",
+		"tf-page-ok-optical":     markDetected,
+		"tf-q1-mark-optical":     markDetected,
+		"tf-q1-number-optical":   markDetected,
+		"tf-q1-section-optical":  markDetected,
+		"tf-subtotal-01-optical": markDetected,
+		"tf-subtotal-03-optical": markDetected,
+		"tf-subtotal-04-optical": markDetected,
+		"tf-subtotal-06-optical": markDetected,
+		"tf-subtotal-07-optical": markDetected,
+		"tf-subtotal-10-optical": markDetected,
+		"tf-subtotal-13-optical": markDetected,
 	}
 
-	for page, fields := range expectedFields {
+	// checking by actual field value allows check for false positive optical marks
+	// without specifying all the null fields in the expected values - it is
+	// assumed automatically
+	for page, fields := range actualFields {
 		for k, v := range fields {
-			assert.Equal(t, v, actualFields[page][k])
+			expectedValue := "" //assume MUST BE empty field if not specified
+			if _, ok := expectedFields[page][k]; ok {
+				expectedValue = expectedFields[page][k]
+			}
+			assert.Equal(t, expectedValue, v)
+			if expectedValue != v {
+				fmt.Println(k)
+			}
+
 		}
 	}
 

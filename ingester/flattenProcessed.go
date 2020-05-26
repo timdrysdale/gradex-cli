@@ -12,7 +12,8 @@ import (
 // This file is to be like add bars ....
 
 // initial sanity check on stage that has been specified
-func (g *Ingester) validStageForFlattenProcessPapers(stage string) bool {
+// also used by merge "half" of the process (see merge.go)
+func validStageForProcessedPapers(stage string) bool {
 
 	switch strings.ToLower(stage) {
 
@@ -23,13 +24,32 @@ func (g *Ingester) validStageForFlattenProcessPapers(stage string) bool {
 	}
 }
 
+func getSpreadForBoxes(stage string) string {
+
+	switch stage {
+
+	case "marked":
+		return "mark"
+	case "remarked":
+		return "remark"
+	case "moderated":
+		return "moderate-active" //we don't get boxes for inactive - NOTE we can know this because no textfields either!
+	case "checked":
+		return "check"
+	case "rechecked":
+		return "recheck"
+	default:
+		return ""
+	}
+}
+
 func (g *Ingester) FlattenProcessedPapers(exam, stage string) error {
 
 	logger := g.logger.With().Str("process", "flatten-processed-papers").Str("stage", stage).Str("exam", exam).Logger()
 
 	stage = strings.ToLower(stage)
 
-	if !g.validStageForFlattenProcessPapers(stage) {
+	if !validStageForProcessedPapers(stage) {
 		logger.Error().Msg("Is not a valid stage")
 		return fmt.Errorf("%s is not a valid stage for flatten-processed\n", stage)
 	}
@@ -64,13 +84,15 @@ func (g *Ingester) FlattenProcessedPapers(exam, stage string) error {
 	}
 
 	oc := OverlayCommand{
-		FromPath:      fromDir,
-		ToPath:        toDir,
-		ExamName:      exam,
-		TemplatePath:  g.OverlayLayoutSVG(),
-		SpreadName:    "flatten-processed",
-		ProcessDetail: procDetail,
-		Msg:           cm,
+		FromPath:         fromDir,
+		ToPath:           toDir,
+		ExamName:         exam,
+		TemplatePath:     g.OverlayLayoutSVG(),
+		SpreadName:       "flatten-processed",
+		ProcessDetail:    procDetail,
+		Msg:              cm,
+		OpticalBoxSpread: getSpreadForBoxes(stage),
+		ReadOpticalBoxes: true,
 	}
 
 	err = g.OverlayPapers(oc, &logger)

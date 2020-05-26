@@ -8,6 +8,8 @@ import (
 	"log"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var testCheckBoxes = []Box{
@@ -49,6 +51,29 @@ var expectedBox = []bool{
 	true,
 }
 
+var testCheckBoxesStylus = []Box{
+	{Vanilla: true, Bounds: image.Rect(8, 43, 60, 95)},
+	{Vanilla: true, Bounds: image.Rect(78, 42, 131, 94)},
+	{Vanilla: true, Bounds: image.Rect(150, 8, 238, 96)},
+	{Vanilla: true, Bounds: image.Rect(261, 8, 350, 97)},
+	{Vanilla: true, Bounds: image.Rect(374, 8, 463, 97)},
+	{Vanilla: true, Bounds: image.Rect(486, 10, 572, 96)},
+	{Vanilla: true, Bounds: image.Rect(591, 9, 783, 95)},
+	{Vanilla: true, Bounds: image.Rect(797, 9, 989, 94)},
+	{Vanilla: true, Bounds: image.Rect(1008, 9, 1200, 95)},
+}
+var expectedBoxStylus = []bool{
+	false,
+	true,
+	true,
+	false,
+	true,
+	true,
+	true,
+	true,
+	false,
+}
+
 func TestCheckBoxDebug(t *testing.T) {
 
 	reader, err := os.Open("./img/test.png")
@@ -81,7 +106,7 @@ func TestCheckBoxDebug(t *testing.T) {
 				t.Errorf("writing file %v\n", err)
 			}
 
-			t.Errorf("Unexpected result for checkbox %d; got %v wanted %v; avg pixel value was %f; see failed.jpg\n",
+			t.Errorf("Unexpected result for checkbox %d; got %v wanted %v; avg pixel value was %f; see failedTestCheckBox.jpg\n",
 				idx, actual, wanted, avgCount)
 		}
 
@@ -110,9 +135,31 @@ func TestCheckBox(t *testing.T) {
 			t.Errorf("Unexpected result for checkbox %d; got %v wanted %v\n",
 				idx, actual, wanted)
 		}
+	}
+}
 
+func TestCheckBoxStylus(t *testing.T) {
+
+	reader, err := os.Open("./img/test2.jpg")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer reader.Close()
+
+	testImage, _, err := image.Decode(reader)
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	for idx := 0; idx < len(testCheckBoxesStylus); idx = idx + 1 {
+		actual := CheckBox(testImage, testCheckBoxesStylus[idx])
+		wanted := expectedBoxStylus[idx]
+		if actual != wanted {
+
+			t.Errorf("Unexpected result for checkbox %d; got %v wanted %v\n",
+				idx, actual, wanted)
+		}
+	}
 }
 
 func TestDataBox(t *testing.T) {
@@ -184,4 +231,32 @@ func TestDataBoxFile(t *testing.T) {
 		}
 
 	}
+}
+
+func TestImageSize(t *testing.T) {
+
+	w, h, err := GetImageDimension("./img/test.png")
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, w)
+	assert.Equal(t, 100, h)
+
+	w, h, err = GetImageDimension("./img/test.svg")
+	assert.Error(t, err)
+	assert.Equal(t, 0, w)
+	assert.Equal(t, 0, h)
+
+}
+
+//BenchmarkImageSize-32    	   57925	     20719 ns/op
+// 59.925 microseconds
+func BenchmarkImageSize(b *testing.B) {
+
+	// run the function b.N times
+	for n := 0; n < b.N; n++ {
+		_, _, err := GetImageDimension("./img/test.png")
+		assert.NoError(b, err)
+
+	}
+
 }

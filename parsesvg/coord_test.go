@@ -87,7 +87,7 @@ func TestGetImageBoxes(t *testing.T) {
 
 	vanilla := true
 
-	boxes, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla)
+	boxes, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
 	assert.NoError(t, err)
 
 	boxMap := make(map[string]optical.Box)
@@ -97,15 +97,15 @@ func TestGetImageBoxes(t *testing.T) {
 	}
 
 	// TODO verify these box values
-	assert.Equal(t, 1762, boxMap["page-bad"].Bounds.Min.X)
-	assert.Equal(t, 290, boxMap["page-bad"].Bounds.Min.Y)
-	assert.Equal(t, 1818, boxMap["page-bad"].Bounds.Max.X)
-	assert.Equal(t, 344, boxMap["page-bad"].Bounds.Max.Y)
+	assert.Equal(t, 1764, boxMap["page-bad"].Bounds.Min.X)
+	assert.Equal(t, 292, boxMap["page-bad"].Bounds.Min.Y)
+	assert.Equal(t, 1816, boxMap["page-bad"].Bounds.Max.X)
+	assert.Equal(t, 342, boxMap["page-bad"].Bounds.Max.Y)
 
-	assert.Equal(t, 1758, boxMap["page-ok"].Bounds.Min.X)
-	assert.Equal(t, 1372, boxMap["page-ok"].Bounds.Min.Y)
-	assert.Equal(t, 1814, boxMap["page-ok"].Bounds.Max.X)
-	assert.Equal(t, 1427, boxMap["page-ok"].Bounds.Max.Y)
+	assert.Equal(t, 1760, boxMap["page-ok"].Bounds.Min.X)
+	assert.Equal(t, 1374, boxMap["page-ok"].Bounds.Min.Y)
+	assert.Equal(t, 1812, boxMap["page-ok"].Bounds.Max.X)
+	assert.Equal(t, 1425, boxMap["page-ok"].Bounds.Max.Y)
 
 	// Test images created manually from marked exam
 	//$ gs -dNOPAUSE -sDEVICE=jpeg -sOutputFile=stylus-%d.jpg -dJPEGQ=90 -r175 -q Practice-B999999-maTDD-marked-stylus.pdf -c quit
@@ -116,9 +116,6 @@ func TestGetImageBoxes(t *testing.T) {
 		boxMap["page-bad"],
 		boxMap["page-ok"],
 	}
-
-	optical.ExpandBound(&pageBoxes[0], -2)
-	optical.ExpandBound(&pageBoxes[1], -2)
 
 	reader, err := os.Open("./img/stylus-1.jpg")
 	if err != nil {
@@ -178,4 +175,75 @@ func TestGetImageBoxes(t *testing.T) {
 	assert.Equal(t, []bool{false, true}, results)
 
 	//PrettyPrintStruct(boxes)
+}
+
+//BenchmarkGetImageBoxes-32    	      73	  35286670 ns/op
+// 35.286670 ms/op
+func BenchmarkGetImageBoxes(b *testing.B) {
+
+	svgLayoutPath := "./test/layout-312pt.svg"
+	spreadName := "mark"
+	widthPx := 1883
+	heightPx := 2150
+	vanilla := true
+
+	// run the function b.N times
+	for n := 0; n < b.N; n++ {
+
+		_, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
+
+		assert.NoError(b, err)
+
+	}
+
+}
+
+//BenchmarkDoCheckBoxesWholePage-32    	      12	  92800839 ns/op
+// 92.800839 ms
+// for reading in the file and checking all the boxes (17 subtotal, 2 page, 6 question)
+func BenchmarkDoCheckBoxesWholePage(b *testing.B) {
+
+	svgLayoutPath := "./test/layout-312pt.svg"
+	spreadName := "mark"
+	widthPx := 1883
+	heightPx := 2150
+	vanilla := true
+	boxes, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
+	assert.NoError(b, err)
+
+	// run the function b.N times
+	for n := 0; n < b.N; n++ {
+
+		_, err := optical.CheckBoxFile("./img/stylus-1.jpg", boxes)
+
+		assert.NoError(b, err)
+
+	}
+
+}
+
+// BenchmarkDoCheckBoxesOneBox-32    	      14	  79123245 ns/op
+// 79.123245 ms
+// for reading in the file and checking one box
+// Hence most of the time is in loading the file
+// So may as well optically read all the boxes on the page in one go
+func BenchmarkDoCheckBoxesOneBox(b *testing.B) {
+
+	svgLayoutPath := "./test/layout-312pt.svg"
+	spreadName := "mark"
+	widthPx := 1883
+	heightPx := 2150
+	vanilla := true
+	boxes, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
+	assert.NoError(b, err)
+
+	// run the function b.N times
+	for n := 0; n < b.N; n++ {
+
+		_, err := optical.CheckBoxFile("./img/stylus-1.jpg", []optical.Box{boxes[0]})
+
+		assert.NoError(b, err)
+
+	}
+
 }

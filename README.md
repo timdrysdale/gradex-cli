@@ -202,23 +202,55 @@ For detailed information on how to customise the templates using Inkscape, [see 
     - merge pages
 	- report bad pages detected by markers
 	- report results into csv, similar to [this](https://github.com/timdrysdale/gradex-extract)
+
+- report results into csv, similar to [this](https://github.com/timdrysdale/gradex-extract)
+
+### Done
+
 - integrate [optical check box](https://github.com/timdrysdale/opticalcheckbox)
-- integrate reporting
-- integrate [optical handwriting recognition](https://github.com/sausheong/gonn)
-- live marking tool to show staff running averages/totals/percentage completion
 - integrate tree view [from here](https://github.com/timdrysdale/dt)
 
+### Deferred
+
+- integrate [optical handwriting recognition](https://github.com/sausheong/gonn)
+- live marking tool to show staff running averages/totals/percentage completion
 
 ## Test coverage
 
 ```
-ok  	github.com/timdrysdale/gradex-cli/comment	0.031s	coverage: 93.8% of statements
-ok  	github.com/timdrysdale/gradex-cli/extract	0.041s	coverage: 49.3% of statements
-ok  	github.com/timdrysdale/gradex-cli/ingester	14.762s	coverage: 59.1% of statements
-ok  	github.com/timdrysdale/gradex-cli/pagedata	0.122s	coverage: 74.2% of statements
-ok  	github.com/timdrysdale/gradex-cli/parselearn	0.010s	coverage: 87.6% of statements
-ok  	github.com/timdrysdale/gradex-cli/parsesvg	15.017s	coverage: 81.6% of statements
+comment	    coverage: 93.8% of statements
+ingester	coverage: 58.1% of statements
+optical	    coverage: 81.5% of statements
+pagedata    coverage: 74.2% of statements
+parselearn  coverage: 87.6% of statements
+parsesvg    coverage: 81.8% of statements
+tree        coverage: 63.4% of statements
 ```
+
+## Codebase
+
+Very close to 10 KLOC ....
+
+```
+--------------------------------------------------------------------------------
+ Language             Files        Lines        Blank      Comment         Code
+--------------------------------------------------------------------------------
+ Go                      70        14216         3073         1212         9931
+ Markdown                 8          681          212            0          469
+ Plain Text              18          291           72            0          219
+ JSON                     1            1            0            0            1
+ Bourne Shell             1            5            2            2            1
+--------------------------------------------------------------------------------
+ Total                   98        15194         3359         1214        10621
+--------------------------------------------------------------------------------
+```
+
+Most of the libraries are sub 1K, but the largest are:
+```
+ingester 4155
+parsesvg  2753
+```
+
 
 [identity]: ./img/identity.png "csv file with anoynmous identity"
 [flattened]: ./img/flattened.png "scanned page with header added"

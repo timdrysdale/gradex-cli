@@ -12,6 +12,7 @@ import (
 	"github.com/timdrysdale/gradex-cli/comment"
 	"github.com/timdrysdale/gradex-cli/extract"
 	"github.com/timdrysdale/gradex-cli/merge"
+	"github.com/timdrysdale/gradex-cli/optical"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
 	"github.com/timdrysdale/pool"
@@ -124,7 +125,7 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 					data =
 						append(data,
 							pagedata.Field{
-								Key:   key,
+								Key:   textFieldPrefix + key,
 								Value: value,
 							})
 				}
@@ -141,26 +142,25 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 		}
 
+		// get the box dimensions we might need
+
 		//NewFieldMap    map[int][]pagedata.Field
 
 		// this is a file-level task, so we we will sort per-page updates
 		// to pageData at the child step
 		overlayTasks = append(overlayTasks, OverlayTask{
-			InputPath: inPath,
-			PageCount: count,
-			// These now in SharedPD
-			//PreparedFor:   oc.PreparedFor,
-			//ToDo:          oc.ToDo,
-			//NewProcessing: oc.ProcessingDetails, //do dynamic update when processing
-			//NewQuestion:   oc.QuestionDetails,   //do dynamic update when processing
-			ProcessDetail:  oc.ProcessDetail,
-			NewFieldMap:    newFieldMap,
-			OldPageDataMap: pageDataMap,
-			OutputPath:     g.OutputPath(oc.ToPath, inPath, oc.PathDecoration),
-			SpreadName:     oc.SpreadName,
-			Template:       oc.TemplatePath,
-			Msg:            oc.Msg,
-			Who:            oc.PathDecoration,
+			InputPath:        inPath,
+			PageCount:        count,
+			ProcessDetail:    oc.ProcessDetail,
+			NewFieldMap:      newFieldMap,
+			OldPageDataMap:   pageDataMap,
+			OutputPath:       g.OutputPath(oc.ToPath, inPath, oc.PathDecoration),
+			SpreadName:       oc.SpreadName,
+			Template:         oc.TemplatePath,
+			Msg:              oc.Msg,
+			Who:              oc.PathDecoration,
+			ReadOpticalBoxes: oc.ReadOpticalBoxes,
+			OpticalBoxSpread: oc.OpticalBoxSpread,
 		})
 		logger.Info().
 			Str("file", inPath).
@@ -249,9 +249,11 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 	return nil
 }
 
+//-----------------------------OverlayOnePDF-----------------------------------------
 // do one file, dynamically assembling the data we need make the latest pagedata
 // from what we get in the OverlayTask struct
 // return the number of pages
+//-----------------------------------------------------------------------------------
 func (g *Ingester) OverlayOnePDF(ot OverlayTask, logger *zerolog.Logger) (int, error) {
 
 	// need page count to find the jpeg files again later
@@ -360,6 +362,10 @@ OUTER:
 		// now add in things we can only know now
 		// like page number, UUID etc.
 
+		// TODO update the UUID etc in Own/Original (with what?)
+		newThisPageDataCurrent.Own.Path = pageFilename //so we can keep track of _this_ version
+		newThisPageDataCurrent.Original.Path = ot.InputPath
+
 		newThisPageDataCurrent.UUID = safeUUID()
 
 		newThisPageDataCurrent.Follows = oldThisPageDataCurrent.UUID
@@ -382,9 +388,91 @@ OUTER:
 
 		}
 
+		// Read the text fields optically, unless the previous process was labelled inactive
+		// using the length of custom data fields is not sufficient, because it could be non-zero
+		// due to some future feature needing them
+		// whereas this can be a convention that for post-NewPaperFlattening, you should call
+		// it inactive if there are no optical boxes to read, when there is more than one type of
+		// bar applied in that stage, and some DO have optical boxes to read
+		// (if no bar variant has optical boxes, then no boxes will be found anyway)
+
+		previousProc := (thisPageData.Previous[len(thisPageData.Previous)-1]).Process.ToDo
+
+		if !strings.Contains(strings.ToLower(previousProc), "inactive") {
+
+			// this benchmarks at <60microseconds, so no penalty doing as separate step
+			widthPx, heightPx, err := optical.GetImageDimension(previousImagePath)
+
+			if err != nil {
+				logger.Error().
+					Str("imagePath", previousImagePath).
+					Str("error", err.Error()).
+					Msg("Error getting image dimensions")
+			} else {
+
+				// this benchmarks at around 30ms - but we have to do it everytime to accommodate changing page sizes
+				// note we shrink each box by 2 pixels, assume and white paper - TODO offer as config options
+				boxes, err := parsesvg.GetImageBoxesForTextFields(ot.Template, ot.OpticalBoxSpread, widthPx, heightPx, true, -4)
+
+				if err != nil {
+					logger.Error().
+						Str("imagePath", previousImagePath).
+						Str("ot.OpticalBoxSpread", ot.OpticalBoxSpread).
+						Str("error", err.Error()).
+						Msg("Error getting optical box dimensions")
+
+				} else {
+
+					if len(boxes) > 0 {
+
+						results, err := optical.CheckBoxFile(previousImagePath, boxes)
+
+						if err != nil {
+
+							logger.Error().
+								Str("imagePath", previousImagePath).
+								Str("ot.OpticalBoxSpread", ot.OpticalBoxSpread).
+								Str("error", err.Error()).
+								Msg("Error getting optical box results")
+
+						} else {
+
+							if len(results) != len(boxes) {
+								logger.Error().
+									Str("imagePath", previousImagePath).
+									Str("ot.OpticalBoxSpread", ot.OpticalBoxSpread).
+									Int("resultsCount", len(results)).
+									Int("boxesCount", len(boxes)).
+									Msg("Result count does not match optical box count, skipping")
+							} else {
+
+								for i, result := range results {
+
+									val := ""
+									if result {
+										val = markDetected
+									}
+									item := pagedata.Field{
+										Key:   textFieldPrefix + boxes[i].ID + opticalSuffix,
+										Value: val,
+									}
+
+									data = append(data, item)
+
+								}
+
+							}
+						}
+					}
+				}
+
+			}
+
+		}
+
 		thisPageData.Current.Data = data
 
-		//___________________________________________
+		//-------------- PREFILLS -------------------------------------------
 
 		headerPrefills := parsesvg.DocPrefills{}
 
@@ -397,6 +485,8 @@ OUTER:
 		headerPrefills[pageNumber]["date"] = thisPageData.Current.Item.When
 
 		headerPrefills[pageNumber]["title"] = thisPageData.Current.Item.What
+
+		headerPrefills[pageNumber]["for"] = thisPageData.Current.Process.For
 
 		contents := parsesvg.SpreadContents{
 			SvgLayoutPath:         ot.Template,
