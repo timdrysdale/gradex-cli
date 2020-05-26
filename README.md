@@ -193,8 +193,16 @@ Markers:
 
 ## Custom templates
 
-For detailed information on how to customise the templates using Inkscape, [see here](https://github.com/timdrysdale/gradex-cli/blob/master/parsesvg/README.md).
+Some exams will have different marking requirements. These can be accommodated by offering different layout templates that offer the same stages as the default process flow (mark, moderate-active, moderate-inactive, check - note that these are intended to be reused for remark remoderate recheck, but these are not fully supported yet. This modification offers an alternative 5-questions-per-page mark template via usage of the ```layout-q5.svg``` layout at mark stage. You can use a custom template with the mark command by issuing the layout flag at the command line. The template path is relative to ```$GRADEX_CLI_ROOT/etc/overlay/template```. For example, for the five-question markbar, issue:
 
+```
+gradex-cli mark <marker> <exam> --layout "layout-q5.svg"
+```
+
+Note that flags need to come after the exam (one of the positional arguments)
+
+For detailed information on how to customise the templates using Inkscape, [see here](https://github.com/timdrysdale/gradex-cli/blob/master/parsesvg/README.md).
+ 
 
 ## TODO
 
