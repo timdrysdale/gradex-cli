@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -309,6 +310,19 @@ OUTER:
 
 	f.Close()
 
+	// clean comments down to ASCII for printing in standard font
+	//  so as to avoid pagedata hash errors
+	for key, pageComments := range comments { //map
+		for idx, cmt := range pageComments { //slice
+			re := regexp.MustCompile("[[:^ascii:]]")
+			cmt.Text = re.ReplaceAllLiteralString(cmt.Text, "")
+			re = regexp.MustCompile("\\s+") // this one necessary
+			cmt.Text = re.ReplaceAllLiteralString(cmt.Text, " ")
+			pageComments[idx] = cmt
+		}
+		comments[key] = pageComments
+	}
+
 	err = ConvertPDFToJPEGs(ot.InputPath, jpegPath, jpegFileOption)
 	if err != nil {
 		logger.Error().
@@ -423,7 +437,8 @@ OUTER:
 
 				// this benchmarks at around 30ms - but we have to do it everytime to accommodate changing page sizes
 				// note we shrink each box by 2 pixels, assume and white paper - TODO offer as config options
-				boxes, err := parsesvg.GetImageBoxesForTextFields(ot.Template, ot.OpticalBoxSpread, widthPx, heightPx, true, -6)
+
+				boxes, err := parsesvg.GetImageBoxesForTextFields(ot.Template, ot.OpticalBoxSpread, widthPx, heightPx, g.backgroundIsVanilla, g.opticalExpand)
 
 				if err != nil {
 					logger.Error().

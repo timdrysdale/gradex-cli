@@ -152,6 +152,8 @@ You can manually inspect them to see that they end up in
 ls $GRADEX_CLI_ROOT/usr/exam/Demo/10-question-back/X
 ```
 
+### Marking
+
 We want to prepare a set of pages for a marker with the initials ABC, so we issue
 
 ```
@@ -168,28 +170,93 @@ $GRADEX_CLI_ROOT/export/Demo-marker-ready-ABC/
 
 You can try marking these files yourself, and save direct back to ingest (no need to change the filename, it will see from the hidden data what file it is). With the files back in the ingest directory after marking, we ingest again (same command as before)
 
-The bit that handles merging questions coming back from markers is not integrated yet, so for this demo, we just manually move our files to where they will be after marking is analysed:
+
+### Processing marked files
+
+We flatten the files to preserve the comments, read the textfields and optical boxes and store the data in the file, then we assemble documents that merge together the relevant pages for each file, by script.
+
+Each page is categorised into exactly one of four categories, in order lowest to highest priority
+
+    -- ```skipped``` - no indication from marker that they saw it
+	-- ```seen``` - page-ok has had a character entered in a textfield or a stylus mark has been made in more than 2% of the area of the box (or a smaller amount if the box is rectangular)
+	-- ```marked``` - something has been entered in one of the other textfields, by keyboard or stylus
+	-- ```bad``` - the page-bad box has been ticked
+
+Note that the priority is used to resolve what status to use when more than one applies. For example, a ```marked``` page that is also ```bad```, is given the status ```bad```. A page that is both ```marked``` and ```seen``` is given status ```marked```.
+
+
+#### Page merge rules
+
+Every page in the script is included at least once, for context. There is a merge summary bar on the side of each page, so you can tell at a glance if you should expect to see a duplicate copy of the page. If there are no ```marked``` pages, then one of the other pages is chosen. If there are more than one pages that are ```marked```, then all ```marked``` pages are included (e.g. if two markers share a question, and there are one or more pages that have material they both ended up marking).
+
+#### Processing adjustments
+
+Textfields are not easily edited by stylus, so for these markers, we expect them to annotate by hand. Then we'll get someone to key in the mark later. So as to retain the benefits of automation, we can use "optical" methods to check whether hand annotations have been made in the textfields, and if so, trigger the same actions as would have happened by typing into the ```page-ok``` and ```page-bad``` boxes.
+
+##### Background colour for optical boxes
+
+We assume a vanilla background (#ffffff) for the boxes, unless the flag ```--background-vanilla=false``` is given, e.g.
 
 ```
-cp -r $GRADEX_CLI_ROOT/usr/exam/Demo/22-marker-back/* $GRADEX_CLI_ROOT/usr/exam/Demo/26-marked-ready/
+gradex-cli flatten marked 'Some Exam' --background-vanilla=false
 ```
 
-Now we can prepare for moderating. The bit of the system that puts papers back into by-script files is not currently integrated. At this stage of the workflow, both by-script and by-questions processes return to the same path. With many scripts in this folder, the system automatically splits the set of scripts into a set to be actively moderated, with a green sidebar. The rest get a smaller grey "inactive" sidebar.
+in which case, the background is assumed to be chocolate (#000000).
+
+###### Optical Box boundaries
+There are some occasions when you get false positives from the optical-boxes, which is attributed without 100% certainty to artefacts from the boundary edges. It's even been the case in testing (before default shrinkage was increased to 6 pixels) where one marker's scripts threw 100% false positives on the ```page-bad``` box, but the other Marker on that script threw far fewer false positives. If you get a bunch of false positives (no marks in box visually, but pagedata contains "markDetected") then try setting the box shrinkage to a higher number. The number is the number of pixels in each direction. A 10mm by 10mm box at 175dpi has 69x69 pixels. The default shrink reduces that to (69-6-6)x(69-6-6) = 57x57 pixels. If you wanted to shrink some more, you could try for (69-10-10)x(69-10-10) = 49x49 pixels with
+
+```
+gradex-cli flatten marked 'Some exam' --box-shrink=10
+```
+Either or both flags can be issued in the same command. Note that flags must come AFTER the exam.
+
+Also note the change from an imperative "mark" from the mark command, to the adjective "marked". Just to keep you on your toes, like. The imperative (command) here is "flatten."
+
+#### Limitations
+
+This page flattening and merging process _should_ work on the by-question batches (but has not been tested yet for that). Note that the flatten and merge phases of this step are implemented separately behind the scenes (for now), but are always performed at the same time, so the single command "flatten" is used to trigger one after the other.
 
 
-### TODO -- FINISH THIS SECTION
+### Moderating
+
+Once our marked work is flattened, we are ready to put on the moderating bars. Since we might be doing this for more than one moderator, we don't link it to the previous step. At this stage of the workflow, both by-script and by-questions processes have return to the same path (```26-marked-ready```). With many scripts in this folder, the system automatically splits the set of scripts into a set to be actively moderated, with a green sidebar. The rest get a smaller grey "inactive" sidebar. Let's say we have moderate FFF who will moderate 10% or 10 scripts (whichever is greater) for 'Some Exam':
 
 
+```
+gradex-cli moderate FFF 'Some Exam'
 
+```
+
+Note: we don't currently support any other split ratios other than 10% or 10, whichever is bigger, but it is straightforward to add flags to do this if needed.
+
+
+## Further procesing steps
+
+There are further processing steps which are currently partly supported (check bars etc). These will be updated in a future release.
 
 ## Guidance to markers
 
 Markers need only use Adobe Acrobat Reader (Free). The onedrive PDF app works on ipad, and Master PDF works on Linux. Most other viewers don't implement enough support for acroforms.
 
-Markers:
+### Markers:
 
 - can use a keyboard, or stylus
 - do not need to rename their file
+
+
+### Tech to avoid:
+
+   -- Apple Preview (Quartz PDF) trashes the page catalog and prevents unipdf from reading the file
+   -- Chrome lets you edit, but doesn't save
+   -- Edge doesn't autosize the text in the boxes so it is not nice to use
+   -- Almost everything on linux
+   
+
+### What to use on Linux:
+
+Master PDF which can fill forms without registration being required
+
 
 ## Custom templates
 
