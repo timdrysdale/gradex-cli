@@ -1923,11 +1923,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.1070407"
-     inkscape:cx="62.357552"
-     inkscape:cy="455.02027"
+     inkscape:zoom="2.2140814"
+     inkscape:cx="25.773531"
+     inkscape:cy="343.91324"
      inkscape:document-units="mm"
-     inkscape:current-layer="svg8"
+     inkscape:current-layer="layer7"
      showgrid="false"
      inkscape:window-width="1850"
      inkscape:window-height="1136"
@@ -2834,7 +2834,7 @@
      inkscape:groupmode="layer"
      id="layer7"
      inkscape:label="textfields"
-     style="display:none">
+     style="display:inline">
     <rect
        ry="0"
        rx="0"
@@ -2936,8 +2936,6 @@
        y="205.85112"
        rx="0"
        ry="0">
-      <desc
-         id="desc33488">multiline</desc>
       <title
          id="title21845">comment-query-00</title>
     </rect>
@@ -2977,8 +2975,6 @@
        id="rect14952"
        style="display:inline;opacity:1;fill:#00ffff;fill-opacity:0.55868542;stroke:none;stroke-width:0.16324458;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
        inkscape:label="#rect1156A">
-      <desc
-         id="desc14948">multiline</desc>
       <title
          id="title14950">comment-query-01</title>
     </rect>
@@ -2992,8 +2988,6 @@
        y="223.1272"
        rx="0"
        ry="0">
-      <desc
-         id="desc14954">multiline</desc>
       <title
          id="title14956">comment-query-02</title>
     </rect>
@@ -3007,8 +3001,6 @@
        id="rect14964"
        style="display:inline;opacity:1;fill:#00ffff;fill-opacity:0.55868542;stroke:none;stroke-width:0.16324458;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
        inkscape:label="#rect1156A">
-      <desc
-         id="desc14960">multiline</desc>
       <title
          id="title14962">comment-query-03</title>
     </rect>
@@ -3022,8 +3014,6 @@
        y="240.38556"
        rx="0"
        ry="0">
-      <desc
-         id="desc14966">multiline</desc>
       <title
          id="title14968">comment-query-04</title>
     </rect>
