@@ -6,6 +6,7 @@ import (
 	"hash/crc32"
 	"math/rand"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -73,20 +74,23 @@ func UnMarshalAllFromFile(inputPath string) (map[int]PageData, error) {
 			pd, err := unMarshalPageData(rawpd)
 
 			if err != nil {
-				//TODO consider logging failures here
+				fmt.Printf("Error extracting page data from Page %d of %s\n", page, inputPath)
 				continue
 			}
 			pds = append(pds, pd)
 		}
 		if len(pds) > 0 {
-			// we just keep the first one
-			// we might put future logic here if use cases evolve
-			// but for now - one good page data is all that is required...
-			// we only anticipate duplications for redundancy, not
-			// separate data (all pageDetails from past can go in previous array)
-			pdMap[page] = pds[0]
+			found := false
+			for _, pd := range pds {
+				if pd.Current.UUID != "" {
+					pdMap[page] = pd
+					found = true
+				}
+			}
+			if !found {
+				fmt.Printf("Error finding non-null page data from Page %d of %s\n", page, inputPath)
+			}
 		}
-
 	}
 
 	return pdMap, nil
@@ -156,11 +160,23 @@ func unmarshalPageDatasFromPage(page *pdf.PdfPage) ([]PageData, error) {
 // >>>>>>>>>>>>>>>>> WRITE TO CREATOR >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 func writeMarshalledPageDataToCreator(c *creator.Creator, text string) {
 
+	//drop non-ascii characters to avoid hash issues?
+	re := regexp.MustCompile("[[:^ascii:]]")
+	text = re.ReplaceAllLiteralString(text, "")
+
 	crc32c := crc32.MakeTable(crc32.Castagnoli)
 
 	hash := fmt.Sprintf("%d", crc32.Checksum([]byte(text), crc32c))
 
-	writeTextToCreator(c, StartTag+text+EndTag+StartHash+hash+EndHash)
+	fulltag := StartTag + text + EndTag + StartHash + hash + EndHash
+
+	check := extractPageDatasFromText(fulltag)
+
+	if text != check[0] {
+		fmt.Printf("PageData: Error generating Hash for:n%s\n", text)
+	}
+
+	writeTextToCreator(c, fulltag)
 }
 
 // We put the text off the page so we are not merged with visible text on the page
@@ -193,6 +209,8 @@ func writeTextToCreator(c *creator.Creator, text string) {
 // >>>>>>>>>>>>>>>>>>>> GENERIC READING OPERATION ON TEXT >>>>>>>>>>>>>>>>>>>>>>
 // separate for ease of testing
 func extractPageDatasFromText(pageText string) []string {
+
+	hashCheckError := false
 
 	var tokens []string
 
@@ -230,9 +248,18 @@ LOOP:
 		crc32c := crc32.MakeTable(crc32.Castagnoli)
 		checkHash := fmt.Sprintf("%d", crc32.Checksum([]byte(token), crc32c))
 
-		if actualHash == checkHash {
-			tokens = append(tokens, token)
+		if actualHash != checkHash {
+			if hashCheckError == false {
+				hashCheckError = true
+				fmt.Printf("------------------PageData Hash Check Warning--------------------\n (Got: %s; Want: %s)\n", actualHash, checkHash)
+				fmt.Println("Please check the raw data to identify the page, and check it is processed properly:")
+				fmt.Printf("%s\n----------------------------------------------------------------\n", token)
+			}
+
 		}
+
+		tokens = append(tokens, token)
+
 	}
 
 	return tokens

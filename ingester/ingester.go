@@ -1,6 +1,7 @@
 package ingester
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -18,6 +19,8 @@ type Ingester struct {
 	UseFullAssignmentName bool
 	overlayTemplatePath   string
 	ingestTemplatePath    string
+	backgroundIsVanilla   bool
+	opticalExpand         int
 }
 
 func New(path string, msgCh chan chmsg.MessageInfo, logger *zerolog.Logger) (*Ingester, error) {
@@ -32,6 +35,8 @@ func New(path string, msgCh chan chmsg.MessageInfo, logger *zerolog.Logger) (*In
 
 	g.overlayTemplatePath = "layout.svg"
 	g.ingestTemplatePath = "layout-flatten-312pt.svg"
+	g.backgroundIsVanilla = true
+	g.opticalExpand = -6
 
 	err := g.SetupGradexPaths()
 
@@ -39,6 +44,16 @@ func New(path string, msgCh chan chmsg.MessageInfo, logger *zerolog.Logger) (*In
 		g.logger = logger
 	}
 	return g, err
+}
+
+func (g *Ingester) SetBackgroundIsVanilla(vanilla bool) {
+	g.logger.Info().Bool("vanilla", vanilla).Msg(fmt.Sprintf("Changing backgroundIsVanilla from %v to %v", g.backgroundIsVanilla, vanilla))
+	g.backgroundIsVanilla = vanilla
+}
+
+func (g *Ingester) SetOpticalShrink(shrink int) {
+	g.logger.Info().Int("shrink", shrink).Msg(fmt.Sprintf("Changing optical shrink from %d to %d", -1*g.opticalExpand, shrink))
+	g.opticalExpand = -1 * shrink
 }
 
 func (g *Ingester) SetOverlayTemplatePath(path string) error {
@@ -49,12 +64,12 @@ func (g *Ingester) SetOverlayTemplatePath(path string) error {
 	}
 
 	g.overlayTemplatePath = path
-
+	g.logger.Info().Str("path", path).Msg("Changed overlay template file")
 	return nil
 }
 
 func (g *Ingester) SetIngestTemplatePath(path string) error {
-
+	g.logger.Info().Str("path", path).Msg("Changed ingest template file")
 	_, err := os.Stat(filepath.Join(g.IngestTemplate(), path))
 
 	if err != nil {

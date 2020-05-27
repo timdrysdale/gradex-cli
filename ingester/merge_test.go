@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/chmsg"
+	"github.com/timdrysdale/gradex-cli/comment"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
@@ -417,6 +418,85 @@ func makePaperMap1() map[string]map[int]PageCollection {
 
 }
 
+func TestSummarisePageCommentOnlyIsMarked(t *testing.T) {
+
+	original := "EL03-B00.pdf"
+	originalPath := "a/file/some/where.pdf"
+	ownPath := "a/b/c.pdf"
+	pageNumber := 3
+	wasFor := "DEF"
+
+	pageData := pagedata.PageData{
+		Current: pagedata.PageDetail{
+			Item: pagedata.ItemDetail{
+				What: "EL03",
+				Who:  "B00",
+			},
+			Own: pagedata.FileDetail{
+				Path: ownPath,
+			},
+			Original: pagedata.FileDetail{
+				Path:   originalPath,
+				Number: pageNumber,
+			},
+			Data: []pagedata.Field{
+				pagedata.Field{
+					Key:   "tf-page-bad",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-page-ok",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-question-01-section",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-page-bad-optical",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-page-ok-optical",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-question-01-section-optical",
+					Value: "",
+				},
+			},
+			Comments: []comment.Comment{
+				comment.Comment{
+					Text: "Hello",
+				},
+			},
+		},
+		Previous: []pagedata.PageDetail{
+			pagedata.PageDetail{
+				Process: pagedata.ProcessDetail{
+					ToDo: "FirstProcess",
+					For:  "ABC",
+				},
+			},
+			pagedata.PageDetail{
+				Process: pagedata.ProcessDetail{
+					For:  wasFor,
+					ToDo: "SecondProcess",
+				},
+			},
+		},
+	}
+
+	summary := summarisePage(pageData)
+
+	assert.Equal(t, wasFor, summary.WasFor)
+	assert.Equal(t, statusMarked, summary.Status)
+	assert.Equal(t, original, summary.Original)
+	assert.Equal(t, ownPath, summary.OwnPath)
+	assert.Equal(t, pageNumber, summary.PageNumber)
+
+}
+
 func TestCreatePaperMap(t *testing.T) {
 
 	paperMap := makePaperMap1()
@@ -484,7 +564,7 @@ func TestCreateMergePathMap(t *testing.T) {
 func TestMergeOverlay(t *testing.T) {
 
 	if testing.Short() {
-		//t.Skip("skipping test in short mode.")
+		t.Skip("skipping test in short mode.")
 	}
 	// process a marked paper with keyed entries
 	// check that keyed entries are picked up
@@ -546,7 +626,7 @@ func TestMergeOverlay(t *testing.T) {
 
 	// visual check (comments, in particular, as well as flattening of typed values)
 	actualPdf := "./tmp-delete-me/usr/exam/Practice/26-marked-ready/Practice-B999999-merge.pdf"
-	expectedPdf := "./expected/visual/Practice-B999999-maTDD-marked-comments-merge.pdf"
+	expectedPdf := "./expected/visual/Practice-B999999-merge.pdf"
 
 	_, err = os.Stat(actualPdf)
 	assert.NoError(t, err)
@@ -558,6 +638,52 @@ func TestMergeOverlay(t *testing.T) {
 	if !result {
 		fmt.Println(actualPdf)
 	}
+
 	os.RemoveAll("./tmp-delete-me")
+
+}
+
+// check that linked list of UUID in pagedata is, in fact, linked
+func TestPageUUIDSequenceIsLinked(t *testing.T) {
+
+	inPath := "./expected/visual/Practice-B999999-merge.pdf"
+
+	pageDataMap, err := pagedata.UnMarshalAllFromFile(inPath)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, 3, pagedata.GetLen(pageDataMap))
+
+	printResults := false
+
+	for pageNumber, pdPage := range pageDataMap {
+
+		pds := []pagedata.PageDetail{}
+
+		// make a list for page 1
+		for _, pd := range pdPage.Previous {
+
+			pds = append(pds, pd)
+		}
+
+		pds = append(pds, pdPage.Current)
+
+		plist := []string{}
+		flist := []string{}
+
+		previous := ""
+		for _, pd := range pds {
+			plist = append(plist, previous)
+			flist = append(flist, pd.Follows)
+			assert.Equal(t, previous, pd.Follows)
+			previous = pd.UUID
+		}
+
+		if printResults {
+
+			fmt.Printf("UUID for page %d (these next two lines should match)\n", pageNumber)
+			fmt.Printf("Previous:%v\nFollows: %v\n\n", plist, flist)
+		}
+	}
 
 }

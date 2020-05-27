@@ -209,6 +209,10 @@ func summarisePage(pageData pagedata.PageData) PageSummary {
 			}
 		}
 	}
+	// if a page only has comments, we still need to catch it
+	if len(pageData.Current.Comments) > 0 {
+		pageFSM.Event(statusMarked)
+	}
 	summary := PageSummary{
 		Original:   getOriginalKey(pageData),
 		PageNumber: getPageNumber(pageData),
