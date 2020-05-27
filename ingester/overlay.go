@@ -318,6 +318,7 @@ OUTER:
 			cmt.Text = re.ReplaceAllLiteralString(cmt.Text, "")
 			re = regexp.MustCompile("\\s+") // this one necessary
 			cmt.Text = re.ReplaceAllLiteralString(cmt.Text, " ")
+
 			pageComments[idx] = cmt
 		}
 		comments[key] = pageComments

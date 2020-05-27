@@ -306,7 +306,12 @@ func RenderSpreadExtra(contents SpreadContents) error {
 
 	for i, cmt := range comments.GetByPage(pageNumber) {
 		cmt.Label = fmt.Sprintf("%d%s", i+numOldComments, lastEditor)
-		comment.DrawComment(c, cmt, x, y)
+
+		shortCmt := cmt
+		if len(shortCmt.Text) > 120 {
+			shortCmt.Text = shortCmt.Text[0:119] + "..."
+		}
+		comment.DrawComment(c, shortCmt, x, y)
 		y = y - rowHeight
 		updatedComments = append(updatedComments, cmt)
 	}
