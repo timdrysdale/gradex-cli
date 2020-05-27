@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/chmsg"
+	"github.com/timdrysdale/gradex-cli/comment"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
@@ -414,6 +415,85 @@ func makePaperMap1() map[string]map[int]PageCollection {
 	}
 
 	return createPaperMap(summaries)
+
+}
+
+func TestSummarisePageCommentOnlyIsMarked(t *testing.T) {
+
+	original := "EL03-B00.pdf"
+	originalPath := "a/file/some/where.pdf"
+	ownPath := "a/b/c.pdf"
+	pageNumber := 3
+	wasFor := "DEF"
+
+	pageData := pagedata.PageData{
+		Current: pagedata.PageDetail{
+			Item: pagedata.ItemDetail{
+				What: "EL03",
+				Who:  "B00",
+			},
+			Own: pagedata.FileDetail{
+				Path: ownPath,
+			},
+			Original: pagedata.FileDetail{
+				Path:   originalPath,
+				Number: pageNumber,
+			},
+			Data: []pagedata.Field{
+				pagedata.Field{
+					Key:   "tf-page-bad",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-page-ok",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-question-01-section",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-page-bad-optical",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-page-ok-optical",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-question-01-section-optical",
+					Value: "",
+				},
+			},
+			Comments: []comment.Comment{
+				comment.Comment{
+					Text: "Hello",
+				},
+			},
+		},
+		Previous: []pagedata.PageDetail{
+			pagedata.PageDetail{
+				Process: pagedata.ProcessDetail{
+					ToDo: "FirstProcess",
+					For:  "ABC",
+				},
+			},
+			pagedata.PageDetail{
+				Process: pagedata.ProcessDetail{
+					For:  wasFor,
+					ToDo: "SecondProcess",
+				},
+			},
+		},
+	}
+
+	summary := summarisePage(pageData)
+
+	assert.Equal(t, wasFor, summary.WasFor)
+	assert.Equal(t, statusMarked, summary.Status)
+	assert.Equal(t, original, summary.Original)
+	assert.Equal(t, ownPath, summary.OwnPath)
+	assert.Equal(t, pageNumber, summary.PageNumber)
 
 }
 
