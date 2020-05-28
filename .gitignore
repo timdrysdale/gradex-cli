@@ -10,6 +10,7 @@
 .#*
 *.html
 # ingester test outputs
+test-set
 example-output
 tmp-delete-me
 ingester/draft

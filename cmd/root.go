@@ -23,7 +23,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var redo bool
+var (
+	OpticalShrink  int
+	OpticalVanilla bool
+	redo           bool
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -46,6 +50,8 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().BoolVar(&redo, "redo", false, "Force redo of already processed files")
+	rootCmd.Flags().BoolVarP(&OpticalVanilla, "background-vanilla", "b", true, "Assume vanilla background for optical checkboxes? [default true]")
+	rootCmd.Flags().IntVarP(&OpticalShrink, "box-shrink", "s", 6, "Number of pixels to shrink optical boxes to avoid false positives from boundaries [default 6]")
 }
 
 func initConfig() {

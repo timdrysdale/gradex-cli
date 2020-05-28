@@ -29,11 +29,6 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
-var (
-	flattenOpticalShrink  int
-	flattenOpticalVanilla bool
-)
-
 // flattenCmd represents the flatten command
 var flattenCmd = &cobra.Command{
 	Use:   "flatten [exam] [stage]",
@@ -110,8 +105,8 @@ rechecked`,
 
 		case "marked", "remarked", "moderated", "remoderated", "checked", "rechecked":
 
-			g.SetBackgroundIsVanilla(flattenOpticalVanilla)
-			g.SetOpticalShrink(flattenOpticalShrink)
+			g.SetBackgroundIsVanilla(OpticalVanilla)
+			g.SetOpticalShrink(OpticalShrink)
 
 			err = g.FlattenProcessedPapers(exam, stage)
 
@@ -140,8 +135,6 @@ rechecked`,
 
 func init() {
 	rootCmd.AddCommand(flattenCmd)
-	flattenCmd.Flags().BoolVarP(&flattenOpticalVanilla, "background-vanilla", "b", true, "Assume vanilla background for optical checkboxes? [default true]")
-	flattenCmd.Flags().IntVarP(&flattenOpticalShrink, "box-shrink", "s", 6, "Number of pixels to shrink optical boxes to avoid false positives from boundaries [default 6]")
 
 	// Here you will define your flags and configuration settings.
 

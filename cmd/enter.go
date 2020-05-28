@@ -28,11 +28,6 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
-var (
-	enterOpticalShrink  int
-	enterOpticalVanilla bool
-)
-
 // moderateCmd represents the moderate command
 var enterCmd = &cobra.Command{
 	Use:   "enter [enterer] [exam]",
@@ -108,8 +103,8 @@ this will produce a bunch of files in the enterReady directory, which can be exp
 			os.Exit(1)
 		}
 
-		g.SetBackgroundIsVanilla(enterOpticalVanilla)
-		g.SetOpticalShrink(enterOpticalShrink)
+		g.SetBackgroundIsVanilla(OpticalVanilla)
+		g.SetOpticalShrink(OpticalShrink)
 
 		err = g.AddEnterActiveBar(exam, enterer)
 
@@ -131,8 +126,6 @@ this will produce a bunch of files in the enterReady directory, which can be exp
 
 func init() {
 	rootCmd.AddCommand(enterCmd)
-	flattenCmd.Flags().BoolVarP(&flattenOpticalVanilla, "background-vanilla", "b", true, "Assume vanilla background for optical checkboxes? [default true]")
-	flattenCmd.Flags().IntVarP(&flattenOpticalShrink, "box-shrink", "s", 6, "Number of pixels to shrink optical boxes to avoid false positives from boundaries [default 6]")
 
 	// Here you will define your flags and configuration settings.
 
