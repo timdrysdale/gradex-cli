@@ -267,6 +267,108 @@ func (g *Ingester) AddModerateInActiveBar(exam string) error {
 	return err
 }
 
+func (g *Ingester) AddEnterActiveBar(exam string, enterer string) error {
+	logger := g.logger.With().Str("process", "add-check-bar").Logger()
+	mc := chmsg.MessagerConf{
+		ExamName:     exam,
+		FunctionName: "overlay",
+		TaskName:     "add-enter-bar",
+	}
+
+	cm := chmsg.New(mc, g.msgCh, g.timeout)
+
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
+		UnixTime: time.Now().UnixNano(),
+		Name:     "enter-bar",
+		By:       "gradex-cli",
+		ToDo:     "entering",
+		For:      enterer,
+	}
+
+	oc := OverlayCommand{
+		FromPath:       g.GetExamDir(exam, enterActive),
+		ToPath:         g.GetExamDirNamed(exam, enterReady, enterer),
+		ExamName:       exam,
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "enter-active",
+		ProcessDetail:  procDetail,
+		Msg:            cm,
+		PathDecoration: g.GetNamedTaskDecoration(entering, enterer),
+	}
+
+	err := g.OverlayPapers(oc, &logger)
+
+	if err == nil {
+		cm.Send(fmt.Sprintf("Finished Processing add-enter-active-bar UUID=%s\n", procDetail.UUID))
+		logger.Info().
+			Str("UUID", procDetail.UUID).
+			Str("enterer", enterer).
+			Str("exam", exam).
+			Msg("Finished add-enter-active-bar")
+	} else {
+		logger.Error().
+			Str("UUID", procDetail.UUID).
+			Str("enterer", enterer).
+			Str("exam", exam).
+			Str("error", err.Error()).
+			Msg("Error add-enter-active-bar")
+	}
+	return err
+
+}
+
+func (g *Ingester) AddEnterInactiveBar(exam string) error {
+	logger := g.logger.With().Str("process", "add-check-bar").Logger()
+	mc := chmsg.MessagerConf{
+		ExamName:     exam,
+		FunctionName: "overlay",
+		TaskName:     "add-enter-inactive-bar",
+	}
+
+	cm := chmsg.New(mc, g.msgCh, g.timeout)
+	enterer := "X"
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
+		UnixTime: time.Now().UnixNano(),
+		Name:     "enter-inactive-bar",
+		By:       "gradex-cli",
+		ToDo:     "entering",
+		For:      enterer,
+	}
+
+	oc := OverlayCommand{
+		FromPath:       g.GetExamDir(exam, enterInactive),
+		ToPath:         g.GetExamDirSub(exam, enterProcessed, inactive),
+		ExamName:       exam,
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "enter-inactive", //same design
+		ProcessDetail:  procDetail,
+		Msg:            cm,
+		PathDecoration: g.GetNamedTaskDecoration(entering, enterer),
+	}
+
+	err := g.OverlayPapers(oc, &logger)
+
+	if err == nil {
+		cm.Send(fmt.Sprintf("Finished Processing add-enter-inactive-bar UUID=%s\n", procDetail.UUID))
+		logger.Info().
+			Str("UUID", procDetail.UUID).
+			Str("enterer", enterer).
+			Str("exam", exam).
+			Msg("Finished add-enter-inactive-bar")
+	} else {
+		logger.Error().
+			Str("UUID", procDetail.UUID).
+			Str("enterer", enterer).
+			Str("exam", exam).
+			Str("error", err.Error()).
+			Msg("Error add-enter-inactive-bar")
+	}
+	return err
+
+}
+
 func (g *Ingester) AddCheckBar(exam string, checker string) error {
 	logger := g.logger.With().Str("process", "add-check-bar").Logger()
 	mc := chmsg.MessagerConf{

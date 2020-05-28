@@ -68,6 +68,12 @@ func (g *Ingester) FlattenProcessedPapersFromDir(exam, stage string) (string, er
 	case "remoderated":
 		dir = reModeratorBack
 
+	case "entered":
+		dir = enterBack
+
+	case "reentered":
+		dir = reEnterBack
+
 	case "checked":
 		dir = checkerBack
 
@@ -100,6 +106,12 @@ func (g *Ingester) FlattenProcessedPapersToDir(exam, stage string) (string, erro
 
 	case "remoderated":
 		dir = reModeratorFlattened
+
+	case "entered":
+		dir = enterFlattened
+
+	case "reentered":
+		dir = reEnterFlattened
 
 	case "checked":
 		dir = checkerFlattened
@@ -288,7 +300,7 @@ func (g *Ingester) SetupExamDirs(exam string) error {
 	}
 
 	for _, stage := range ExamStage {
-		err := g.EnsureDir(g.GetExamDir(exam, stage))
+		err := g.EnsureDirAll(g.GetExamDir(exam, stage))
 		if err != nil {
 			return err
 		}
