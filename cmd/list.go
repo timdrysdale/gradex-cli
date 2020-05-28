@@ -100,12 +100,12 @@ gradex-cli list badpages 'PGEE00000 A B D Exam'
 		}
 
 		g.EnsureDirectoryStructure()
-		g.SetupExamPaths(exam)
+		g.SetupExamDirs(exam)
 
 		switch what {
 
 		case "badpage", "badpages", "pagebad":
-			files, err := g.GetFileList(g.PageBad(exam))
+			files, err := g.GetFileList(g.GetExamDir(exam, ingester.PageBad))
 			if err != nil {
 				return
 			}
@@ -115,7 +115,7 @@ gradex-cli list badpages 'PGEE00000 A B D Exam'
 
 		case "tree":
 
-			lines, err := tree.Tree(g.GetExamPath(exam), false)
+			lines, err := tree.Tree(g.GetExamRoot(exam), false)
 
 			if err != nil {
 				fmt.Println(err)
@@ -126,7 +126,7 @@ gradex-cli list badpages 'PGEE00000 A B D Exam'
 
 		case "pagetree":
 
-			lines, err := tree.Tree(g.GetExamPath(exam), true)
+			lines, err := tree.Tree(g.GetExamRoot(exam), true)
 
 			if err != nil {
 				fmt.Println(err)

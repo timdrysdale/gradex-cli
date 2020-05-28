@@ -23,24 +23,27 @@ func (g *Ingester) MergeProcessedPapersToDir(exam, stage string) (string, error)
 	switch stage {
 
 	case "marked":
-		dir = markedReady
+		dir = markerProcessed
 
 	case "remarked":
-		dir = reMarkedReady
+		dir = reMarkerProcessed
 
 	case "moderated":
-		dir = moderatedReady
+		dir = moderatorProcessed
+
+	case "remoderated":
+		dir = reModeratorProcessed
 
 	case "checked":
-		dir = checkedReady
+		dir = checkerProcessed
 
 	case "rechecked":
-		dir = reCheckedReady
+		dir = reCheckerProcessed
 	default:
 		return "", fmt.Errorf("unknown stage %s", stage)
 	}
 
-	path := filepath.Join(g.Exam(), exam, dir)
+	path := g.GetExamDir(exam, dir)
 	g.EnsureDirAll(path)
 	return path, nil
 }
@@ -62,6 +65,15 @@ func (g *Ingester) FlattenProcessedPapersFromDir(exam, stage string) (string, er
 	case "moderated":
 		dir = moderatorBack
 
+	case "remoderated":
+		dir = reModeratorBack
+
+	case "entered":
+		dir = enterBack
+
+	case "reentered":
+		dir = reEnterBack
+
 	case "checked":
 		dir = checkerBack
 
@@ -72,7 +84,7 @@ func (g *Ingester) FlattenProcessedPapersFromDir(exam, stage string) (string, er
 		return "", fmt.Errorf("unknown stage %s", stage)
 	}
 
-	path := filepath.Join(g.Exam(), exam, dir)
+	path := g.GetExamDir(exam, dir)
 	g.EnsureDirAll(path)
 	return path, nil
 }
@@ -84,336 +96,97 @@ func (g *Ingester) FlattenProcessedPapersToDir(exam, stage string) (string, erro
 	switch stage {
 
 	case "marked":
-		dir = markedFlattened
+		dir = markerFlattened
 
 	case "remarked":
-		dir = reMarkedFlattened
+		dir = reMarkerFlattened
 
 	case "moderated":
-		dir = moderatedFlattened
+		dir = moderatorFlattened
+
+	case "remoderated":
+		dir = reModeratorFlattened
+
+	case "entered":
+		dir = enterFlattened
+
+	case "reentered":
+		dir = reEnterFlattened
 
 	case "checked":
-		dir = checkedFlattened
+		dir = checkerFlattened
 
 	case "rechecked":
-		dir = reCheckedFlattened
+		dir = reCheckerFlattened
+
 	default:
 		return "", fmt.Errorf("unknown stage %s", stage)
 	}
 
-	path := filepath.Join(g.Exam(), exam, dir)
+	path := g.GetExamDir(exam, dir)
 	g.EnsureDirAll(path)
 	return path, nil
 }
 
-//>>>>>>>>>>>>>> ANNOTATE PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-func (g *Ingester) QuestionImages(exam string) string {
-	path := filepath.Join(g.Exam(), exam, questionImages)
+func (g *Ingester) GetExamRoot(exam string) string {
+	path := filepath.Join(g.Exam(), exam)
 	g.EnsureDirAll(path)
 	return path
 }
 
-func (g *Ingester) QuestionPages(exam string) string {
-	path := filepath.Join(g.Exam(), exam, questionPages)
-	g.EnsureDirAll(path)
-	return path
-}
-func (g *Ingester) QuestionReady(exam, labeller string) string {
-	path := filepath.Join(g.Exam(), exam, questionReady, limit(labeller, N))
+func (g *Ingester) GetExamDir(exam, dir string) string {
+	path := filepath.Join(g.Exam(), exam, dir)
 	g.EnsureDirAll(path)
 	return path
 }
 
-func (g *Ingester) QuestionSent(exam, labeller string) string {
-	path := filepath.Join(g.Exam(), exam, questionSent, limit(labeller, N))
-	g.EnsureDirAll(path)
-	return path
-}
-func (g *Ingester) QuestionBack(exam, labeller string) string {
-	path := filepath.Join(g.Exam(), exam, questionBack, limit(labeller, N))
-	g.EnsureDirAll(path)
-	return path
-}
-func (g *Ingester) QuestionSplit(exam, question string) string {
-
-	path := filepath.Join(g.Exam(), exam, questionSplit, question)
+// note that inactive moderator back would use this function as
+// destination := GetExamDir(exam, moderatorBack, inactive)
+func (g *Ingester) GetExamDirSub(exam, dir, sub string) string {
+	path := filepath.Join(g.Exam(), exam, dir, sub)
 	g.EnsureDirAll(path)
 	return path
 }
 
-//>>>>>>>>>>>>>>>> EXPORT PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-func (g *Ingester) ExportLabelling(exam, labeller string) string {
-	path := filepath.Join(g.Export(), exam+"-"+questionReady+"-"+limit(labeller, N))
+func (g *Ingester) GetExportDir(exam, dir, name string) string {
+	path := filepath.Join(g.Export(), exam+"-"+dir+"-"+g.GetShortActorName(name))
 	g.EnsureDirAll(path)
 	return path
 }
 
-func (g *Ingester) ExportMarking(exam, marker string) string {
-	path := filepath.Join(g.Export(), exam+"-"+markerReady+"-"+limit(marker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) ExportModerating(exam, moderator string) string {
-	path := filepath.Join(g.Export(), exam+"-"+moderatorReady+"-"+limit(moderator, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) ExportChecking(exam, checker string) string {
-	path := filepath.Join(g.Export(), exam+"-"+checkerReady+"-"+limit(checker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-func (g *Ingester) ExportReMarking(exam, marker string) string {
-	path := filepath.Join(g.Export(), exam+"-"+reMarkerReady+"-"+limit(marker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) ExportReChecking(exam, checker string) string {
-	path := filepath.Join(g.Export(), exam+"-"+reCheckerReady+"-"+limit(checker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-//>>>>>>>>>>>>>>>> GENERAL PATHS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-func (g *Ingester) PageBad(exam string) string {
-	return filepath.Join(g.Exam(), exam, pageBad)
-}
-func (g *Ingester) MarkedFlattened(exam string) string {
-	return filepath.Join(g.Exam(), exam, markedFlattened)
-}
-func (g *Ingester) MarkedMerged(exam string) string {
-	return filepath.Join(g.Exam(), exam, markedMerged)
-}
-func (g *Ingester) MarkedPruned(exam string) string {
-	return filepath.Join(g.Exam(), exam, markedPruned)
-}
-func (g *Ingester) MarkedReady(exam string) string {
-	return filepath.Join(g.Exam(), exam, markedReady)
-}
-func (g *Ingester) ModerateActive(exam string) string {
-	return filepath.Join(g.Exam(), exam, moderateActive)
-}
-
-func (g *Ingester) ModeratedFlattened(exam string) string {
-	return filepath.Join(g.Exam(), exam, moderatedFlattened)
-}
-func (g *Ingester) ModeratedMerged(exam string) string {
-	return filepath.Join(g.Exam(), exam, moderatedMerged)
-}
-func (g *Ingester) ModeratedPruned(exam string) string {
-	return filepath.Join(g.Exam(), exam, moderatedPruned)
-}
-
-func (g *Ingester) ModeratedReady(exam string) string {
-	return filepath.Join(g.Exam(), exam, moderatedReady)
-}
-
-func (g *Ingester) ModerateInActive(exam string) string {
-	return filepath.Join(g.Exam(), exam, moderateInActive)
-}
-
-func (g *Ingester) ModeratedInActiveBack(exam string) string {
-	path := filepath.Join(g.Exam(), exam, moderatorBack, "inactive")
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) CheckedFlattened(exam string) string {
-	return filepath.Join(g.Exam(), exam, checkedFlattened)
-}
-func (g *Ingester) CheckedMerged(exam string) string {
-	return filepath.Join(g.Exam(), exam, checkedMerged)
-}
-func (g *Ingester) CheckedPruned(exam string) string {
-	return filepath.Join(g.Exam(), exam, checkedPruned)
-}
-func (g *Ingester) CheckedReady(exam string) string {
-	return filepath.Join(g.Exam(), exam, checkedReady)
-}
-
+/* Not sure if this is actually used? replace with doneDecoration
 func (g *Ingester) DoneDecoration() string {
 	return "d"
 }
+*/
 
-func (g *Ingester) LabellerABCDecoration(initials string) string {
-	return fmt.Sprintf("-la%s", limit(initials, N))
+func (g *Ingester) GetShortActorName(name string) string {
+	return GetShortActorName(name)
 }
 
-func (g *Ingester) MarkerABCDecoration(initials string) string {
-	return fmt.Sprintf("-ma%s", limit(initials, N))
+//some external libraries use this, like pagedata
+func GetShortActorName(name string) string {
+	return limitToUpper(name, 3)
 }
 
-func (g *Ingester) MarkerABCDirName(initials string) string {
-	return limit(initials, N)
+func (g *Ingester) GetNamedTaskDecoration(task, name string) string {
+	return "-" + limitToLower(task, 2) + GetShortActorName(name)
 }
 
-func (g *Ingester) ModeratorABCDecoration(initials string) string {
-	return fmt.Sprintf("-mo%s", limit(initials, N))
-}
-
-func (g *Ingester) ModeratorABCDirName(initials string) string {
-	return limit(initials, N)
-}
-
-func (g *Ingester) CheckerABCDecoration(initials string) string {
-	return fmt.Sprintf("-c%s", limit(initials, N))
-}
-
-func (g *Ingester) CheckerABCDirName(initials string) string {
-	return limit(initials, N)
-}
-
-func (g *Ingester) MarkerNDecoration(number int) string {
-	return fmt.Sprintf("-ma%d", number)
-}
-
-func (g *Ingester) MarkerNDirName(number int) string {
-	return fmt.Sprintf("marker%d", number)
-}
-
-func (g *Ingester) ModeratorNDecoration(number int) string {
-	return fmt.Sprintf("-mo%d", number)
-}
-
-func (g *Ingester) ModeratorNDirName(number int) string {
-	return fmt.Sprintf("moderator%d", number)
-}
-
-func (g *Ingester) CheckerNDecoration(number int) string {
-	return fmt.Sprintf("-c%d", number)
-}
-
-func (g *Ingester) CheckerNDirName(number int) string {
-	return fmt.Sprintf("checker%d", number)
-}
-
-func (g *Ingester) MarkerReady(exam, marker string) string {
-	path := filepath.Join(g.Exam(), exam, markerReady, limit(marker, N))
+func (g *Ingester) GetExamDirNamed(exam, dir, name string) string {
+	path := filepath.Join(g.Exam(), exam, dir, GetShortActorName(name))
 	g.EnsureDirAll(path)
 	return path
 }
 
-func (g *Ingester) MarkerSent(exam, marker string) string {
-	path := filepath.Join(g.Exam(), exam, markerSent, limit(marker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) MarkerBack(exam, marker string) string {
-	path := filepath.Join(g.Exam(), exam, markerBack, limit(marker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) ModeratorReady(exam, moderator string) string {
-	path := filepath.Join(g.Exam(), exam, moderatorReady, limit(moderator, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) ModeratorSent(exam, moderator string) string {
-	path := filepath.Join(g.Exam(), exam, moderatorSent, limit(moderator, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) ModeratorBack(exam, moderator string) string {
-	path := filepath.Join(g.Exam(), exam, moderatorBack, limit(moderator, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) CheckerReady(exam, checker string) string {
-	path := filepath.Join(g.Exam(), exam, checkerReady, limit(checker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) CheckerSent(exam, checker string) string {
-	path := filepath.Join(g.Exam(), exam, checkerSent, limit(checker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) CheckerBack(exam, checker string) string {
-	path := filepath.Join(g.Exam(), exam, checkerBack, limit(checker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) ReMarkerReady(exam, marker string) string {
-	path := filepath.Join(g.Exam(), exam, reMarkerReady, limit(marker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) ReMarkerSent(exam, marker string) string {
-	path := filepath.Join(g.Exam(), exam, reMarkerSent, limit(marker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) ReMarkerBack(exam, marker string) string {
-	path := filepath.Join(g.Exam(), exam, reMarkerBack, limit(marker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) ReCheckerReady(exam, checker string) string {
-	path := filepath.Join(g.Exam(), exam, reCheckerReady, limit(checker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) ReCheckerSent(exam, checker string) string {
-	path := filepath.Join(g.Exam(), exam, reCheckerSent, limit(checker, N))
-	EnsureDirAll(path)
-	return path
-}
-
-func (g *Ingester) ReCheckerBack(exam, checker string) string {
-	path := filepath.Join(g.Exam(), exam, reCheckerBack, limit(checker, N))
-	g.EnsureDirAll(path)
-	return path
-}
-
+// note these rely on info contained in the instantiated ingester
+// because they can be set on the command line
 func (g *Ingester) FlattenLayoutSVG() string {
 	return filepath.Join(g.IngestTemplate(), g.ingestTemplatePath)
 }
 
 func (g *Ingester) OverlayLayoutSVG() string {
 	return filepath.Join(g.OverlayTemplate(), g.overlayTemplatePath)
-}
-
-func (g *Ingester) AcceptedPapers(exam string) string {
-	return filepath.Join(g.Exam(), exam, acceptedPapers)
-}
-
-func (g *Ingester) AcceptedReceipts(exam string) string {
-	return filepath.Join(g.Exam(), exam, acceptedReceipts)
-}
-
-//TODO in flatten, swap these paths for the general named ones below
-func (g *Ingester) AcceptedPaperImages(exam string) string {
-	return filepath.Join(g.Exam(), exam, tempImages)
-}
-func (g *Ingester) AcceptedPaperPages(exam string) string {
-	return filepath.Join(g.Exam(), exam, tempPages)
-}
-func (g *Ingester) PaperImages(exam string) string {
-	return filepath.Join(g.Exam(), exam, tempImages)
-}
-func (g *Ingester) PaperPages(exam string) string {
-	return filepath.Join(g.Exam(), exam, tempPages)
-}
-
-func (g *Ingester) AnonymousPapers(exam string) string {
-	return filepath.Join(g.Exam(), exam, anonPapers)
 }
 
 func (g *Ingester) Identity() string {
@@ -488,15 +261,7 @@ func (g *Ingester) Root() string {
 	return g.root
 }
 
-func (g *Ingester) GetExamPath(name string) string {
-	return filepath.Join(g.Exam(), name)
-}
-
-func (g *Ingester) GetExamStagePath(name, stage string) string {
-	return filepath.Join(g.Exam(), name, stage)
-}
-
-func (g *Ingester) SetupGradexPaths() error {
+func (g *Ingester) SetupGradexDirs() error {
 
 	paths := []string{
 		g.Root(),
@@ -527,15 +292,15 @@ func (g *Ingester) SetupGradexPaths() error {
 	return nil
 }
 
-func (g *Ingester) SetupExamPaths(exam string) error {
+func (g *Ingester) SetupExamDirs(exam string) error {
 	// don't use EnsureDirAll so it flags if we are not otherwise setup
-	err := g.EnsureDir(g.GetExamPath(exam))
+	err := g.EnsureDir(g.GetExamRoot(exam))
 	if err != nil {
 		return err
 	}
 
 	for _, stage := range ExamStage {
-		err := g.EnsureDir(g.GetExamStagePath(exam, stage))
+		err := g.EnsureDirAll(g.GetExamDir(exam, stage))
 		if err != nil {
 			return err
 		}

@@ -38,7 +38,7 @@ func New(path string, msgCh chan chmsg.MessageInfo, logger *zerolog.Logger) (*In
 	g.backgroundIsVanilla = true
 	g.opticalExpand = -6
 
-	err := g.SetupGradexPaths()
+	err := g.SetupGradexDirs()
 
 	if logger != nil { //for testing
 		g.logger = logger

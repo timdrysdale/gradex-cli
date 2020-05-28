@@ -64,14 +64,14 @@ func TestExport(t *testing.T) {
 	exam := "export-test"
 	actor := "tester"
 
-	g.SetupExamPaths(exam)
+	g.SetupExamDirs(exam)
 
 	fn := "test.pdf"
 
 	//LABELLING
-	fileReady := filepath.Join(g.QuestionReady(exam, actor), fn)
-	fileSent := filepath.Join(g.QuestionSent(exam, actor), fn)
-	fileExport := filepath.Join(g.ExportLabelling(exam, actor), fn)
+	fileReady := filepath.Join(g.GetExamDirNamed(exam, questionReady, actor), fn)
+	fileSent := filepath.Join(g.GetExamDirNamed(exam, questionSent, actor), fn)
+	fileExport := filepath.Join(g.GetExportDir(exam, questionReady, actor), fn)
 
 	createFile(t, fileReady)
 
@@ -82,9 +82,9 @@ func TestExport(t *testing.T) {
 	mustExist(t, fileExport)
 
 	// MARKING
-	fileReady = filepath.Join(g.MarkerReady(exam, actor), fn)
-	fileSent = filepath.Join(g.MarkerSent(exam, actor), fn)
-	fileExport = filepath.Join(g.ExportMarking(exam, actor), fn)
+	fileReady = filepath.Join(g.GetExamDirNamed(exam, markerReady, actor), fn)
+	fileSent = filepath.Join(g.GetExamDirNamed(exam, markerSent, actor), fn)
+	fileExport = filepath.Join(g.GetExportDir(exam, markerReady, actor), fn)
 
 	createFile(t, fileReady)
 
@@ -95,9 +95,9 @@ func TestExport(t *testing.T) {
 	mustExist(t, fileExport)
 
 	// MODERATING
-	fileReady = filepath.Join(g.ModeratorReady(exam, actor), fn)
-	fileSent = filepath.Join(g.ModeratorSent(exam, actor), fn)
-	fileExport = filepath.Join(g.ExportModerating(exam, actor), fn)
+	fileReady = filepath.Join(g.GetExamDirNamed(exam, moderatorReady, actor), fn)
+	fileSent = filepath.Join(g.GetExamDirNamed(exam, moderatorSent, actor), fn)
+	fileExport = filepath.Join(g.GetExportDir(exam, moderatorReady, actor), fn)
 
 	createFile(t, fileReady)
 
@@ -108,9 +108,9 @@ func TestExport(t *testing.T) {
 	mustExist(t, fileExport)
 
 	// CHECKING
-	fileReady = filepath.Join(g.CheckerReady(exam, actor), fn)
-	fileSent = filepath.Join(g.CheckerSent(exam, actor), fn)
-	fileExport = filepath.Join(g.ExportChecking(exam, actor), fn)
+	fileReady = filepath.Join(g.GetExamDirNamed(exam, checkerReady, actor), fn)
+	fileSent = filepath.Join(g.GetExamDirNamed(exam, checkerSent, actor), fn)
+	fileExport = filepath.Join(g.GetExportDir(exam, checkerReady, actor), fn)
 
 	createFile(t, fileReady)
 
@@ -121,9 +121,9 @@ func TestExport(t *testing.T) {
 	mustExist(t, fileExport)
 
 	// REMARKING
-	fileReady = filepath.Join(g.ReMarkerReady(exam, actor), fn)
-	fileSent = filepath.Join(g.ReMarkerSent(exam, actor), fn)
-	fileExport = filepath.Join(g.ExportReMarking(exam, actor), fn)
+	fileReady = filepath.Join(g.GetExamDirNamed(exam, reMarkerReady, actor), fn)
+	fileSent = filepath.Join(g.GetExamDirNamed(exam, reMarkerSent, actor), fn)
+	fileExport = filepath.Join(g.GetExportDir(exam, reMarkerReady, actor), fn)
 
 	createFile(t, fileReady)
 
@@ -134,9 +134,9 @@ func TestExport(t *testing.T) {
 	mustExist(t, fileExport)
 
 	// RECHECKING
-	fileReady = filepath.Join(g.ReCheckerReady(exam, actor), fn)
-	fileSent = filepath.Join(g.ReCheckerSent(exam, actor), fn)
-	fileExport = filepath.Join(g.ExportReChecking(exam, actor), fn)
+	fileReady = filepath.Join(g.GetExamDirNamed(exam, reCheckerReady, actor), fn)
+	fileSent = filepath.Join(g.GetExamDirNamed(exam, reCheckerSent, actor), fn)
+	fileExport = filepath.Join(g.GetExportDir(exam, reCheckerReady, actor), fn)
 
 	createFile(t, fileReady)
 

@@ -180,7 +180,7 @@ func TestAddBars(t *testing.T) {
 
 	exam := "Practice"
 
-	actualPdf, err = g.GetFileList(g.AcceptedPapers(exam))
+	actualPdf, err = g.GetFileList(g.GetExamDir(exam, acceptedPapers))
 	assert.NoError(t, err)
 	assert.Equal(t, len(expectedPdf), len(actualPdf))
 	assert.True(t, CopyIsComplete(expectedPdf, actualPdf))
@@ -188,7 +188,7 @@ func TestAddBars(t *testing.T) {
 	expectedTxt, err = g.GetFileList("./expected/temp-txt-after-validation")
 	assert.NoError(t, err)
 
-	actualTxt, err = g.GetFileList(g.AcceptedReceipts(exam))
+	actualTxt, err = g.GetFileList(g.GetExamDir(exam, acceptedReceipts))
 	assert.NoError(t, err)
 	assert.Equal(t, len(expectedTxt), len(actualTxt))
 	assert.True(t, CopyIsComplete(expectedTxt, actualTxt))
@@ -217,7 +217,7 @@ func TestAddBars(t *testing.T) {
 	_, err = os.Stat(dest)
 
 	//>>>>>>>>>>>>>>>>>>>>>>>>> FLATTEN/RENAME  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-	err = g.FlattenNewPapers("Practice")
+	err = g.FlattenNewPapers(exam)
 	assert.NoError(t, err)
 
 	// check files exist
@@ -229,7 +229,7 @@ func TestAddBars(t *testing.T) {
 		"Practice-B999999.pdf",
 	}
 
-	anonymousPdf, err := g.GetFileList(g.AnonymousPapers(exam))
+	anonymousPdf, err := g.GetFileList(g.GetExamDir(exam, anonPapers))
 	assert.NoError(t, err)
 
 	assert.Equal(t, len(expectedAnonymousPdf), len(anonymousPdf))
@@ -241,9 +241,9 @@ func TestAddBars(t *testing.T) {
 	pds, err := pagedata.UnMarshalAllFromFile(anonymousPdf[0])
 	assert.NoError(t, err)
 	pd := pds[1] //book number 1 for page 1
-	assert.Equal(t, "Practice", pd.Current.Item.What)
+	assert.Equal(t, exam, pd.Current.Item.What)
 
-	CollectFilesFrom(g.AnonymousPapers(exam))
+	CollectFilesFrom(g.GetExamDir(exam, anonPapers))
 	assert.NoError(t, err)
 	//>>>>>>>>>>>>>>>>>>>>>>>>> SETUP FOR OVERLAY (via ADDBARS) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -269,10 +269,10 @@ func TestAddBars(t *testing.T) {
 		"Practice-B999999-maTDD.pdf",
 	}
 
-	CollectFilesFrom(g.MarkerReady(exam, marker))
+	CollectFilesFrom(g.GetExamDirNamed(exam, markerReady, marker))
 	assert.NoError(t, err)
 
-	readyPdf, err := g.GetFileList(g.MarkerReady(exam, marker))
+	readyPdf, err := g.GetFileList(g.GetExamDirNamed(exam, markerReady, marker))
 
 	assert.NoError(t, err)
 
@@ -286,12 +286,12 @@ func TestAddBars(t *testing.T) {
 	assert.Equal(t, pd.Current.Process.ToDo, "marking")
 
 	for _, file := range readyPdf[0:2] {
-		destination := filepath.Join(g.ModerateActive(exam), filepath.Base(file))
+		destination := filepath.Join(g.GetExamDir(exam, moderatorActive), filepath.Base(file))
 		err := Copy(file, destination)
 		assert.NoError(t, err)
 	}
 	for _, file := range readyPdf[2:4] {
-		destination := filepath.Join(g.ModerateInActive(exam), filepath.Base(file))
+		destination := filepath.Join(g.GetExamDir(exam, moderatorInactive), filepath.Base(file))
 		err := Copy(file, destination)
 		assert.NoError(t, err)
 	}
@@ -306,14 +306,14 @@ func TestAddBars(t *testing.T) {
 		"Practice-B999997-maTDD-moABC.pdf",
 	}
 
-	activePdf, err := g.GetFileList(g.ModeratorReady(exam, moderator))
+	activePdf, err := g.GetFileList(g.GetExamDirNamed(exam, moderatorReady, moderator))
 	assert.NoError(t, err)
 
 	assert.Equal(t, len(expectedActive), len(activePdf))
 
 	assert.True(t, CopyIsComplete(expectedActive, activePdf))
 
-	CollectFilesFrom(g.ModeratorReady(exam, moderator))
+	CollectFilesFrom(g.GetExamDirNamed(exam, moderatorReady, moderator))
 	assert.NoError(t, err)
 	//>>>>>>>>>>>>>>>>>>>>>>>>> ADD INACTIVE MODERATE BAR  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	err = g.AddModerateInActiveBar(exam)
@@ -324,10 +324,10 @@ func TestAddBars(t *testing.T) {
 		"Practice-B999999-maTDD-moX.pdf",
 	}
 
-	inActivePdf, err := g.GetFileList(g.ModeratedInActiveBack(exam))
+	inActivePdf, err := g.GetFileList(g.GetExamDirSub(exam, moderatorBack, inactive))
 	assert.NoError(t, err)
 
-	CollectFilesFrom(g.ModeratedInActiveBack(exam))
+	CollectFilesFrom(g.GetExamDirSub(exam, moderatorBack, inactive))
 	assert.NoError(t, err)
 
 	assert.Equal(t, len(expectedInActive), len(inActivePdf))
@@ -337,14 +337,12 @@ func TestAddBars(t *testing.T) {
 	// copy files to common area (as if have processed them - not checked here)
 
 	for _, file := range activePdf {
-		destination := filepath.Join(g.ModeratedReady(exam), filepath.Base(file))
-		err := Copy(file, destination)
+		err := g.CopyToDir(file, g.GetExamDir(exam, moderatorProcessed))
 		assert.NoError(t, err)
 	}
 
 	for _, file := range inActivePdf {
-		destination := filepath.Join(g.ModeratedReady(exam), filepath.Base(file))
-		err := Copy(file, destination)
+		err := g.CopyToDir(file, g.GetExamDir(exam, moderatorProcessed))
 		assert.NoError(t, err)
 	}
 
@@ -355,12 +353,66 @@ func TestAddBars(t *testing.T) {
 		"Practice-B999999-maTDD-moX.pdf",
 	}
 
-	moderatedReadyPdf, err := g.GetFileList(g.ModeratedReady(exam))
+	moderatedReadyPdf, err := g.GetFileList(g.GetExamDir(exam, moderatorProcessed))
 	assert.NoError(t, err)
 
 	assert.Equal(t, len(expectedModeratedReadyPdf), len(moderatedReadyPdf))
 
 	assert.True(t, CopyIsComplete(expectedModeratedReadyPdf, moderatedReadyPdf))
+
+	///>>>>>>>>>>>>>>>>>>>>>>>> ADD ENTER BARS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+	for _, path := range readyPdf[0:2] {
+		err := g.CopyToDir(path, g.GetExamDir(exam, enterActive))
+		assert.NoError(t, err)
+	}
+	for _, path := range readyPdf[2:4] {
+		err := g.CopyToDir(path, g.GetExamDir(exam, enterInactive))
+		assert.NoError(t, err)
+	}
+	//for _, path := range readyPdf[2:4] {
+	//	err := g.CopyToDir(path, g.GetExamDirSub(exam, enterProcessed, inactive))
+	//	assert.NoError(t, err)
+	//}
+
+	err = g.AddEnterInactiveBar(exam)
+	assert.NoError(t, err)
+	expectedInactiveEnter := []string{ //note the d is missing for convenience here
+		"Practice-B999998-maTDD-enX.pdf",
+		"Practice-B999999-maTDD-enX.pdf",
+	}
+
+	inactiveEnterPdf, err := g.GetFileList(g.GetExamDirSub(exam, enterProcessed, inactive))
+	assert.NoError(t, err)
+
+	assert.Equal(t, len(expectedInactiveEnter), len(inactiveEnterPdf))
+
+	assert.True(t, CopyIsComplete(expectedInactiveEnter, inactiveEnterPdf))
+
+	//>>>>>>>>>>>>>>>>>>>>>>> ADD ENTER ACTIVE BAR >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+	enterer := "JM"
+
+	err = g.AddEnterActiveBar(exam, enterer)
+
+	assert.NoError(t, err)
+
+	expectedActiveEnter := []string{ //note the d is missing for convenience here
+		"Practice-B999995-maTDD-enJM.pdf",
+		"Practice-B999997-maTDD-enJM.pdf",
+	}
+
+	activeEnterPdf, err := g.GetFileList(g.GetExamDirNamed(exam, enterReady, enterer))
+	assert.NoError(t, err)
+
+	assert.Equal(t, len(expectedActiveEnter), len(activeEnterPdf))
+
+	assert.True(t, CopyIsComplete(expectedActiveEnter, activeEnterPdf))
+
+	for _, path := range activeEnterPdf {
+		err := g.CopyToDir(path, g.GetExamDirNamed(exam, enterProcessed, enterer))
+		assert.NoError(t, err)
+	}
 
 	//>>>>>>>>>>>>>>>>>>>>>>>>> ADD CHECK BAR  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -369,19 +421,19 @@ func TestAddBars(t *testing.T) {
 	err = g.AddCheckBar(exam, checker)
 	assert.NoError(t, err)
 	expectedChecked := []string{ //note the d is missing for convenience here
-		"Practice-B999995-maTDD-moABC-cLD.pdf",
-		"Practice-B999997-maTDD-moABC-cLD.pdf",
-		"Practice-B999998-maTDD-moX-cLD.pdf",
-		"Practice-B999999-maTDD-moX-cLD.pdf",
+		"Practice-B999995-maTDD-enJM-chLD.pdf",
+		"Practice-B999997-maTDD-enJM-chLD.pdf",
+		"Practice-B999998-maTDD-enX-chLD.pdf",
+		"Practice-B999999-maTDD-enX-chLD.pdf",
 	}
 
-	checkedPdf, err := g.GetFileList(g.CheckerReady(exam, checker))
+	checkedPdf, err := g.GetFileList(g.GetExamDirNamed(exam, checkerReady, checker))
 	assert.NoError(t, err)
 
 	assert.Equal(t, len(expectedChecked), len(checkedPdf))
 
 	assert.True(t, CopyIsComplete(expectedChecked, checkedPdf))
-	CollectFilesFrom(g.CheckerReady(exam, checker))
+	CollectFilesFrom(g.GetExamDirNamed(exam, checkerReady, checker))
 	assert.NoError(t, err)
 
 	// Now do visual checks
@@ -389,10 +441,10 @@ func TestAddBars(t *testing.T) {
 	actualPdfs := []string{
 		"./tmp-delete-me/usr/exam/Practice/05-anonymous-papers/Practice-B999999.pdf",
 		"./tmp-delete-me/usr/exam/Practice/20-marker-ready/TDD/Practice-B999999-maTDD.pdf",
-		"./tmp-delete-me/usr/exam/Practice/32-moderator-ready/ABC/Practice-B999995-maTDD-moABC.pdf",
-		"./tmp-delete-me/usr/exam/Practice/34-moderator-back/inactive/Practice-B999999-maTDD-moX.pdf",
-		"./tmp-delete-me/usr/exam/Practice/40-checker-ready/LD/Practice-B999995-maTDD-moABC-cLD.pdf",
-		"./tmp-delete-me/usr/exam/Practice/40-checker-ready/LD/Practice-B999999-maTDD-moX-cLD.pdf",
+		"./tmp-delete-me/usr/exam/Practice/30-moderator-ready/ABC/Practice-B999995-maTDD-moABC.pdf",
+		"./tmp-delete-me/usr/exam/Practice/32-moderator-back/inactive/Practice-B999999-maTDD-moX.pdf",
+		"./tmp-delete-me/usr/exam/Practice/50-checker-ready/LD/Practice-B999995-maTDD-enJM-chLD.pdf",
+		"./tmp-delete-me/usr/exam/Practice/50-checker-ready/LD/Practice-B999999-maTDD-enX-chLD.pdf",
 	}
 
 	expectedPdfs := []string{
@@ -400,8 +452,8 @@ func TestAddBars(t *testing.T) {
 		"./expected/visual/Practice-B999999-maTDD.pdf",
 		"./expected/visual/Practice-B999995-maTDD-moABC.pdf",
 		"./expected/visual/Practice-B999999-maTDD-moX.pdf",
-		"./expected/visual/Practice-B999995-maTDD-moABC-cLD.pdf",
-		"./expected/visual/Practice-B999999-maTDD-moX-cLD.pdf", //deliberate mistake
+		"./expected/visual/Practice-B999995-maTDD-enJM-chLD.pdf",
+		"./expected/visual/Practice-B999999-maTDD-enX-chLD.pdf", //deliberate mistake
 	}
 
 	for i := 0; i < len(actualPdfs); i++ {

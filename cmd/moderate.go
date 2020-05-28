@@ -97,7 +97,7 @@ active/inactive directory according to whether they are to be moderated or not
 		// if we call it on structure already setup
 		// these functions MUST not delete anything!
 		g.EnsureDirectoryStructure()
-		g.SetupExamPaths(exam)
+		g.SetupExamDirs(exam)
 
 		// TODO handling redo flag to redo the split is starting to get into
 		// unclear territory - do you remove all files from moderation sets?

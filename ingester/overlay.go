@@ -280,7 +280,7 @@ OUTER:
 
 	// render to images
 
-	jpegPath := g.PaperImages(courseCode) //ot.PageDataMap[0].Exam.CourseCode)
+	jpegPath := g.GetExamDir(courseCode, tempImages) //ot.PageDataMap[0].Exam.CourseCode)
 
 	suffix := filepath.Ext(ot.InputPath)
 	basename := strings.TrimSuffix(filepath.Base(ot.InputPath), suffix)
@@ -336,7 +336,7 @@ OUTER:
 
 	// convert images to individual pdfs, with form overlay
 
-	pagePath := g.PaperPages(courseCode)
+	pagePath := g.GetExamDir(courseCode, tempPages)
 	pageFileOption := fmt.Sprintf("%s/%s%%04d.pdf", pagePath, basename)
 
 	mergePaths := []string{}

@@ -52,7 +52,7 @@ func TestFlattenProcessedMarked(t *testing.T) {
 	exam := "Practice"
 	stage := "marked"
 
-	err = g.SetupExamPaths(exam)
+	err = g.SetupExamDirs(exam)
 
 	assert.NoError(t, err)
 
@@ -74,13 +74,11 @@ func TestFlattenProcessedMarked(t *testing.T) {
 	assert.NoError(t, err)
 
 	// pagedata check
-	flattenedPath := "tmp-delete-me/usr/exam/Practice/23-marked-flattened/Practice-B999999-maTDD-marked-comments.pdf"
+	flattenedPath := "tmp-delete-me/usr/exam/Practice/23-marker-flattened/Practice-B999999-maTDD-marked-comments.pdf"
 	pdMap, err := pagedata.UnMarshalAllFromFile(flattenedPath)
 	if err != nil {
 		t.Error(err)
 	}
-
-	//parsesvg.PrettyPrintStruct(pdMap)
 
 	// check question values, and comments on page 1 in currentData
 	// check previousData has one set, with null values for comments and values
@@ -172,7 +170,7 @@ func TestFlattenProcessedMarked(t *testing.T) {
 	}
 
 	// visual check (comments, in particular, as well as flattening of typed values)
-	actualPdf := "./tmp-delete-me/usr/exam/Practice/23-marked-flattened/Practice-B999999-maTDD-marked-comments.pdf"
+	actualPdf := "./tmp-delete-me/usr/exam/Practice/23-marker-flattened/Practice-B999999-maTDD-marked-comments.pdf"
 	expectedPdf := "./expected/visual/Practice-B999999-maTDD-marked-comments.pdf"
 
 	_, err = os.Stat(actualPdf)
@@ -229,7 +227,7 @@ func TestFlattenProcessedStylus(t *testing.T) {
 	exam := "Practice"
 	stage := "marked"
 
-	err = g.SetupExamPaths(exam)
+	err = g.SetupExamDirs(exam)
 
 	assert.NoError(t, err)
 
@@ -251,7 +249,7 @@ func TestFlattenProcessedStylus(t *testing.T) {
 	assert.NoError(t, err)
 
 	// pagedata check
-	flattenedPath := "tmp-delete-me/usr/exam/Practice/23-marked-flattened/Practice-B999999-maTDD-marked-stylus.pdf"
+	flattenedPath := "tmp-delete-me/usr/exam/Practice/23-marker-flattened/Practice-B999999-maTDD-marked-stylus.pdf"
 	pdMap, err := pagedata.UnMarshalAllFromFile(flattenedPath)
 	if err != nil {
 		t.Error(err)
@@ -330,7 +328,7 @@ func TestFlattenProcessedStylus(t *testing.T) {
 	}
 
 	// visual check (comments, in particular, as well as flattening of typed values)
-	actualPdf := "./tmp-delete-me/usr/exam/Practice/23-marked-flattened/Practice-B999999-maTDD-marked-stylus.pdf"
+	actualPdf := "./tmp-delete-me/usr/exam/Practice/23-marker-flattened/Practice-B999999-maTDD-marked-stylus.pdf"
 	expectedPdf := "./expected/visual/Practice-B999999-maTDD-marked-stylus.pdf"
 
 	_, err = os.Stat(actualPdf)

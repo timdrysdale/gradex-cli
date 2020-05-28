@@ -85,9 +85,9 @@ func (g *Ingester) ValidateNewPapers() error {
 			sub.Assignment = shortenAssignment(sub.Assignment)
 		}
 
-		_, err = os.Stat(g.GetExamPath(sub.Assignment))
+		_, err = os.Stat(g.GetExamRoot(sub.Assignment))
 		if os.IsNotExist(err) {
-			err = g.SetupExamPaths(sub.Assignment)
+			err = g.SetupExamDirs(sub.Assignment)
 			if err != nil {
 				g.logger.Error().
 					Str("course", sub.Assignment).
@@ -107,7 +107,7 @@ func (g *Ingester) ValidateNewPapers() error {
 
 		// file we want to get from the temp-pdf dir
 		currentPath := filepath.Join(g.TempPDF(), filepath.Base(pdfFilename))
-		destinationDir := g.AcceptedPapers(sub.Assignment)
+		destinationDir := g.GetExamDir(sub.Assignment, acceptedPapers)
 
 		baseFileName := filepath.Base(pdfFilename)
 
@@ -144,7 +144,7 @@ func (g *Ingester) ValidateNewPapers() error {
 					Msg("PDF validated and moved to accepted papers")
 
 				// write receipt with updated filename in it
-				destinationDir := g.AcceptedReceipts(sub.Assignment)
+				destinationDir := g.GetExamDir(sub.Assignment, acceptedReceipts)
 				destination := filepath.Join(destinationDir, shortLearnNameTXT)
 
 				err = parselearn.WriteLearnReceipt(destination, sub)

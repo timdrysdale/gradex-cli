@@ -91,7 +91,7 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 		}
 
 		g.EnsureDirectoryStructure()
-		g.SetupExamPaths(exam)
+		g.SetupExamDirs(exam)
 
 		g.Redo = redo
 
