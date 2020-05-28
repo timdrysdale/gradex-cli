@@ -28,29 +28,27 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
-// exportCmd represents the export command
-var exportCmd = &cobra.Command{
-	Use:   "export [stage] [who] [exam]",
-	Short: "Put files into the export directory",
-	Args:  cobra.ExactArgs(3),
-	Long: `A helper command to take files from key points in the process, and put them in the export 
-directory where they are easier to find. Example usage
+var (
+	enterOpticalShrink  int
+	enterOpticalVanilla bool
+)
 
-gradex-cli export marking pjh 'ELEE09000 a b c exam'
+// moderateCmd represents the moderate command
+var enterCmd = &cobra.Command{
+	Use:   "enter [enterer] [exam]",
+	Short: "Add moderation bars to an exam",
+	Args:  cobra.ExactArgs(2),
+	Long: `Add enter bar to flattened, marked scripts, decorating the path with the enterer name, for example
 
-valid stages are: 
-labelling
-marking
-moderating
-checking
-remarking
-rechecking
+gradex-cli enter abc demo-exam
 
-Exported files are usually flagged in some way, e.g. being moved to a "sent" folder internally.`,
+this will produce a bunch of files in the enterReady directory, which can be exported.
+
+`,
 	Run: func(cmd *cobra.Command, args []string) {
-		which := os.Args[2]
-		who := os.Args[3]
-		exam := os.Args[4]
+
+		enterer := os.Args[2]
+		exam := os.Args[3]
 
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
@@ -85,60 +83,64 @@ Exported files are usually flagged in some way, e.g. being moved to a "sent" fol
 			os.Exit(1)
 		}
 		defer f.Close()
-
-		logger := zerolog.
-			New(f).
-			With().
-			Timestamp().
-			Str("command", "export").
-			Str("which", which).
-			Str("who", who).
-			Str("exam", exam).
-			Logger()
-
+		logger := zerolog.New(f).With().Timestamp().Str("command", "enter").Logger()
 		g, err := ingester.New(s.Root, mch, &logger)
 		if err != nil {
 			fmt.Printf("Failed getting New Ingester %v", err)
 			os.Exit(1)
 		}
 
+		// if we've added new steps to the process, this prepares
+		// the directories - is idempotent so doesn't matter
+		// if we call it on structure already setup
+		// these functions MUST not delete anything!
 		g.EnsureDirectoryStructure()
 		g.SetupExamDirs(exam)
 
-		switch which {
+		// TODO handling redo flag to redo the split is starting to get into
+		// unclear territory - do you remove all files from moderation sets?
+		// what if they have been sent?
+		// do you block if any moderation files have been exported?
+		// better to handle these cases manually
+		err = g.SplitForEnter(exam)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 
-		case "labelling", "label":
-			g.ExportForLabelling(exam, who)
+		g.SetBackgroundIsVanilla(enterOpticalVanilla)
+		g.SetOpticalShrink(enterOpticalShrink)
 
-		case "marking", "mark":
-			g.ExportForMarking(exam, who)
+		err = g.AddEnterActiveBar(exam, enterer)
 
-		case "moderating", "moderate":
-			g.ExportForModerating(exam, who)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 
-		case "checking", "check":
-			g.ExportForChecking(exam, who)
+		err = g.AddEnterInActiveBar(exam)
 
-		case "remarking", "remark":
-			g.ExportForReMarking(exam, who)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 
-		case "rechecking", "recheck":
-			g.ExportForChecking(exam, who)
-
-		} // switch
+		os.Exit(0)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(exportCmd)
+	rootCmd.AddCommand(enterCmd)
+	flattenCmd.Flags().BoolVarP(&flattenOpticalVanilla, "background-vanilla", "b", true, "Assume vanilla background for optical checkboxes? [default true]")
+	flattenCmd.Flags().IntVarP(&flattenOpticalShrink, "box-shrink", "s", 6, "Number of pixels to shrink optical boxes to avoid false positives from boundaries [default 6]")
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// exportCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// moderateCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// exportCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// moderateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

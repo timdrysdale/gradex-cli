@@ -213,4 +213,8 @@ const (
 	moderating     = "moderating"
 	checking       = "checking"
 	entering       = "entering"
+
+	//External directories
+
+	PageBad = pageBad
 )
