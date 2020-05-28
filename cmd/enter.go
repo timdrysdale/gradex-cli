@@ -118,7 +118,7 @@ this will produce a bunch of files in the enterReady directory, which can be exp
 			os.Exit(1)
 		}
 
-		err = g.AddEnterInActiveBar(exam)
+		err = g.AddEnterInactiveBar(exam)
 
 		if err != nil {
 			fmt.Println(err)
