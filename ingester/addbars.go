@@ -30,14 +30,14 @@ func (g *Ingester) AddLabelBar(exam, labeller string) error {
 	}
 
 	oc := OverlayCommand{
-		FromPath:       g.AnonymousPapers(exam),
-		ToPath:         g.QuestionReady(exam, labeller),
+		FromPath:       g.GetExamDir(exam, anonPapers),
+		ToPath:         g.GetExamDirNamed(exam, questionReady, labeller),
 		ExamName:       exam,
 		TemplatePath:   g.OverlayLayoutSVG(),
 		SpreadName:     "label",
 		ProcessDetail:  procDetail,
 		Msg:            cm,
-		PathDecoration: g.LabellerABCDecoration(labeller),
+		PathDecoration: g.GetNamedTaskDecoration(labelling, labeller),
 	}
 
 	err := g.OverlayPapers(oc, &logger)
@@ -82,14 +82,14 @@ func (g *Ingester) AddMarkBarByQ(exam string, marker string) error {
 	}
 
 	oc := OverlayCommand{
-		FromPath:       g.QuestionSplit(exam, ""),
-		ToPath:         g.MarkerReady(exam, marker),
+		FromPath:       g.GetExamDir(exam, questionSplit),
+		ToPath:         g.GetExamDirNamed(exam, markerReady, marker),
 		ExamName:       exam,
 		TemplatePath:   g.OverlayLayoutSVG(),
 		SpreadName:     "mark",
 		ProcessDetail:  procDetail,
 		Msg:            cm,
-		PathDecoration: g.MarkerABCDecoration(marker),
+		PathDecoration: g.GetNamedTaskDecoration(marking, marker),
 	}
 
 	err := g.OverlayPapers(oc, &logger)
@@ -134,14 +134,14 @@ func (g *Ingester) AddMarkBar(exam string, marker string) error {
 	}
 
 	oc := OverlayCommand{
-		FromPath:       g.AnonymousPapers(exam),
-		ToPath:         g.MarkerReady(exam, marker),
+		FromPath:       g.GetExamDir(exam, anonPapers),
+		ToPath:         g.GetExamDirNamed(exam, markerReady, marker),
 		ExamName:       exam,
 		TemplatePath:   g.OverlayLayoutSVG(),
 		SpreadName:     "mark",
 		ProcessDetail:  procDetail,
 		Msg:            cm,
-		PathDecoration: g.MarkerABCDecoration(marker),
+		PathDecoration: g.GetNamedTaskDecoration(marking, marker),
 	}
 
 	err := g.OverlayPapers(oc, &logger)
@@ -186,14 +186,14 @@ func (g *Ingester) AddModerateActiveBar(exam string, moderator string) error {
 	}
 
 	oc := OverlayCommand{
-		FromPath:       g.ModerateActive(exam),
-		ToPath:         g.ModeratorReady(exam, moderator),
+		FromPath:       g.GetExamDir(exam, moderatorActive),
+		ToPath:         g.GetExamDirNamed(exam, moderatorReady, moderator),
 		ExamName:       exam,
 		TemplatePath:   g.OverlayLayoutSVG(),
 		SpreadName:     "moderate-active",
 		ProcessDetail:  procDetail,
 		Msg:            cm,
-		PathDecoration: g.ModeratorABCDecoration(moderator),
+		PathDecoration: g.GetNamedTaskDecoration(moderating, moderator),
 	}
 
 	err := g.OverlayPapers(oc, &logger)
@@ -239,14 +239,14 @@ func (g *Ingester) AddModerateInActiveBar(exam string) error {
 	}
 
 	oc := OverlayCommand{
-		FromPath:       g.ModerateInActive(exam),
-		ToPath:         g.ModeratedInActiveBack(exam),
+		FromPath:       g.GetExamDir(exam, moderatorInactive),
+		ToPath:         g.GetExamDirSub(exam, moderatorBack, inactive),
 		ExamName:       exam,
 		TemplatePath:   g.OverlayLayoutSVG(),
 		SpreadName:     "moderate-inactive",
 		ProcessDetail:  procDetail,
 		Msg:            cm,
-		PathDecoration: g.ModeratorABCDecoration("X"),
+		PathDecoration: g.GetNamedTaskDecoration(moderating, "X"),
 	}
 	err := g.OverlayPapers(oc, &logger)
 
@@ -287,14 +287,14 @@ func (g *Ingester) AddCheckBar(exam string, checker string) error {
 	}
 
 	oc := OverlayCommand{
-		FromPath:       g.ModeratedReady(exam),
-		ToPath:         g.CheckerReady(exam, checker),
+		FromPath:       g.GetExamDir(exam, enterProcessed),
+		ToPath:         g.GetExamDirNamed(exam, checkerReady, checker),
 		ExamName:       exam,
 		TemplatePath:   g.OverlayLayoutSVG(),
 		SpreadName:     "check",
 		ProcessDetail:  procDetail,
 		Msg:            cm,
-		PathDecoration: g.CheckerABCDecoration(checker),
+		PathDecoration: g.GetNamedTaskDecoration(checking, checker),
 	}
 
 	err := g.OverlayPapers(oc, &logger)

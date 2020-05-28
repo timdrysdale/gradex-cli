@@ -9,7 +9,7 @@ import (
 
 func (g *Ingester) SplitForModeration(exam string, minFiles int, minPercent float64) error {
 
-	files, err := g.GetFileList(g.MarkedReady(exam))
+	files, err := g.GetFileList(g.GetExamDir(exam, markerReady))
 
 	if err != nil {
 		return err
@@ -34,23 +34,23 @@ func (g *Ingester) SplitForModeration(exam string, minFiles int, minPercent floa
 	for k, v := range pdfFiles {
 
 		if v {
-			err = g.MoveToDir(k, g.ModerateActive(exam))
+			err = g.MoveToDir(k, g.GetExamDir(exam, moderatorActive))
 			if err != nil {
 				numErrors++
 				g.logger.Error().
 					Str("file", k).
 					Str("error", err.Error()).
-					Str("destination", g.ModerateActive(exam)).
+					Str("destination", g.GetExamDir(exam, moderatorActive)).
 					Msg("Could not move to moderate-active dir")
 			}
 		} else {
-			err = g.MoveToDir(k, g.ModerateInActive(exam))
+			err = g.MoveToDir(k, g.GetExamDir(exam, moderatorInactive))
 			if err != nil {
 				numErrors++
 				g.logger.Error().
 					Str("file", k).
 					Str("error", err.Error()).
-					Str("destination", g.ModerateInActive(exam)).
+					Str("destination", g.GetExamDir(exam, moderatorInactive)).
 					Msg("Could not move to moderate-inactive dir")
 			}
 

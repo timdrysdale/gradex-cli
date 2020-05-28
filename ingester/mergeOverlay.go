@@ -212,7 +212,7 @@ func (g *Ingester) MergeOverlayOnePDF(mt MergeTask, logger *zerolog.Logger) (int
 		// the previous image for this flattened page does not contain the comments, because they are added as text
 		//---------------------------------------------------------------------------------------------------
 
-		jpegDir := g.PaperImages(courseCode)
+		jpegDir := g.GetExamDir(courseCode, tempImages)
 		basename := strings.TrimSuffix(filepath.Base(inPath), filepath.Ext(inPath))
 		jpegPathOption := fmt.Sprintf("%s/%s-me%%d.jpg", jpegDir, basename)
 
@@ -236,7 +236,7 @@ func (g *Ingester) MergeOverlayOnePDF(mt MergeTask, logger *zerolog.Logger) (int
 
 		// convert images to individual pdfs, with form overlay
 
-		pageDir := g.PaperPages(courseCode)
+		pageDir := g.GetExamDir(courseCode, tempPages)
 		pagePathOption := fmt.Sprintf("%s/%s-me%%d.pdf", pageDir, basename)
 
 		pagePath := fmt.Sprintf(pagePathOption, 1) //this is the merge page index -me1, we get the 000n index from the Own.Path

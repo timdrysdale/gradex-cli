@@ -393,5 +393,5 @@ func getOwnPath(pageData pagedata.PageData) string {
 	return pageData.Current.Own.Path
 }
 func getWasFor(pageData pagedata.PageData) string {
-	return limit((pageData.Previous[len(pageData.Previous)-1]).Process.For, N)
+	return GetShortActorName((pageData.Previous[len(pageData.Previous)-1]).Process.For)
 }

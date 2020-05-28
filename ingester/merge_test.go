@@ -601,7 +601,7 @@ func TestMergeOverlay(t *testing.T) {
 	exam := "Practice"
 	stage := "marked"
 
-	err = g.SetupExamPaths(exam)
+	err = g.SetupExamDirs(exam)
 
 	assert.NoError(t, err)
 
@@ -625,7 +625,7 @@ func TestMergeOverlay(t *testing.T) {
 	err = g.MergeProcessedPapers(exam, stage)
 
 	// visual check (comments, in particular, as well as flattening of typed values)
-	actualPdf := "./tmp-delete-me/usr/exam/Practice/26-marked-ready/Practice-B999999-merge.pdf"
+	actualPdf := "./tmp-delete-me/usr/exam/Practice/24-marker-processed/Practice-B999999-merge.pdf"
 	expectedPdf := "./expected/visual/Practice-B999999-merge.pdf"
 
 	_, err = os.Stat(actualPdf)

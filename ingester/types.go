@@ -63,8 +63,8 @@ var (
 	ExamStage       = []string{
 		config,
 		pageBad,
-		acceptedPapers,
 		acceptedReceipts,
+		acceptedPapers,
 		tempImages,
 		tempPages,
 		anonPapers,
@@ -77,41 +77,47 @@ var (
 		markerReady,
 		markerSent,
 		markerBack,
-		markedFlattened,
-		markedMerged,
-		markedPruned,
-		markedReady,
-		moderateActive,
+		markerFlattened,
+		markerProcessed,
+		moderatorInactive,
+		moderatorActive,
 		moderatorReady,
 		moderatorSent,
 		moderatorBack,
-		moderatedFlattened,
-		moderatedMerged,
-		moderatedPruned,
-		moderatedReady,
-		moderateInActive,
+		moderatorFlattened,
+		moderatorProcessed,
+		enterInactive,
+		enterActive,
+		enterReady,
+		enterSent,
+		enterBack,
+		enterFlattened,
+		enterProcessed,
 		checkerReady,
 		checkerSent,
 		checkerBack,
-		checkedFlattened,
-		checkedMerged,
-		checkedPruned,
-		checkedReady,
-
+		checkerFlattened,
+		checkerProcessed,
+		reMarkerInactive,
+		reMarkerActive,
 		reMarkerReady,
 		reMarkerSent,
 		reMarkerBack,
-		reMarkedFlattened,
-		reMarkedMerged,
-		reMarkedPruned,
-		reMarkedReady,
+		reMarkerFlattened,
+		reMarkerProcessed,
+		reModeratorInactive,
+		reModeratorActive,
+		reModeratorReady,
+		reModeratorSent,
+		reModeratorBack,
+		reModeratorFlattened,
+		reModeratorProcessed,
 		reCheckerReady,
 		reCheckerSent,
 		reCheckerBack,
-		reCheckedFlattened,
-		reCheckedMerged,
-		reCheckedPruned,
-		reCheckedReady,
+		reCheckerFlattened,
+		reCheckerProcessed,
+		finalPapers,
 		reports,
 	}
 )
@@ -134,66 +140,70 @@ const (
 	ReCheckerSent  = "recheckerSent"
 
 	//>>>>>>>>>>>> INTERNAL >>>>>>>>>>>>>>>>>>
-	config = "00-config"
-
-	pageBad = "01-page-bad"
-
-	tempImages = "03-temporary-images"
-	tempPages  = "04-temporary-pages"
-
-	acceptedReceipts = "02-accepted-receipts"
-	acceptedPapers   = "03-accepted-papers"
-	anonPapers       = "05-anonymous-papers"
-
-	questionImages = "06-question-images"
-	questionPages  = "07-question-pages"
-	questionReady  = "08-question-ready"
-	questionSent   = "09-question-sent"
-	questionBack   = "10-question-back"
-	questionSplit  = "11-question-split"
-
+	config               = "00-config"
+	pageBad              = "01-page-bad"
+	acceptedReceipts     = "02-accepted-receipts"
+	acceptedPapers       = "03-accepted-papers"
+	tempImages           = "04-temporary-images"
+	tempPages            = "04-temporary-pages"
+	anonPapers           = "05-anonymous-papers"
+	questionImages       = "06-question-images"
+	questionPages        = "07-question-pages"
+	questionReady        = "08-question-ready"
+	questionSent         = "09-question-sent"
+	questionBack         = "10-question-back"
+	questionSplit        = "11-question-split"
 	markerReady          = "20-marker-ready"
 	markerSent           = "21-marker-sent"
 	markerBack           = "22-marker-back"
-	markedFlattened      = "23-marked-flattened"
-	markedMerged         = "24-marked-merged"
-	markedPruned         = "25-marked-pruned" //whatever gets trimmed goes here for potential audit
-	markedReady          = "26-marked-ready"
-	moderateActive       = "30-moderate-active"
-	moderateInActive     = "31-moderate-inactive"
-	moderatorReady       = "32-moderator-ready"
-	moderatorSent        = "33-moderator-sent"
-	moderatorBack        = "34-moderator-back"
-	moderateInActiveBack = "35-moderate-inactive-back"
-	moderatedFlattened   = "36-moderated-flattened"
-	moderatedMerged      = "37-moderated-merged"
-	moderatedPruned      = "38-moderated-pruned"
-	moderatedReady       = "39-moderated-ready"
+	markerFlattened      = "23-marker-flattened"
+	markerProcessed      = "24-marker-processed"
+	moderatorInactive    = "28-moderator-inactive"
+	moderatorActive      = "29-moderator-active"
+	moderatorReady       = "30-moderator-ready"
+	moderatorSent        = "31-moderator-sent"
+	moderatorBack        = "32-moderator-back"
+	moderatorFlattened   = "33-moderator-flattened"
+	moderatorProcessed   = "34-moderator-processed"
+	enterInactive        = "38-enter-inactive"
+	enterActive          = "39-enter-active"
+	enterReady           = "40-enter-ready"
+	enterSent            = "41-enter-sent"
+	enterBack            = "42-enter-back"
+	enterFlattened       = "43-enter-flattened"
+	enterProcessed       = "44-enter-processed"
+	checkerReady         = "50-checker-ready"
+	checkerSent          = "51-checker-sent"
+	checkerBack          = "52-checker-back"
+	checkerFlattened     = "53-checker-flattened"
+	checkerProcessed     = "54-checker-processed"
+	reMarkerInactive     = "58-remarker-inactive"
+	reMarkerActive       = "59-remarker-active"
+	reMarkerReady        = "60-remarker-ready"
+	reMarkerSent         = "61-remarker-sent"
+	reMarkerBack         = "62-remarker-back"
+	reMarkerFlattened    = "63-remarker-flattened"
+	reMarkerProcessed    = "64-remarker-processed"
+	reModeratorInactive  = "68-remoderator-inactive"
+	reModeratorActive    = "69-remoderator-active"
+	reModeratorReady     = "70-remoderator-ready"
+	reModeratorSent      = "71-remoderator-sent"
+	reModeratorBack      = "72-remoderator-back"
+	reModeratorFlattened = "73-remoderator-flattened"
+	reModeratorProcessed = "74-remoderator-processed"
+	reCheckerReady       = "80-rechecker-ready"
+	reCheckerSent        = "81-rechecker-sent"
+	reCheckerBack        = "82-rechecker-back"
+	reCheckerFlattened   = "83-rechecker-flattened"
+	reCheckerProcessed   = "86-rechecker-processed"
+	finalPapers          = "95-FinalPapers"
+	reports              = "99-reports"
 
-	checkerReady     = "40-checker-ready"
-	checkerSent      = "41-checker-sent"
-	checkerBack      = "42-checker-back"
-	checkedFlattened = "43-checked-flattened"
-	checkedMerged    = "44-checked-merged"
-	checkedPruned    = "45-checked-pruned"
-	checkedReady     = "46-checked-ready"
-	reports          = "99-reports"
-
-	reMarkerReady     = "50-remarker-ready"
-	reMarkerSent      = "51-remarker-sent"
-	reMarkerBack      = "52-remarker-back"
-	reMarkedFlattened = "53-remarked-flattened"
-	reMarkedMerged    = "54-remarked-merged"
-	reMarkedPruned    = "55-remarked-pruned" //whatever gets trimmed goes here for potential audit
-	reMarkedReady     = "56-remarked-ready"
-
-	reCheckerReady     = "60-rechecker-ready"
-	reCheckerSent      = "61-rechecker-sent"
-	reCheckerBack      = "62-rechecker-back"
-	reCheckedFlattened = "63-rechecked-flattened"
-	reCheckedMerged    = "64-rechecked-merged"
-	reCheckedPruned    = "65-rechecked-pruned"
-	reCheckedReady     = "66-rechecked-ready"
-
-	N = 3
+	inactive       = "inactive"
+	doneDecoration = "d"
+	labelling      = "labelling"
+	marking        = "marking"
+	moderating     = "moderating"
+	checking       = "checking"
+	entering       = "entering"
 )

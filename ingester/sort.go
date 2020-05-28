@@ -18,7 +18,7 @@ import (
 
 func (g *Ingester) SortQuestions(exam string) error {
 
-	files, err := GetFileList(g.QuestionBack(exam, ""))
+	files, err := GetFileList(g.GetExamDir(exam, questionBack))
 
 	if err != nil {
 
@@ -131,7 +131,7 @@ func (g *Ingester) SortQuestions(exam string) error {
 
 				filename := fmt.Sprintf("%s-%02d.pdf", question, batchCount)
 
-				destination := filepath.Join(g.QuestionSplit(exam, ""), filename)
+				destination := filepath.Join(g.GetExamDir(exam, questionSplit), filename)
 
 				merge.PDF(pagePaths, destination)
 
@@ -149,14 +149,15 @@ func (g *Ingester) SortQuestions(exam string) error {
 
 			filename := fmt.Sprintf("%s-%02d.pdf", question, batchCount)
 
-			destination := filepath.Join(g.QuestionSplit(exam, ""), filename)
+			destination := filepath.Join(g.GetExamDir(exam, questionSplit), filename)
+
 			merge.PDF(pagePaths, destination)
 		}
 
 	} // for each question
 
 	for _, file := range pagebad {
-		err = g.CopyToDir(file, g.PageBad(exam))
+		err = g.CopyToDir(file, g.GetExamDir(exam, pageBad))
 		if err != nil {
 			g.logger.Error().
 				Str("file", file).
@@ -170,7 +171,7 @@ func (g *Ingester) SortQuestions(exam string) error {
 
 func (g *Ingester) SortCheck(exam string) error {
 
-	files, err := GetFileList(g.AnonymousPapers(exam))
+	files, err := GetFileList(g.GetExamDir(exam, anonPapers))
 
 	usedMap := make(map[string]int)
 
@@ -213,7 +214,7 @@ func (g *Ingester) SortCheck(exam string) error {
 
 	fmt.Printf("Inputs: Found %d scripts with %d pages\n", fileCount, pageCount)
 
-	files, err = GetFileList(g.QuestionSplit(exam, ""))
+	files, err = GetFileList(g.GetExamDir(exam, questionSplit))
 	ofileCount := 0
 	opageCount := 0
 

@@ -15,10 +15,20 @@ import (
 )
 
 func limit(initials string, N int) string {
+	return limitToUpper(initials, N)
+}
+
+func limitToUpper(initials string, N int) string {
 	if len(initials) < 3 {
 		N = len(initials)
 	}
 	return strings.ToUpper(initials[0:N])
+}
+func limitToLower(initials string, N int) string {
+	if len(initials) < 3 {
+		N = len(initials)
+	}
+	return strings.ToLower(initials[0:N])
 }
 
 func shortenBaseFileName(baseFileName string) string {
@@ -87,7 +97,7 @@ func fileKey(path string) string {
 
 // This must remain idempotent so we can call it every startup
 func (g *Ingester) EnsureDirectoryStructure() error {
-	return g.SetupGradexPaths()
+	return g.SetupGradexDirs()
 }
 
 //need to be case insensitive
