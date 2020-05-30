@@ -234,7 +234,7 @@ func TestExtractTextFieldsStructFromFile(t *testing.T) {
 
 // BenchmarkGetImageBoxesExtractTextFieldsStructFromFile-32    	     499	   2083397 ns/op
 // 2.083397  2ms - i.e 15x faster than reading from the template.
-func BenchmarkGetImageBoxesExtractTextFieldsStructFromFile(b *testing.B) {
+func BenchmarkExtractTextFieldsStructFromFile(b *testing.B) {
 
 	util.EnsureDir("./test")
 
