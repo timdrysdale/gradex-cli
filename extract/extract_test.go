@@ -231,3 +231,43 @@ func TestExtractTextFieldsStructFromFile(t *testing.T) {
 	os.Remove(path2)
 	os.Remove(path3)
 }
+
+// BenchmarkGetImageBoxesExtractTextFieldsStructFromFile-32    	     499	   2083397 ns/op
+// 2.083397  2ms - i.e 15x faster than reading from the template.
+func BenchmarkGetImageBoxesExtractTextFieldsStructFromFile(b *testing.B) {
+
+	util.EnsureDir("./test")
+
+	path := "./test/with-fields.pdf"
+	path1 := "./test/with-field-p1.pdf"
+	path2 := "./test/with-field-p2.pdf"
+	path3 := "./test/with-field-p3.pdf"
+
+	textp1 := "What's your favourite colour?"
+	textp2 := "What's your favourite food?"
+	textp3 := "What's your favourite number?"
+
+	message1 := "TEST PAGE ONE"
+	message2 := "TEST PAGE TWO"
+	message3 := "TEST PAGE THREE"
+
+	// page-nnn- is an overlay-specifc-feature
+	// which ensures we can track the page number in these fields
+	qp1 := "page-001-question"
+	qp2 := "page-002-question"
+	qp3 := "page-003-question"
+	writePage(path1, qp1, textp1, message1)
+	writePage(path2, qp2, textp2, message2)
+	writePage(path3, qp3, textp3, message3)
+
+	err := merge.PDF([]string{path1, path2, path3}, path)
+	assert.NoError(b, err)
+
+	_, err = os.Stat(path)
+	assert.NoError(b, err)
+
+	for n := 0; n < b.N; n++ {
+		ExtractTextFieldsStructFromPDF(path)
+	}
+
+}
