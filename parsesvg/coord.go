@@ -273,27 +273,27 @@ func GetImageBoxesForTextFields(textfields map[string]extract.TextField, heightP
 
 	ScaleTextFieldGeometry(&textfields, heightPx)
 
-	// convert origin to bottomLeft
-	/*
-			err = SwitchTextFieldOrigin(&textfields, float64(widthPx), float64(heightPx))
+	for _, tf := range textfields {
 
-			// now we have the coordinates in origin lower left, units of pixels
-			// all that is left is to transfer these into the optical.Box struct
+		bounds, err := geo.ConvertPDFRectToImageRectangle(tf.Rect)
 
-			for _, tf := range textFields {
-
-				box := optical.Box{
-					Vanilla: vanilla,
-					ID:      tf.Name,
-					Bounds:  geo.ConvertToImageRectangle(tf.Rect),
-				}
-
-				optical.ExpandBound(&box, expand)
-
-				boxes = append(boxes, box)
-
+		if err != nil {
+			fmt.Printf("parsesvg/coord: Error converting rectangle dims for image boxes because %s\n", err.Error())
+			continue
 		}
-	*/
+
+		box := optical.Box{
+			Vanilla: vanilla,
+			ID:      tf.Name,
+			Bounds:  bounds,
+		}
+
+		optical.ExpandBound(&box, expand)
+
+		boxes = append(boxes, box)
+
+	}
+
 	return boxes, nil
 
 }

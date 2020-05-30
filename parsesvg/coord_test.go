@@ -53,8 +53,76 @@ func TestScaleTextFieldGeometry(t *testing.T) {
 
 	assert.Equal(t, []float64{300, 600, 450, 750}, inputMap["q"].Rect)
 	assert.Equal(t, []float64{450, 750, 990, 1050}, inputMap["r"].Rect)
+}
+
+func TestGetImageBoxesForTextFields(t *testing.T) {
+
+	inputMap := make(map[string]extract.TextField)
+	inputMap["q"] = extract.TextField{
+		Name:    "q",
+		Key:     "q",
+		PageNum: 1,
+		Value:   "v",
+		Rect:    []float64{100, 200, 150, 250},
+		PageDim: geo.Dim{
+			Width:  595,
+			Height: 841,
+		},
+	}
+	inputMap["r"] = extract.TextField{
+		Name:    "r",
+		Key:     "r",
+		PageNum: 1,
+		Value:   "w",
+		Rect:    []float64{150, 250, 330, 350},
+		PageDim: geo.Dim{
+			Width:  595,
+			Height: 841,
+		},
+	}
+
+	irq := image.Rectangle{
+		Min: image.Point{
+			X: 305,
+			Y: 605,
+		},
+
+		Max: image.Point{
+			X: 445,
+			Y: 745,
+		},
+	}
+	irr := image.Rectangle{
+		Min: image.Point{
+			X: 455,
+			Y: 755,
+		},
+
+		Max: image.Point{
+			X: 985,
+			Y: 1045,
+		},
+	}
+
+	heightPx := 2523 //scaleFactor of three for convenience
+
+	boxes, err := GetImageBoxesForTextFields(inputMap, heightPx, 1900, true, -5)
+
+	assert.NoError(t, err)
+
+	// make sure test is agnostic to box order
+	boxmap := make(map[string]optical.Box)
+
+	for _, box := range boxes {
+
+		boxmap[box.ID] = box
+	}
+	assert.Equal(t, irq, boxmap["q"].Bounds)
+	assert.Equal(t, irr, boxmap["r"].Bounds)
 
 }
+
+// GetImageBoxesForTextFields(textfields map[string]extract.TextField, heightPx, widthPx int, vanilla bool, expand int) ([]optical.Box, error) {
 
 func TestGetTextFieldSpread(t *testing.T) {
 
