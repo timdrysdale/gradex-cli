@@ -16,16 +16,18 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/timdrysdale/gradex-cli/geo"
 	"github.com/timdrysdale/unipdf/v3/core"
 	pdf "github.com/timdrysdale/unipdf/v3/model"
 )
 
 type TextField struct {
-	Name  string
-	Key   string
-	Page  int
-	Value string
-	Rect  []float64
+	Name    string
+	Key     string
+	PageNum int
+	Value   string
+	Rect    []float64
+	PageDim geo.Dim
 }
 
 func ExtractTextFieldsFromPDF(path string) (map[int]map[string]string, error) {
@@ -50,11 +52,12 @@ func ExtractTextFieldsFromPDF(path string) (map[int]map[string]string, error) {
 	return fieldsByPage, nil
 }
 
+// put together the textfields with the right pagesize
 func ExtractTextFieldsStructFromPDF(path string) (map[int]map[string]TextField, error) {
 
 	fieldsByPage := make(map[int]map[string]TextField)
 
-	fields, err := mapTextFields(path)
+	fields, pageSizeList, err := mapTextFields(path)
 	if err != nil {
 		return fieldsByPage, err
 	}
@@ -66,7 +69,11 @@ func ExtractTextFieldsStructFromPDF(path string) (map[int]map[string]TextField, 
 				fieldsByPage[p] = make(map[string]TextField)
 			}
 			val.Key = key
-			val.Page = p
+			val.PageNum = p
+			pageIndex := p - 1
+			if pageIndex < len(pageSizeList) {
+				val.PageDim = pageSizeList[pageIndex]
+			}
 			fieldsByPage[p][key] = val
 		}
 	}
@@ -183,24 +190,38 @@ func mapPdfFieldData(inputPath string) (map[string]string, error) {
 	return textfields, nil
 }
 
-func mapTextFields(inputPath string) (map[string]TextField, error) {
+func mapTextFields(inputPath string) (map[string]TextField, []geo.Dim, error) {
 
 	textfields := make(map[string]TextField)
+	pageSizeList := []geo.Dim{}
 
 	f, err := os.Open(inputPath)
 	if err != nil {
-		return textfields, errors.New(fmt.Sprintf("Problem opening file %s", inputPath))
+		return textfields, pageSizeList, errors.New(fmt.Sprintf("Problem opening file %s", inputPath))
 	}
 	defer f.Close()
 
 	pdfReader, err := pdf.NewPdfReader(f)
 	if err != nil {
-		return textfields, errors.New(fmt.Sprintf("Problem creating reader %s", inputPath))
+		return textfields, pageSizeList, errors.New(fmt.Sprintf("Problem creating reader %s", inputPath))
+	}
+
+	for _, page := range pdfReader.PageList {
+
+		rect, err := page.GetMediaBox()
+
+		if err == nil {
+
+			pageSizeList = append(pageSizeList, geo.Dim{
+				Width:  rect.Width(),
+				Height: rect.Height(),
+			})
+		}
 	}
 
 	acroForm := pdfReader.AcroForm
 	if acroForm == nil {
-		return textfields, nil
+		return textfields, pageSizeList, nil
 	}
 
 	fields := acroForm.AllFields()
@@ -235,7 +256,7 @@ func mapTextFields(inputPath string) (map[string]TextField, error) {
 
 	}
 
-	return textfields, nil
+	return textfields, pageSizeList, nil
 }
 
 func PrettyPrintStruct(layout interface{}) error {

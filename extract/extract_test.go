@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/gradex-cli/geo"
 	"github.com/timdrysdale/gradex-cli/merge"
 	"github.com/timdrysdale/gradex-cli/util"
 	"github.com/timdrysdale/unipdf/v3/annotator"
@@ -179,27 +180,39 @@ func TestExtractTextFieldsStructFromFile(t *testing.T) {
 	q := "question"
 
 	expectedMap[1]["question"] = TextField{
-		Name:  qp1,
-		Key:   q,
-		Page:  1,
-		Value: textp1,
-		Rect:  []float64{100, 200, 150, 250},
+		Name:    qp1,
+		Key:     q,
+		PageNum: 1,
+		Value:   textp1,
+		Rect:    []float64{100, 200, 150, 250},
+		PageDim: geo.Dim{
+			Width:  595.275590551181,
+			Height: 841.8897637795275,
+		},
 	}
 
 	expectedMap[2]["question"] = TextField{
-		Name:  "doc2." + qp2,
-		Key:   q,
-		Page:  2,
-		Value: textp2,
-		Rect:  []float64{100, 200, 150, 250},
+		Name:    "doc2." + qp2,
+		Key:     q,
+		PageNum: 2,
+		Value:   textp2,
+		Rect:    []float64{100, 200, 150, 250},
+		PageDim: geo.Dim{
+			Width:  595.275590551181,
+			Height: 841.8897637795275,
+		},
 	}
 
 	expectedMap[3]["question"] = TextField{
-		Name:  "doc3." + qp3,
-		Key:   q,
-		Page:  3,
-		Value: textp3,
-		Rect:  []float64{100, 200, 150, 250},
+		Name:    "doc3." + qp3,
+		Key:     q,
+		PageNum: 3,
+		Value:   textp3,
+		Rect:    []float64{100, 200, 150, 250},
+		PageDim: geo.Dim{
+			Width:  595.275590551181,
+			Height: 841.8897637795275,
+		},
 	}
 
 	assert.Equal(t, expectedMap, fieldsMap)
