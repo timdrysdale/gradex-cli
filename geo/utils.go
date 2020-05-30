@@ -35,15 +35,25 @@ func ConvertPDFRectToImageRectangle(rect []float64) (image.Rectangle, error) {
 		return ir, errors.New("expected four elements in input array")
 	}
 
+	xa := math.Round(rect[0])
+	xb := math.Round(rect[2])
+	ya := math.Round(rect[1])
+	yb := math.Round(rect[3])
+
+	minX := int(math.Min(xa, xb))
+	minY := int(math.Min(ya, yb))
+	maxX := int(math.Max(xa, xb))
+	maxY := int(math.Max(ya, yb))
+
 	ir = image.Rectangle{
 		Min: image.Point{
-			X: int(math.Round(rect[0])),
-			Y: int(math.Round(rect[1])),
+			X: minX,
+			Y: minY,
 		},
 
 		Max: image.Point{
-			X: int(math.Round(rect[2])),
-			Y: int(math.Round(rect[3])),
+			X: maxX,
+			Y: maxY,
 		},
 	}
 

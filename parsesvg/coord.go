@@ -199,6 +199,9 @@ func ScaleTextFieldGeometry(textfields *(map[string]extract.TextField), heightPx
 	}
 
 	for key, tf := range *textfields {
+		//swap Y components
+		tf.Rect[1] = tf.PageDim.Height - tf.Rect[1]
+		tf.Rect[3] = tf.PageDim.Height - tf.Rect[3]
 
 		scaleFactor := float64(heightPx) / tf.PageDim.Height
 
