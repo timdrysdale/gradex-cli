@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/timdrysdale/gradex-cli/extract"
 	"github.com/timdrysdale/gradex-cli/geo"
 	"github.com/timdrysdale/gradex-cli/optical"
 )
@@ -104,7 +105,7 @@ func GetTextFieldSpread(svgLayoutPath, spreadName string) (Spread, error) {
 	return spread, nil
 }
 
-func SwapTextFieldXCoords(spread *Spread) error {
+func SwapTextFieldXCoordsInSpread(spread *Spread) error {
 
 	if spread == nil {
 		return errors.New("nil pointer to spread")
@@ -124,7 +125,7 @@ func SwapTextFieldXCoords(spread *Spread) error {
 
 }
 
-func GetTextFieldsByTopRight(svgLayoutPath, spreadName string) ([]TextField, error) {
+func GetTextFieldsByTopRightInSpread(svgLayoutPath, spreadName string) ([]TextField, error) {
 
 	tf := []TextField{}
 
@@ -134,7 +135,7 @@ func GetTextFieldsByTopRight(svgLayoutPath, spreadName string) ([]TextField, err
 		return tf, err
 	}
 
-	err = SwapTextFieldXCoords(&spread)
+	err = SwapTextFieldXCoordsInSpread(&spread)
 
 	if err != nil {
 		return tf, err
@@ -144,7 +145,7 @@ func GetTextFieldsByTopRight(svgLayoutPath, spreadName string) ([]TextField, err
 
 }
 
-func SwitchTextFieldOrigin(spread *Spread, width, height float64) error {
+func SwitchTextFieldOriginInSpread(spread *Spread, width, height float64) error {
 
 	if spread == nil {
 		return errors.New("nil pointer to spread")
@@ -161,7 +162,7 @@ func SwitchTextFieldOrigin(spread *Spread, width, height float64) error {
 
 }
 
-func ScaleTextFieldGeometry(spread *Spread, scaleFactor float64) error {
+func ScaleTextFieldGeometryInSpread(spread *Spread, scaleFactor float64) error {
 
 	if spread == nil {
 		return errors.New("nil pointer to spread")
@@ -179,7 +180,38 @@ func ScaleTextFieldGeometry(spread *Spread, scaleFactor float64) error {
 
 }
 
-func GetImageBoxesForTextFields(svgLayoutPath, spreadName string, widthPx, heightPx int, vanilla bool, expand int) ([]optical.Box, error) {
+//scaleFactor := float64(heightPx) / spread.Dim.Height
+
+func scaleArray(array []float64, scaleFactor float64) []float64 {
+
+	for i, val := range array {
+		array[i] = val * scaleFactor
+	}
+
+	return array
+
+}
+
+func ScaleTextFieldGeometry(textfields *(map[string]extract.TextField), heightPx int) error {
+
+	if textfields == nil {
+		return errors.New("nil pointer to textfields")
+	}
+
+	for key, tf := range *textfields {
+
+		scaleFactor := float64(heightPx) / tf.PageDim.Height
+
+		tf.Rect = scaleArray(tf.Rect, scaleFactor)
+
+		(*textfields)[key] = tf
+	}
+
+	return nil
+
+}
+
+func GetImageBoxesForTextFieldsFromTemplate(svgLayoutPath, spreadName string, widthPx, heightPx int, vanilla bool, expand int) ([]optical.Box, error) {
 
 	boxes := []optical.Box{}
 
@@ -190,7 +222,7 @@ func GetImageBoxesForTextFields(svgLayoutPath, spreadName string, widthPx, heigh
 	}
 
 	// coords from top-right corner (known point)
-	err = SwapTextFieldXCoords(&spread)
+	err = SwapTextFieldXCoordsInSpread(&spread)
 
 	if err != nil {
 		return boxes, err
@@ -201,11 +233,11 @@ func GetImageBoxesForTextFields(svgLayoutPath, spreadName string, widthPx, heigh
 
 	scaleFactor := float64(heightPx) / spread.Dim.Height
 
-	err = ScaleTextFieldGeometry(&spread, scaleFactor)
+	err = ScaleTextFieldGeometryInSpread(&spread, scaleFactor)
 
 	// convert origin to bottomLeft
 
-	err = SwitchTextFieldOrigin(&spread, float64(widthPx), float64(heightPx))
+	err = SwitchTextFieldOriginInSpread(&spread, float64(widthPx), float64(heightPx))
 
 	// now we have the coordinates in origin lower left, units of pixels
 	// all that is left is to transfer these into the optical.Box struct
@@ -224,6 +256,44 @@ func GetImageBoxesForTextFields(svgLayoutPath, spreadName string, widthPx, heigh
 
 	}
 
+	return boxes, nil
+
+}
+
+// the textfields we will get are in a map
+// TODO control vanilla at design time, e.g. via custom field in page data
+// TODO figure out a way to have mixed background boxes (... just, you know, in case ...)
+// note heightPx and widthPx are for the "previousImage" which can't be predicted from the PDF
+// because the size depends on the quality settings in the flattening process
+func GetImageBoxesForTextFields(textfields map[string]extract.TextField, heightPx, widthPx int, vanilla bool, expand int) ([]optical.Box, error) {
+
+	//page height is in the textfields info
+
+	boxes := []optical.Box{}
+
+	ScaleTextFieldGeometry(&textfields, heightPx)
+
+	// convert origin to bottomLeft
+	/*
+			err = SwitchTextFieldOrigin(&textfields, float64(widthPx), float64(heightPx))
+
+			// now we have the coordinates in origin lower left, units of pixels
+			// all that is left is to transfer these into the optical.Box struct
+
+			for _, tf := range textFields {
+
+				box := optical.Box{
+					Vanilla: vanilla,
+					ID:      tf.Name,
+					Bounds:  geo.ConvertToImageRectangle(tf.Rect),
+				}
+
+				optical.ExpandBound(&box, expand)
+
+				boxes = append(boxes, box)
+
+		}
+	*/
 	return boxes, nil
 
 }

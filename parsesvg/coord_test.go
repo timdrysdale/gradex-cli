@@ -9,8 +9,52 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/gradex-cli/extract"
+	"github.com/timdrysdale/gradex-cli/geo"
 	"github.com/timdrysdale/gradex-cli/optical"
 )
+
+func TestScaleArray(t *testing.T) {
+	assert.Equal(t, []float64{1.5, 3, 4.5}, scaleArray([]float64{0.5, 1, 1.5}, 3))
+}
+
+func TestScaleTextFieldGeometry(t *testing.T) {
+
+	inputMap := make(map[string]extract.TextField)
+
+	inputMap["q"] = extract.TextField{
+		Name:    "q",
+		Key:     "q",
+		PageNum: 1,
+		Value:   "v",
+		Rect:    []float64{100, 200, 150, 250},
+		PageDim: geo.Dim{
+			Width:  595,
+			Height: 841,
+		},
+	}
+	inputMap["r"] = extract.TextField{
+		Name:    "r",
+		Key:     "r",
+		PageNum: 1,
+		Value:   "w",
+		Rect:    []float64{150, 250, 330, 350},
+		PageDim: geo.Dim{
+			Width:  595,
+			Height: 841,
+		},
+	}
+
+	heightPx := 2523 //scaleFactor of three for convenience
+
+	err := ScaleTextFieldGeometry(&inputMap, heightPx)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, []float64{300, 600, 450, 750}, inputMap["q"].Rect)
+	assert.Equal(t, []float64{450, 750, 990, 1050}, inputMap["r"].Rect)
+
+}
 
 func TestGetTextFieldSpread(t *testing.T) {
 
@@ -41,7 +85,7 @@ func TestGetTextFieldSpread(t *testing.T) {
 	assert.Equal(t, badY, tfMap["page-bad"].Rect.Corner.Y)
 	assert.Equal(t, width, spread.Dim.Width)
 
-	err = SwapTextFieldXCoords(&spread)
+	err = SwapTextFieldXCoordsInSpread(&spread)
 	tfMap = make(map[string]TextField)
 
 	for _, tf := range spread.TextFields {
@@ -59,7 +103,7 @@ func TestGetTextFieldSpread(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	textfields, err := GetTextFieldsByTopRight(svgLayoutPath, spreadName)
+	textfields, err := GetTextFieldsByTopRightInSpread(svgLayoutPath, spreadName)
 
 	assert.NoError(t, err)
 
@@ -77,7 +121,7 @@ func TestGetTextFieldSpread(t *testing.T) {
 
 }
 
-func TestGetImageBoxes(t *testing.T) {
+func TestGetImageBoxesFromTemplate(t *testing.T) {
 
 	svgLayoutPath := "./test/layout-312pt.svg"
 	spreadName := "mark"
@@ -87,7 +131,7 @@ func TestGetImageBoxes(t *testing.T) {
 
 	vanilla := true
 
-	boxes, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
+	boxes, err := GetImageBoxesForTextFieldsFromTemplate(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
 	assert.NoError(t, err)
 
 	boxMap := make(map[string]optical.Box)
@@ -190,7 +234,7 @@ func BenchmarkGetImageBoxes(b *testing.B) {
 	// run the function b.N times
 	for n := 0; n < b.N; n++ {
 
-		_, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
+		_, err := GetImageBoxesForTextFieldsFromTemplate(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
 
 		assert.NoError(b, err)
 
@@ -208,7 +252,7 @@ func BenchmarkDoCheckBoxesWholePage(b *testing.B) {
 	widthPx := 1883
 	heightPx := 2150
 	vanilla := true
-	boxes, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
+	boxes, err := GetImageBoxesForTextFieldsFromTemplate(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
 	assert.NoError(b, err)
 
 	// run the function b.N times
@@ -234,7 +278,7 @@ func BenchmarkDoCheckBoxesOneBox(b *testing.B) {
 	widthPx := 1883
 	heightPx := 2150
 	vanilla := true
-	boxes, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
+	boxes, err := GetImageBoxesForTextFieldsFromTemplate(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
 	assert.NoError(b, err)
 
 	// run the function b.N times
