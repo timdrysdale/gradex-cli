@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/timdrysdale/gradex-cli/optical"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
+	"github.com/timdrysdale/gradex-cli/util"
 	"github.com/timdrysdale/pool"
 	pdf "github.com/timdrysdale/unipdf/v3/model"
 )
@@ -110,7 +110,7 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 		// get all textfields from the file
 
-		fieldsMapByPage, err := extract.ExtractTextFieldsFromPDF(inPath)
+		fieldsMapByPage, err := extract.ExtractTextFieldsStructFromPDF(inPath)
 
 		newFieldMap := make(map[int][]pagedata.Field)
 
@@ -126,8 +126,8 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 					data =
 						append(data,
 							pagedata.Field{
-								Key:   textFieldPrefix + key,
-								Value: value,
+								Key:   util.SafeText(textFieldPrefix + key), //unlikely to get unicode in the fields, but, protect anyway.
+								Value: util.SafeText(value.Value),
 							})
 				}
 
@@ -142,10 +142,6 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 				Msg("Expected text fields but couldn't get them")
 
 		}
-
-		// get the box dimensions we might need
-
-		//NewFieldMap    map[int][]pagedata.Field
 
 		// this is a file-level task, so we we will sort per-page updates
 		// to pageData at the child step
@@ -162,6 +158,7 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 			Who:              oc.PathDecoration,
 			ReadOpticalBoxes: oc.ReadOpticalBoxes,
 			OpticalBoxSpread: oc.OpticalBoxSpread,
+			TextFields:       fieldsMapByPage,
 		})
 		logger.Info().
 			Str("file", inPath).
@@ -174,8 +171,6 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 	// now process the files
 	N := len(overlayTasks)
-
-	//pcChan := make(chan int, N)
 
 	tasks := []*pool.Task{}
 
@@ -310,15 +305,12 @@ OUTER:
 
 	f.Close()
 
-	// clean comments down to ASCII for printing in standard font
-	//  so as to avoid pagedata hash errors
+	//  make comment text safe (ASCII only, no non-space whitespace)
+	//  so they can be represented in standard font without changing
+	//  this helps us avoid pagedata hash errors (e.g. as arised from \r in comment)
 	for key, pageComments := range comments { //map
 		for idx, cmt := range pageComments { //slice
-			re := regexp.MustCompile("[[:^ascii:]]")
-			cmt.Text = re.ReplaceAllLiteralString(cmt.Text, "")
-			re = regexp.MustCompile("\\s+") // this one necessary
-			cmt.Text = re.ReplaceAllLiteralString(cmt.Text, " ")
-
+			cmt.Text = util.SafeText(cmt.Text)
 			pageComments[idx] = cmt
 		}
 		comments[key] = pageComments
@@ -436,10 +428,8 @@ OUTER:
 					Msg("Error getting image dimensions")
 			} else {
 
-				// this benchmarks at around 30ms - but we have to do it everytime to accommodate changing page sizes
-				// note we shrink each box by 2 pixels, assume and white paper - TODO offer as config options
-
-				boxes, err := parsesvg.GetImageBoxesForTextFields(ot.Template, ot.OpticalBoxSpread, widthPx, heightPx, g.backgroundIsVanilla, g.opticalExpand)
+				// We use the textfield dimensions we read out of the pdf file itself, and adjust them according to total page size
+				boxes, err := parsesvg.GetImageBoxesForTextFields(ot.TextFields[imgIdx], heightPx, widthPx, g.backgroundIsVanilla, g.opticalExpand)
 
 				if err != nil {
 					logger.Error().
