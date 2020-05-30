@@ -1,12 +1,15 @@
 package extract
 
 import (
+	"fmt"
 	"os"
+	"reflect"
 	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/gradex-cli/merge"
+	"github.com/timdrysdale/gradex-cli/util"
 	"github.com/timdrysdale/unipdf/v3/annotator"
 	"github.com/timdrysdale/unipdf/v3/creator"
 	pdf "github.com/timdrysdale/unipdf/v3/model"
@@ -79,6 +82,8 @@ func writePage(path, key, value, message string) error {
 
 func TestExtractTextFieldFromFile(t *testing.T) {
 
+	util.EnsureDir("./test")
+
 	path := "./test/with-fields.pdf"
 	path1 := "./test/with-field-p1.pdf"
 	path2 := "./test/with-field-p2.pdf"
@@ -121,6 +126,92 @@ func TestExtractTextFieldFromFile(t *testing.T) {
 	expectedMap[3]["question"] = textp3
 
 	assert.Equal(t, expectedMap, fieldsMap)
+
+	os.Remove(path)
+	os.Remove(path1)
+	os.Remove(path2)
+	os.Remove(path3)
+}
+
+func TestExtractTextFieldsStructFromFile(t *testing.T) {
+
+	util.EnsureDir("./test")
+
+	path := "./test/with-fields.pdf"
+	path1 := "./test/with-field-p1.pdf"
+	path2 := "./test/with-field-p2.pdf"
+	path3 := "./test/with-field-p3.pdf"
+
+	textp1 := "What's your favourite colour?"
+	textp2 := "What's your favourite food?"
+	textp3 := "What's your favourite number?"
+
+	message1 := "TEST PAGE ONE"
+	message2 := "TEST PAGE TWO"
+	message3 := "TEST PAGE THREE"
+
+	// page-nnn- is an overlay-specifc-feature
+	// which ensures we can track the page number in these fields
+	qp1 := "page-001-question"
+	qp2 := "page-002-question"
+	qp3 := "page-003-question"
+	writePage(path1, qp1, textp1, message1)
+	writePage(path2, qp2, textp2, message2)
+	writePage(path3, qp3, textp3, message3)
+
+	err := merge.PDF([]string{path1, path2, path3}, path)
+	assert.NoError(t, err)
+
+	_, err = os.Stat(path)
+
+	assert.NoError(t, err)
+
+	fieldsMap, err := ExtractTextFieldsStructFromPDF(path)
+
+	assert.NoError(t, err)
+
+	expectedMap := make(map[int]map[string]TextField)
+
+	expectedMap[1] = make(map[string]TextField)
+	expectedMap[2] = make(map[string]TextField)
+	expectedMap[3] = make(map[string]TextField)
+
+	q := "question"
+
+	expectedMap[1]["question"] = TextField{
+		Name:  qp1,
+		Key:   q,
+		Page:  1,
+		Value: textp1,
+		Rect:  []float64{100, 200, 150, 250},
+	}
+
+	expectedMap[2]["question"] = TextField{
+		Name:  "doc2." + qp2,
+		Key:   q,
+		Page:  2,
+		Value: textp2,
+		Rect:  []float64{100, 200, 150, 250},
+	}
+
+	expectedMap[3]["question"] = TextField{
+		Name:  "doc3." + qp3,
+		Key:   q,
+		Page:  3,
+		Value: textp3,
+		Rect:  []float64{100, 200, 150, 250},
+	}
+
+	assert.Equal(t, expectedMap, fieldsMap)
+
+	if !reflect.DeepEqual(expectedMap, fieldsMap) {
+
+		fmt.Println("--EXPECTED--")
+		util.PrettyPrintStruct(expectedMap)
+		fmt.Println("--ACTUAL--")
+		util.PrettyPrintStruct(fieldsMap)
+
+	}
 
 	os.Remove(path)
 	os.Remove(path1)

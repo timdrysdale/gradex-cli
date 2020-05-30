@@ -16,8 +16,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/timdrysdale/unipdf/v3/core"
 	pdf "github.com/timdrysdale/unipdf/v3/model"
 )
+
+type TextField struct {
+	Name  string
+	Key   string
+	Page  int
+	Value string
+	Rect  []float64
+}
 
 func ExtractTextFieldsFromPDF(path string) (map[int]map[string]string, error) {
 
@@ -34,6 +43,30 @@ func ExtractTextFieldsFromPDF(path string) (map[int]map[string]string, error) {
 			if _, ok := fieldsByPage[p]; !ok { //init map for this page if not present
 				fieldsByPage[p] = make(map[string]string)
 			}
+			fieldsByPage[p][key] = val
+		}
+	}
+
+	return fieldsByPage, nil
+}
+
+func ExtractTextFieldsStructFromPDF(path string) (map[int]map[string]TextField, error) {
+
+	fieldsByPage := make(map[int]map[string]TextField)
+
+	fields, err := mapTextFields(path)
+	if err != nil {
+		return fieldsByPage, err
+	}
+
+	for pagekey, val := range fields {
+		p, key := getPageAndKey(pagekey)
+		if p > -1 {
+			if _, ok := fieldsByPage[p]; !ok { //init map for this page if not present
+				fieldsByPage[p] = make(map[string]TextField)
+			}
+			val.Key = key
+			val.Page = p
 			fieldsByPage[p][key] = val
 		}
 	}
@@ -144,6 +177,61 @@ func mapPdfFieldData(inputPath string) (map[string]string, error) {
 		}
 
 		textfields[fullname] = val
+
+	}
+
+	return textfields, nil
+}
+
+func mapTextFields(inputPath string) (map[string]TextField, error) {
+
+	textfields := make(map[string]TextField)
+
+	f, err := os.Open(inputPath)
+	if err != nil {
+		return textfields, errors.New(fmt.Sprintf("Problem opening file %s", inputPath))
+	}
+	defer f.Close()
+
+	pdfReader, err := pdf.NewPdfReader(f)
+	if err != nil {
+		return textfields, errors.New(fmt.Sprintf("Problem creating reader %s", inputPath))
+	}
+
+	acroForm := pdfReader.AcroForm
+	if acroForm == nil {
+		return textfields, nil
+	}
+
+	fields := acroForm.AllFields()
+	for _, field := range fields {
+		fullname, err := field.FullName()
+		if err != nil {
+			continue
+		}
+
+		val := ""
+
+		if field.V != nil {
+			val = field.V.String()
+		}
+
+		annots := field.Annotations
+
+		rect := []float64{}
+		// this has always been length one in docs produced so far, so
+		// this length check / indexing is just to avoid nul pointer
+		// any additional annotations will be ignored, and anyway
+		// what would we do with a field two with rects? mmmm
+		if len(annots) > 0 {
+			rect, err = annots[0].Rect.(*core.PdfObjectArray).ToFloat64Array()
+		}
+
+		textfields[fullname] = TextField{
+			Name:  fullname,
+			Value: val,
+			Rect:  rect,
+		}
 
 	}
 
