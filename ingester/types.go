@@ -212,9 +212,22 @@ const (
 	doneDecoration = "d"
 	labelling      = "labelling"
 	marking        = "marking"
+	remarking      = "remarking"
 	moderating     = "moderating"
+	remoderating   = "remoderating"
 	checking       = "checking"
+	rechecking     = "rechecking"
 	entering       = "entering"
+	reentering     = "rentering"
+
+	marked      = "marked"
+	moderated   = "moderated"
+	entered     = "entered"
+	checked     = "checked"
+	remarked    = "remarked"
+	remoderated = "remoderated"
+	reentered   = "reentered"
+	rechecked   = "rechecked"
 
 	//External directories
 

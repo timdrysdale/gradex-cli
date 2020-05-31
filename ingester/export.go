@@ -2,411 +2,160 @@ package ingester
 
 import (
 	"fmt"
-
-	"github.com/rs/zerolog/log"
+	"strings"
 )
 
-func (g *Ingester) ExportForLabelling(exam, labeller string) {
-
-	source := g.GetExamDirNamed(exam, questionReady, labeller)
-
-	g.logger.Info().Msg("Exporting")
-
-	files, err := GetFileList(source)
-
-	if err != nil {
-
-		g.logger.Error().
-			Str("error", err.Error()).
-			Msg("could not get file list for exporting")
+var (
+	exportStages = []string{
+		"labelling",
+		"marking",
+		"remarking",
+		"moderating",
+		"remoderating",
+		"entering",
+		"reentering",
+		"checking",
+		"rechecking",
 	}
+)
 
-	g.logger.Info().Msg("Exporting")
+func ValidStageForExport(stage string) bool {
 
-	numErrors := 0
+	switch strings.ToLower(stage) {
 
-	destination := g.GetExportDir(exam, questionReady, labeller)
-
-	for _, file := range files {
-
-		if !g.IsPDF(file) {
-			continue
-		}
-
-		destination := g.GetExportDir(exam, questionReady, labeller)
-
-		err := g.CopyToDir(file, destination)
-		if err == nil {
-
-			destination = g.GetExamDirNamed(exam, questionSent, labeller)
-
-			err = g.MoveToDir(file, destination)
-
-			if err != nil {
-				g.logger.Error().
-					Str("file", file).
-					Str("destination", destination).
-					Str("error", err.Error()).
-					Msg("could not copy file to LabellerSent")
-
-			}
-
-		} else {
-			numErrors++
-			g.logger.Error().
-				Str("file", file).
-				Str("destination", destination).
-				Str("error", err.Error()).
-				Msg("could not copy file to export it")
-
-		}
-
+	case labelling, marking, remarking, moderating, remoderating, entering, reentering, checking, rechecking:
+		return true
+	default:
+		return false
 	}
-	if numErrors == 0 {
-		g.logger.Info().
-			Int("count", len(files)).
-			Str("destination", destination).
-			Msg(fmt.Sprintf("Exported %d files to %s", len(files), destination))
-	}
-
 }
 
-func (g *Ingester) ExportForMarking(exam, marker string) {
+func (g *Ingester) GetExportDirs(exam, stage, actor string) (string, string, string, error) {
 
-	source := g.GetExamDirNamed(exam, markerReady, marker)
+	var ready, sent string
 
-	files, err := GetFileList(source)
+	switch stage {
+	case labelling:
+		ready = questionReady
+		sent = questionSent
+	case marking:
+		ready = markerReady
+		sent = markerSent
 
-	if err != nil {
+	case remarking:
+		ready = reMarkerReady
+		sent = reMarkerSent
 
-		g.logger.Error().
-			Str("error", err.Error()).
-			Msg("could not get file list for exporting")
+	case moderating:
+		ready = moderatorReady
+		sent = moderatorSent
+
+	case remoderating:
+		ready = reModeratorReady
+		sent = reModeratorSent
+
+	case entering:
+		ready = enterReady
+		sent = enterSent
+
+	case reentering:
+		ready = reEnterReady
+		sent = reEnterSent
+
+	case checking:
+		ready = checkerReady
+		sent = checkerSent
+
+	case rechecking:
+		ready = reCheckerReady
+		sent = reCheckerSent
+
+	default:
+		return "", "", "", fmt.Errorf("unknown stage %s.\n Try: [%s]", stage, strings.Join(exportStages, ","))
 	}
 
-	g.logger.Info().Msg("Exporting")
+	readyDir := g.GetExamDirNamed(exam, ready, actor)
+	sentDir := g.GetExamDirNamed(exam, sent, actor)
+	exportDir := g.GetExportDir(exam, stage, actor)
 
-	numErrors := 0
+	g.EnsureDirAll(readyDir)
+	g.EnsureDirAll(sentDir)
+	g.EnsureDirAll(exportDir)
 
-	destination := g.GetExportDir(exam, markerReady, marker)
-
-	for _, file := range files {
-
-		if !g.IsPDF(file) {
-			continue
-		}
-
-		destination := g.GetExportDir(exam, markerReady, marker)
-
-		err := g.CopyToDir(file, destination)
-		if err == nil {
-
-			destination = g.GetExamDirNamed(exam, markerSent, marker)
-
-			err = g.MoveToDir(file, destination)
-
-			if err != nil {
-				g.logger.Error().
-					Str("file", file).
-					Str("destination", destination).
-					Str("error", err.Error()).
-					Msg("could not copy file to MarkerSent")
-
-			}
-
-		} else {
-			numErrors++
-			g.logger.Error().
-				Str("file", file).
-				Str("destination", destination).
-				Str("error", err.Error()).
-				Msg("could not copy file to export it")
-
-		}
-
-	}
-	if numErrors == 0 {
-		g.logger.Info().
-			Int("count", len(files)).
-			Str("destination", destination).
-			Msg(fmt.Sprintf("Exported %d files to %s", len(files), destination))
-	}
-
+	return readyDir, sentDir, exportDir, nil
 }
 
-func (g *Ingester) ExportForModerating(exam, moderator string) {
+func (g *Ingester) ExportFiles(exam, stage, actor string) error {
 
-	files, err := GetFileList(g.GetExamDirNamed(exam, moderatorReady, moderator))
+	logger := g.logger.With().
+		Str("exam", exam).
+		Str("stage", stage).
+		Str("actor", actor).Logger()
+
+	logger.Info().Msg("Exporting")
+
+	readyDir, sentDir, exportDir, err := g.GetExportDirs(exam, stage, actor)
+
+	if err != nil {
+		logger.Error().
+			Str("error", err.Error()).
+			Msg("Could not get export directories")
+		return err
+	}
+
+	logger = logger.With().
+		Str("ready", readyDir).
+		Str("sent", sentDir).
+		Str("export", exportDir).
+		Logger()
+
+	files, err := GetFileList(readyDir)
 
 	if err != nil {
 
-		g.logger.Error().
+		logger.Error().
 			Str("error", err.Error()).
 			Msg("could not get file list for exporting")
 	}
-	g.logger.Info().Msg("Exporting")
-	numErrors := 0
 
-	destination := g.GetExportDir(exam, moderatorReady, moderator)
+	numErrors := 0
 
 	for _, file := range files {
 
 		if !g.IsPDF(file) {
 			continue
 		}
-		destination := g.GetExportDir(exam, moderatorReady, moderator)
 
-		err := g.CopyToDir(file, destination)
+		_, err := g.CopyIfNewerThanDestinationInDir(file, exportDir, &logger)
+
 		if err == nil {
 
-			destination = g.GetExamDirNamed(exam, moderatorSent, moderator)
-			err = g.MoveToDir(file, destination)
+			err = g.MoveToDir(file, sentDir)
+
 			if err != nil {
 				g.logger.Error().
-					Str("file", file).
-					Str("destination", destination).
 					Str("error", err.Error()).
-					Msg("could not copy file to ModeratorSent")
-
+					Str("file", file).
+					Msg("Could not move file to sent directory")
 			}
 
 		} else {
 			numErrors++
 			g.logger.Error().
 				Str("file", file).
-				Str("destination", destination).
 				Str("error", err.Error()).
-				Msg("could not copy file to export it")
+				Msg("could not copy file to export directory")
 
 		}
+
 	}
 	if numErrors == 0 {
 		g.logger.Info().
 			Int("count", len(files)).
-			Str("destination", destination).
-			Msg(fmt.Sprintf("Exported %d files to %s", len(files), destination))
+			Msg(fmt.Sprintf("Exported %d files", len(files)))
+
+		return nil
 	}
 
-}
-
-func (g *Ingester) ExportForReModerating(exam, moderator string) {
-
-	files, err := GetFileList(g.GetExamDirNamed(exam, reModeratorReady, moderator))
-
-	if err != nil {
-
-		g.logger.Error().
-			Str("error", err.Error()).
-			Msg("could not get file list for exporting")
-	}
-	g.logger.Info().Msg("Exporting")
-	numErrors := 0
-
-	destination := g.GetExportDir(exam, reModeratorReady, moderator)
-
-	for _, file := range files {
-
-		if !g.IsPDF(file) {
-			continue
-		}
-		destination := g.GetExportDir(exam, reModeratorReady, moderator)
-
-		err := g.CopyToDir(file, destination)
-		if err == nil {
-
-			destination = g.GetExamDirNamed(exam, reModeratorSent, moderator)
-			err = g.MoveToDir(file, destination)
-			if err != nil {
-				g.logger.Error().
-					Str("file", file).
-					Str("destination", destination).
-					Str("error", err.Error()).
-					Msg("could not copy file to reModeratorSent")
-
-			}
-
-		} else {
-			numErrors++
-			g.logger.Error().
-				Str("file", file).
-				Str("destination", destination).
-				Str("error", err.Error()).
-				Msg("could not copy file to export it")
-
-		}
-	}
-	if numErrors == 0 {
-		g.logger.Info().
-			Int("count", len(files)).
-			Str("destination", destination).
-			Msg(fmt.Sprintf("Exported %d files to %s", len(files), destination))
-	}
-
-}
-
-func (g *Ingester) ExportForChecking(exam, checker string) {
-
-	files, err := GetFileList(g.GetExamDirNamed(exam, checkerReady, checker))
-	if err != nil {
-
-		g.logger.Error().
-			Str("error", err.Error()).
-			Msg("could not get file list for exporting")
-	}
-
-	g.logger.Info().Msg("Exporting")
-
-	numErrors := 0
-
-	destination := g.GetExportDir(exam, checkerReady, checker)
-
-	for _, file := range files {
-
-		if !g.IsPDF(file) {
-			continue
-		}
-		destination := g.GetExportDir(exam, checkerReady, checker)
-
-		err := g.CopyToDir(file, destination)
-		if err == nil {
-
-			destination = g.GetExamDirNamed(exam, checkerSent, checker)
-			err = g.MoveToDir(file, destination)
-			if err != nil {
-				g.logger.Error().
-					Str("file", file).
-					Str("destination", destination).
-					Str("error", err.Error()).
-					Msg("could not copy file to CheckerSent")
-
-			}
-
-		} else {
-			numErrors++
-			g.logger.Error().
-				Str("file", file).
-				Str("destination", destination).
-				Str("error", err.Error()).
-				Msg("could not copy file to export it")
-
-		}
-	}
-	if numErrors == 0 {
-		g.logger.Info().
-			Int("count", len(files)).
-			Str("destination", destination).
-			Msg(fmt.Sprintf("Exported %d files to %s", len(files), destination))
-	}
-
-}
-
-func (g *Ingester) ExportForReMarking(exam, marker string) {
-
-	files, err := GetFileList(g.GetExamDirNamed(exam, reMarkerReady, marker))
-	if err != nil {
-
-		log.Error().
-			Str("error", err.Error()).
-			Msg("could not get file list for exporting")
-	}
-	g.logger.Info().Msg("Exporting")
-	numErrors := 0
-
-	destination := g.GetExportDir(exam, reMarkerReady, marker)
-
-	for _, file := range files {
-
-		if !g.IsPDF(file) {
-			continue
-		}
-		destination := g.GetExportDir(exam, reMarkerReady, marker)
-
-		err := g.CopyToDir(file, destination)
-		if err == nil {
-
-			destination = g.GetExamDirNamed(exam, reMarkerSent, marker)
-
-			err = g.MoveToDir(file, destination)
-			if err != nil {
-				g.logger.Error().
-					Str("file", file).
-					Str("destination", destination).
-					Str("error", err.Error()).
-					Msg("could not copy file to ReMarkerSent")
-
-			}
-
-		} else {
-			numErrors++
-			g.logger.Error().
-				Str("file", file).
-				Str("destination", destination).
-				Str("error", err.Error()).
-				Msg("could not copy file to export it")
-
-		}
-	}
-	if numErrors == 0 {
-		g.logger.Info().
-			Int("count", len(files)).
-			Str("destination", destination).
-			Msg(fmt.Sprintf("Exported %d files to %s", len(files), destination))
-	}
-
-}
-
-func (g *Ingester) ExportForReChecking(exam, checker string) {
-
-	files, err := GetFileList(g.GetExamDirNamed(exam, reCheckerReady, checker))
-	if err != nil {
-
-		log.Error().
-			Str("error", err.Error()).
-			Msg("could not get file list for exporting")
-	}
-	g.logger.Info().Msg("Exporting")
-	numErrors := 0
-
-	destination := g.GetExportDir(exam, reCheckerReady, checker)
-
-	for _, file := range files {
-
-		if !g.IsPDF(file) {
-			continue
-		}
-		destination := g.GetExportDir(exam, reCheckerReady, checker)
-
-		err := g.CopyToDir(file, destination)
-		if err == nil {
-
-			destination = g.GetExamDirNamed(exam, reCheckerSent, checker)
-
-			err = g.MoveToDir(file, destination)
-			if err != nil {
-				g.logger.Error().
-					Str("file", file).
-					Str("destination", destination).
-					Str("error", err.Error()).
-					Msg("could not copy file to CheckerSent")
-
-			}
-
-		} else {
-			numErrors++
-			g.logger.Error().
-				Str("file", file).
-				Str("destination", destination).
-				Str("error", err.Error()).
-				Msg("could not copy file to export it")
-
-		}
-	}
-
-	if numErrors == 0 {
-		g.logger.Info().
-			Int("count", len(files)).
-			Str("destination", destination).
-			Msg(fmt.Sprintf("Exported %d files to %s", len(files), destination))
-	}
-
+	return fmt.Errorf("%d errors in exporting - see logfile for details", numErrors)
 }

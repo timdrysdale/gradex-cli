@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -33,6 +34,56 @@ func mustNotExist(t *testing.T, path string) {
 	if os.IsExist(err) {
 		t.Error(fmt.Sprintf("Found (unwanted) %s", path))
 	}
+}
+
+func (g *Ingester) MoveExportedFilesToIngest(exam, stage, actor string) error {
+	// this is for testing, so we don't try to salvage any further file moves
+	// after we get an error (keep function simple + fail "noisy" in test!)
+	_, _, exportDir, err := g.GetExportDirs(exam, stage, actor)
+
+	if err != nil {
+		return err
+	}
+	files, err := g.GetFileList(exportDir)
+
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		err := UpdateModTime(file) //else it won't looked actioned to stage
+		if err != nil {
+			return err
+		}
+		err = g.MoveToDir(file, g.Ingest())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+//https://socketloop.com/tutorials/golang-change-a-file-last-modified-date-and-time
+func UpdateModTime(filename string) error {
+
+	_, err := os.Stat(filename)
+
+	if err != nil {
+		return err
+	}
+
+	// get current timestamp
+
+	currenttime := time.Now().Local()
+
+	// change both atime and mtime to currenttime
+
+	err = os.Chtimes(filename, currenttime, currenttime)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func TestExport(t *testing.T) {
@@ -71,11 +122,11 @@ func TestExport(t *testing.T) {
 	//LABELLING
 	fileReady := filepath.Join(g.GetExamDirNamed(exam, questionReady, actor), fn)
 	fileSent := filepath.Join(g.GetExamDirNamed(exam, questionSent, actor), fn)
-	fileExport := filepath.Join(g.GetExportDir(exam, questionReady, actor), fn)
+	fileExport := filepath.Join(g.GetExportDir(exam, labelling, actor), fn)
 
 	createFile(t, fileReady)
 
-	g.ExportForLabelling(exam, actor)
+	g.ExportFiles(exam, labelling, actor)
 
 	mustNotExist(t, fileReady)
 	mustExist(t, fileSent)
@@ -84,11 +135,11 @@ func TestExport(t *testing.T) {
 	// MARKING
 	fileReady = filepath.Join(g.GetExamDirNamed(exam, markerReady, actor), fn)
 	fileSent = filepath.Join(g.GetExamDirNamed(exam, markerSent, actor), fn)
-	fileExport = filepath.Join(g.GetExportDir(exam, markerReady, actor), fn)
+	fileExport = filepath.Join(g.GetExportDir(exam, marking, actor), fn)
 
 	createFile(t, fileReady)
 
-	g.ExportForMarking(exam, actor)
+	g.ExportFiles(exam, marking, actor)
 
 	mustNotExist(t, fileReady)
 	mustExist(t, fileSent)
@@ -97,11 +148,11 @@ func TestExport(t *testing.T) {
 	// MODERATING
 	fileReady = filepath.Join(g.GetExamDirNamed(exam, moderatorReady, actor), fn)
 	fileSent = filepath.Join(g.GetExamDirNamed(exam, moderatorSent, actor), fn)
-	fileExport = filepath.Join(g.GetExportDir(exam, moderatorReady, actor), fn)
+	fileExport = filepath.Join(g.GetExportDir(exam, moderating, actor), fn)
 
 	createFile(t, fileReady)
 
-	g.ExportForModerating(exam, actor)
+	g.ExportFiles(exam, moderating, actor)
 
 	mustNotExist(t, fileReady)
 	mustExist(t, fileSent)
@@ -110,11 +161,11 @@ func TestExport(t *testing.T) {
 	// CHECKING
 	fileReady = filepath.Join(g.GetExamDirNamed(exam, checkerReady, actor), fn)
 	fileSent = filepath.Join(g.GetExamDirNamed(exam, checkerSent, actor), fn)
-	fileExport = filepath.Join(g.GetExportDir(exam, checkerReady, actor), fn)
+	fileExport = filepath.Join(g.GetExportDir(exam, checking, actor), fn)
 
 	createFile(t, fileReady)
 
-	g.ExportForChecking(exam, actor)
+	g.ExportFiles(exam, checking, actor)
 
 	mustNotExist(t, fileReady)
 	mustExist(t, fileSent)
@@ -123,11 +174,11 @@ func TestExport(t *testing.T) {
 	// REMARKING
 	fileReady = filepath.Join(g.GetExamDirNamed(exam, reMarkerReady, actor), fn)
 	fileSent = filepath.Join(g.GetExamDirNamed(exam, reMarkerSent, actor), fn)
-	fileExport = filepath.Join(g.GetExportDir(exam, reMarkerReady, actor), fn)
+	fileExport = filepath.Join(g.GetExportDir(exam, remarking, actor), fn)
 
 	createFile(t, fileReady)
 
-	g.ExportForReMarking(exam, actor)
+	g.ExportFiles(exam, remarking, actor)
 
 	mustNotExist(t, fileReady)
 	mustExist(t, fileSent)
@@ -136,11 +187,11 @@ func TestExport(t *testing.T) {
 	// RECHECKING
 	fileReady = filepath.Join(g.GetExamDirNamed(exam, reCheckerReady, actor), fn)
 	fileSent = filepath.Join(g.GetExamDirNamed(exam, reCheckerSent, actor), fn)
-	fileExport = filepath.Join(g.GetExportDir(exam, reCheckerReady, actor), fn)
+	fileExport = filepath.Join(g.GetExportDir(exam, rechecking, actor), fn)
 
 	createFile(t, fileReady)
 
-	g.ExportForReChecking(exam, actor)
+	g.ExportFiles(exam, rechecking, actor)
 
 	mustNotExist(t, fileReady)
 	mustExist(t, fileSent)

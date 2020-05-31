@@ -337,6 +337,7 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 			} //switch
 
 		}
+
 	case "moderating":
 
 		origin := g.GetExamDirNamed(t.What, moderatorSent, t.For)
@@ -363,6 +364,34 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 			g.MoveIfNewerThanDestinationInDir(path, destination, logger)
 			return
 		}
+
+	case "entering":
+
+		origin := g.GetExamDirNamed(t.What, enterSent, t.For)
+
+		preOrigin := g.GetExamDirNamed(t.What, enterReady, t.For)
+
+		if g.IsSameAsSelfInDir(path, origin) {
+			// put the file back in Ready (we keep this incoming version _just_in_case_ it had mods
+			// despite having original time stamp and size!
+			err := os.Rename(path, filepath.Join(preOrigin, filepath.Base(path)))
+			if err != nil {
+				return
+			}
+
+			// delete the version we had "sent" - this could be DSA re-ingesting exports before sending them
+			err = os.Remove(filepath.Join(origin, filepath.Base(path)))
+			if err != nil {
+				return
+			}
+		} else {
+			// it's (probably) been marked at least partly, so see if it is newer
+			// than a version we might already have
+			destination := g.GetExamDirNamed(t.What, enterBack, t.For)
+			g.MoveIfNewerThanDestinationInDir(path, destination, logger)
+			return
+		}
+
 	case "checking":
 
 		origin := g.GetExamDirNamed(t.What, checkerSent, t.For)
