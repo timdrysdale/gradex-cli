@@ -1,13 +1,16 @@
 package image
 
 import (
+	"log"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+//https://stackoverflow.com/questions/31663229/how-can-stdout-be-captured-or-suppressed-for-golang-testing
 func TestCheck(t *testing.T) {
-
+	defer quiet()()
 	pdf1 := "./test/test.pdf"
 	pdf2 := "./test/test-mod.pdf"
 
@@ -26,4 +29,19 @@ func TestCheck(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, result)
 
+}
+func quiet() func() {
+	null, _ := os.Open(os.DevNull)
+	sout := os.Stdout
+	serr := os.Stderr
+	os.Stdout = null
+	os.Stderr = null
+	log.SetOutput(null)
+
+	return func() {
+		defer null.Close()
+		os.Stdout = sout
+		os.Stderr = serr
+		log.SetOutput(os.Stderr)
+	}
 }

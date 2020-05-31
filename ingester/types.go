@@ -2,6 +2,7 @@ package ingester
 
 import (
 	"github.com/timdrysdale/chmsg"
+	"github.com/timdrysdale/gradex-cli/extract"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
@@ -33,6 +34,7 @@ type OverlayTask struct {
 	Who              string
 	OpticalBoxSpread string
 	ReadOpticalBoxes bool
+	TextFields       map[int]map[string]extract.TextField
 }
 
 // Overlay command struct - for backwards compatability

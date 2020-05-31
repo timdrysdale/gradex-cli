@@ -1,16 +1,132 @@
 package parsesvg
 
 import (
+	"fmt"
 	"image"
 	"image/jpeg"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/gradex-cli/extract"
+	"github.com/timdrysdale/gradex-cli/geo"
+	img "github.com/timdrysdale/gradex-cli/image"
 	"github.com/timdrysdale/gradex-cli/optical"
 )
+
+func TestScaleArray(t *testing.T) {
+	assert.Equal(t, []float64{1.5, 3, 4.5}, scaleArray([]float64{0.5, 1, 1.5}, 3))
+}
+
+func TestScaleTextFieldGeometry(t *testing.T) {
+
+	inputMap := make(map[string]extract.TextField)
+
+	inputMap["q"] = extract.TextField{
+		Name:    "q",
+		Key:     "q",
+		PageNum: 1,
+		Value:   "v",
+		Rect:    []float64{100, 200, 150, 250},
+		PageDim: geo.Dim{
+			Width:  595,
+			Height: 841,
+		},
+	}
+	inputMap["r"] = extract.TextField{
+		Name:    "r",
+		Key:     "r",
+		PageNum: 1,
+		Value:   "w",
+		Rect:    []float64{150, 250, 330, 350},
+		PageDim: geo.Dim{
+			Width:  595,
+			Height: 841,
+		},
+	}
+
+	heightPx := 2523 //scaleFactor of three for convenience
+
+	err := ScaleTextFieldGeometry(&inputMap, heightPx)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, []float64{300, 1923, 450, 1773}, inputMap["q"].Rect)
+	assert.Equal(t, []float64{450, 1773, 990, 1473}, inputMap["r"].Rect)
+}
+
+func TestGetImageBoxesForTextFields(t *testing.T) {
+
+	inputMap := make(map[string]extract.TextField)
+	inputMap["q"] = extract.TextField{
+		Name:    "q",
+		Key:     "q",
+		PageNum: 1,
+		Value:   "v",
+		Rect:    []float64{100, 200, 150, 250},
+		PageDim: geo.Dim{
+			Width:  595,
+			Height: 841,
+		},
+	}
+	inputMap["r"] = extract.TextField{
+		Name:    "r",
+		Key:     "r",
+		PageNum: 1,
+		Value:   "w",
+		Rect:    []float64{150, 250, 330, 350},
+		PageDim: geo.Dim{
+			Width:  595,
+			Height: 841,
+		},
+	}
+
+	irq := image.Rectangle{
+		Min: image.Point{
+			X: 305,
+			Y: 1778,
+		},
+
+		Max: image.Point{
+			X: 445,
+			Y: 1918,
+		},
+	}
+	irr := image.Rectangle{
+		Min: image.Point{
+			X: 455,
+			Y: 1478,
+		},
+
+		Max: image.Point{
+			X: 985,
+			Y: 1768,
+		},
+	}
+
+	heightPx := 2523 //scaleFactor of three for convenience
+
+	boxes, err := GetImageBoxesForTextFields(inputMap, heightPx, 1900, true, -5)
+
+	assert.NoError(t, err)
+
+	// make sure test is agnostic to box order
+	boxmap := make(map[string]optical.Box)
+
+	for _, box := range boxes {
+
+		boxmap[box.ID] = box
+	}
+	assert.Equal(t, irq, boxmap["q"].Bounds)
+	assert.Equal(t, irr, boxmap["r"].Bounds)
+
+}
+
+// GetImageBoxesForTextFields(textfields map[string]extract.TextField, heightPx, widthPx int, vanilla bool, expand int) ([]optical.Box, error) {
 
 func TestGetTextFieldSpread(t *testing.T) {
 
@@ -41,7 +157,7 @@ func TestGetTextFieldSpread(t *testing.T) {
 	assert.Equal(t, badY, tfMap["page-bad"].Rect.Corner.Y)
 	assert.Equal(t, width, spread.Dim.Width)
 
-	err = SwapTextFieldXCoords(&spread)
+	err = SwapTextFieldXCoordsInSpread(&spread)
 	tfMap = make(map[string]TextField)
 
 	for _, tf := range spread.TextFields {
@@ -59,7 +175,7 @@ func TestGetTextFieldSpread(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	textfields, err := GetTextFieldsByTopRight(svgLayoutPath, spreadName)
+	textfields, err := GetTextFieldsByTopRightInSpread(svgLayoutPath, spreadName)
 
 	assert.NoError(t, err)
 
@@ -77,7 +193,7 @@ func TestGetTextFieldSpread(t *testing.T) {
 
 }
 
-func TestGetImageBoxes(t *testing.T) {
+func TestGetImageBoxesFromTemplate(t *testing.T) {
 
 	svgLayoutPath := "./test/layout-312pt.svg"
 	spreadName := "mark"
@@ -87,7 +203,7 @@ func TestGetImageBoxes(t *testing.T) {
 
 	vanilla := true
 
-	boxes, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
+	boxes, err := GetImageBoxesForTextFieldsFromTemplate(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
 	assert.NoError(t, err)
 
 	boxMap := make(map[string]optical.Box)
@@ -177,6 +293,100 @@ func TestGetImageBoxes(t *testing.T) {
 	//PrettyPrintStruct(boxes)
 }
 
+func TestCheckFileUsingPDFCoords(t *testing.T) {
+
+	pdfPath := "./expected/Practice-B999995-maTDD-enJM-chLD.pdf"
+	jpgPath := "./test/Practice-B999995-maTDD-enJM-chLD.jpg"
+	err := img.ConvertPDFToJPEGs(pdfPath, "./test", jpgPath)
+
+	assert.NoError(t, err)
+
+	widthPx, heightPx, err := optical.GetImageDimension(jpgPath)
+
+	assert.NoError(t, err)
+
+	fieldsMapByPage, err := extract.ExtractTextFieldsStructFromPDF(pdfPath)
+
+	textfields := make(map[string]extract.TextField)
+
+	//get the first one
+	for _, v := range fieldsMapByPage {
+		textfields = v
+		break
+	}
+
+	assert.NoError(t, err)
+	expandPx := -5
+	boxes, err := GetImageBoxesForTextFields(textfields, heightPx, widthPx, true, expandPx)
+
+	results, err := optical.CheckBoxFile(jpgPath, boxes)
+	assert.NoError(t, err)
+
+	resultMap := make(map[string]bool)
+
+	for i, result := range results {
+		resultMap[boxes[i].ID] = result
+	}
+
+	assert.Equal(t, true, resultMap["page-ok"])
+	assert.Equal(t, false, resultMap["page-bad"])
+	assert.Equal(t, true, resultMap["q1-section"])
+	assert.Equal(t, true, resultMap["q1-number"])
+	assert.Equal(t, true, resultMap["q1-mark"])
+	assert.Equal(t, false, resultMap["q2-section"])
+	assert.Equal(t, false, resultMap["q2-number"])
+	assert.Equal(t, false, resultMap["q2-mark"])
+
+	reader, err := os.Open(jpgPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer reader.Close()
+
+	testImage, _, err := image.Decode(reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for idx := 0; idx < len(boxes); idx = idx + 1 {
+
+		checkImage := testImage.(optical.SubImager).SubImage(boxes[idx].Bounds)
+
+		actualImagePath := filepath.Join("./test/", boxes[idx].ID+".jpg")
+		expectedImagePath := filepath.Join("./expected/", boxes[idx].ID+".jpg")
+		of, err := os.Create(actualImagePath)
+
+		if err != nil {
+			t.Errorf("problem saving checkbox image to file %v\n", err)
+		}
+
+		err = jpeg.Encode(of, checkImage, nil)
+
+		if err != nil {
+			t.Errorf("writing file %v\n", err)
+		}
+
+		of.Close()
+		imgPath1 := expectedImagePath
+		imgPath2 := actualImagePath
+
+		out, err := exec.Command("compare", "-metric", "ae", imgPath1, imgPath2, "null:").CombinedOutput()
+		assert.NoError(t, err)
+		if err != nil {
+
+			diffPath := filepath.Join(filepath.Dir(imgPath2),
+				strings.TrimSuffix(filepath.Base(imgPath2), filepath.Ext(imgPath2))+
+					"-diff"+filepath.Ext(imgPath2))
+			cmd := exec.Command("compare", imgPath1, imgPath2, diffPath)
+			cmd.Run()
+
+			fmt.Printf("Images differ on page %d by %s (metric ae)\n see %s\n", idx, out, diffPath)
+		}
+
+	}
+
+}
+
 //BenchmarkGetImageBoxes-32    	      73	  35286670 ns/op
 // 35.286670 ms/op
 func BenchmarkGetImageBoxes(b *testing.B) {
@@ -190,7 +400,7 @@ func BenchmarkGetImageBoxes(b *testing.B) {
 	// run the function b.N times
 	for n := 0; n < b.N; n++ {
 
-		_, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
+		_, err := GetImageBoxesForTextFieldsFromTemplate(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
 
 		assert.NoError(b, err)
 
@@ -208,7 +418,7 @@ func BenchmarkDoCheckBoxesWholePage(b *testing.B) {
 	widthPx := 1883
 	heightPx := 2150
 	vanilla := true
-	boxes, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
+	boxes, err := GetImageBoxesForTextFieldsFromTemplate(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
 	assert.NoError(b, err)
 
 	// run the function b.N times
@@ -234,7 +444,7 @@ func BenchmarkDoCheckBoxesOneBox(b *testing.B) {
 	widthPx := 1883
 	heightPx := 2150
 	vanilla := true
-	boxes, err := GetImageBoxesForTextFields(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
+	boxes, err := GetImageBoxesForTextFieldsFromTemplate(svgLayoutPath, spreadName, widthPx, heightPx, vanilla, -2)
 	assert.NoError(b, err)
 
 	// run the function b.N times

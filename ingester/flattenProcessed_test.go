@@ -2,16 +2,139 @@ package ingester
 
 import (
 	"fmt"
+	"image"
+	"image/jpeg"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/chmsg"
 	"github.com/timdrysdale/gradex-cli/count"
+	"github.com/timdrysdale/gradex-cli/extract"
+	img "github.com/timdrysdale/gradex-cli/image"
+	"github.com/timdrysdale/gradex-cli/optical"
 	"github.com/timdrysdale/gradex-cli/pagedata"
+	"github.com/timdrysdale/gradex-cli/parsesvg"
+	"github.com/timdrysdale/gradex-cli/util"
 )
+
+func TestOpticalBoxReading(t *testing.T) {
+
+	util.EnsureDir("tmp-flatten")
+	pdfPath := "./test-flatten/Practice-B999999-maTDD-marked-comments.pdf"
+	jpgPath := "./tmp-flatten/Practice-B999999-maTDD-marked-comments.jpg"
+
+	err := img.ConvertPDFToJPEGs(pdfPath, "./tmp-flatten", jpgPath)
+
+	assert.NoError(t, err)
+
+	widthPx, heightPx, err := optical.GetImageDimension(jpgPath)
+
+	assert.NoError(t, err)
+
+	fieldsMapByPage, err := extract.ExtractTextFieldsStructFromPDF(pdfPath)
+
+	textfields := make(map[string]extract.TextField)
+
+	//get the first one
+	for _, v := range fieldsMapByPage {
+		textfields = v
+		break
+	}
+
+	assert.NoError(t, err)
+	expandPx := -5
+	boxes, err := parsesvg.GetImageBoxesForTextFields(textfields, heightPx, widthPx, true, expandPx)
+
+	results, err := optical.CheckBoxFile(jpgPath, boxes)
+	assert.NoError(t, err)
+
+	resultMap := make(map[string]bool)
+
+	for i, result := range results {
+		resultMap[boxes[i].ID] = result
+	}
+
+	expectedMap := map[string]bool{
+		"page-bad":    false,
+		"page-ok":     true,
+		"q1-mark":     true,
+		"q1-number":   true,
+		"q1-section":  true,
+		"q2-mark":     false,
+		"q2-number":   false,
+		"q2-section":  false,
+		"subtotal-00": true,
+		"subtotal-01": false,
+		"subtotal-02": false,
+		"subtotal-03": false,
+		"subtotal-04": true,
+		"subtotal-05": false,
+		"subtotal-06": false,
+		"subtotal-07": false,
+		"subtotal-08": false,
+		"subtotal-09": true,
+		"subtotal-10": false,
+		"subtotal-11": false,
+		"subtotal-12": false,
+		"subtotal-13": false,
+		"subtotal-14": false,
+		"subtotal-15": false,
+		"subtotal-16": false,
+	}
+
+	assert.Equal(t, expectedMap, resultMap)
+
+	reader, err := os.Open(jpgPath)
+	assert.NoError(t, err)
+
+	defer reader.Close()
+
+	testImage, _, err := image.Decode(reader)
+	assert.NoError(t, err)
+
+	for idx := 0; idx < len(boxes); idx = idx + 1 {
+
+		checkImage := testImage.(optical.SubImager).SubImage(boxes[idx].Bounds)
+
+		actualImagePath := filepath.Join("./tmp-flatten/", boxes[idx].ID+".jpg")
+		expectedImagePath := filepath.Join("./expected/visual", boxes[idx].ID+".jpg")
+		of, err := os.Create(actualImagePath)
+
+		if err != nil {
+			t.Errorf("problem saving checkbox image to file %v\n", err)
+		}
+
+		err = jpeg.Encode(of, checkImage, nil)
+
+		if err != nil {
+			t.Errorf("writing file %v\n", err)
+		}
+
+		of.Close()
+		imgPath1 := expectedImagePath
+		imgPath2 := actualImagePath
+
+		out, err := exec.Command("compare", "-metric", "ae", imgPath1, imgPath2, "null:").CombinedOutput()
+		assert.NoError(t, err)
+		if err != nil {
+
+			diffPath := filepath.Join(filepath.Dir(imgPath2),
+				strings.TrimSuffix(filepath.Base(imgPath2), filepath.Ext(imgPath2))+
+					"-diff"+filepath.Ext(imgPath2))
+			cmd := exec.Command("compare", imgPath1, imgPath2, diffPath)
+			cmd.Run()
+
+			fmt.Printf("Images differ on page %d by %s (metric ae)\n see %s\n", idx, out, diffPath)
+		}
+
+	}
+
+}
 
 func TestFlattenProcessedMarked(t *testing.T) {
 	if testing.Short() {
@@ -71,6 +194,7 @@ func TestFlattenProcessedMarked(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = g.FlattenProcessedPapers(exam, stage)
+
 	assert.NoError(t, err)
 
 	// pagedata check
