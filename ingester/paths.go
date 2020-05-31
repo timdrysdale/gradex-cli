@@ -2,6 +2,7 @@ package ingester
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -292,11 +293,181 @@ func (g *Ingester) SetupGradexDirs() error {
 	return nil
 }
 
+func (g *Ingester) MigrateVersionDirStruct(exam string) error {
+
+	err := g.MigrateTempImages(exam)
+
+	var lastError error
+
+	if err != nil {
+		lastError = fmt.Errorf("Could not migrate temp Images because %s", err)
+	}
+
+	err = g.RemoveEmptySubDirs(exam)
+
+	if err != nil {
+		return fmt.Errorf("Could not remove old sub-directories because %s", err)
+	}
+
+	err = g.SetupExamDirs(filepath.Base(exam))
+
+	if err != nil {
+		return fmt.Errorf("Could not set up new sub-directories because %s", err)
+	}
+
+	return lastError
+
+}
+
+// on update from 0.4 -0.5 temp images moved
+func (g *Ingester) MigrateTempImages(exam string) error {
+
+	from := filepath.Join(exam, "03-temporary-images")
+
+	_, err := os.Stat(from)
+
+	if os.IsNotExist(err) {
+		// already done
+		return nil
+	}
+
+	to := filepath.Join(exam, tempImages)
+
+	g.EnsureDir(to)
+
+	fmt.Printf("Moved tempImages from: %s\nTo                   : %s\n", from, to)
+
+	files, err := g.GetFileList(from)
+
+	var lastError error
+
+	for _, file := range files {
+		err := g.MoveToDir(file, to)
+
+		if err != nil {
+			lastError = fmt.Errorf("Could not migrate temporary image file %s to %s because %s\n", file, to, err)
+		}
+	}
+
+	return lastError
+
+}
+
+func GetSubDirList(dir string) ([]string, error) {
+
+	paths := []string{}
+
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() && path != dir {
+
+			paths = append(paths, path)
+
+			return filepath.SkipDir
+		}
+
+		return nil
+	})
+
+	return paths, err
+
+}
+
+func (g *Ingester) RemoveEmptySubDirs(dir string) error {
+
+	emptySubDirs, err := g.GetEmptySubDirs(dir)
+
+	if err != nil {
+		return err
+	}
+
+	var lastError error
+
+	removedOk := []string{}
+	newStageMap := make(map[string]bool)
+
+	for _, newstage := range ExamStage {
+		newStageMap[filepath.Join(dir, newstage)] = true
+	}
+
+	for _, emptyDir := range emptySubDirs {
+
+		if emptyDir == dir {
+			//don't erase parent
+			continue
+		}
+
+		if _, ok := newStageMap[emptyDir]; ok {
+			// we'll use this dir in new version
+			continue
+		}
+
+		thisError := os.Remove(emptyDir)
+
+		if thisError != nil {
+			lastError = thisError
+		} else {
+			removedOk = append(removedOk, emptyDir)
+		}
+	}
+
+	if len(removedOk) > 0 {
+		fmt.Printf("Removed empty deprecated directories:\n")
+		for _, dir := range removedOk {
+			fmt.Println(dir)
+		}
+	}
+
+	return lastError
+
+}
+
+//https://rosettacode.org/wiki/Empty_directory#Go
+func IsEmptyDir(name string) (bool, error) {
+	entries, err := ioutil.ReadDir(name)
+	if err != nil {
+		return false, err
+	}
+	return len(entries) == 0, nil
+}
+
+func (g *Ingester) GetEmptySubDirs(dir string) ([]string, error) {
+
+	paths := []string{}
+
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+
+			empty, err := IsEmptyDir(path)
+			if err == nil && empty {
+				paths = append(paths, path)
+			}
+		}
+
+		return nil
+	})
+
+	return paths, err
+}
+
 func (g *Ingester) SetupExamDirs(exam string) error {
 	// don't use EnsureDirAll so it flags if we are not otherwise setup
 	err := g.EnsureDir(g.GetExamRoot(exam))
 	if err != nil {
 		return err
+	}
+
+	err = g.RemoveEmptySubDirs(g.GetExamRoot(exam))
+
+	if err != nil {
+		fmt.Printf("Error cleaning unused directories because %s\n", err.Error())
 	}
 
 	for _, stage := range ExamStage {
