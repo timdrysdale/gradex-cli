@@ -94,6 +94,7 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 		}
 
 		g.EnsureDirectoryStructure()
+		g.SetupExamDirs(exam)
 
 		if markTemplate != "" {
 			err := g.SetOverlayTemplatePath(markTemplate)

@@ -94,6 +94,7 @@ rechecked`,
 		}
 
 		g.EnsureDirectoryStructure()
+		g.SetupExamDirs(exam)
 
 		g.Redo = redo
 

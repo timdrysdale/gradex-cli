@@ -85,13 +85,22 @@ func (g *Ingester) ValidateNewPapers() error {
 			sub.Assignment = shortenAssignment(sub.Assignment)
 		}
 
+		err = g.SetupExamDirs(sub.Assignment)
+
+		if err != nil {
+			g.logger.Error().
+				Str("course", sub.Assignment).
+				Msg("Could not ensure directory structure was set up. Is your disk full?")
+			return err // If we can't set up a new exam, we may as well bail out
+		}
+
 		_, err = os.Stat(g.GetExamRoot(sub.Assignment))
 		if os.IsNotExist(err) {
-			err = g.SetupExamDirs(sub.Assignment)
+
 			if err != nil {
 				g.logger.Error().
 					Str("course", sub.Assignment).
-					Msg("Could not ensure directory structure was set up. Yikes, disk full? Bailing out!")
+					Msg("Directory structure was not found. Is your disk full?")
 				return err // If we can't set up a new exam, we may as well bail out
 			}
 		}
