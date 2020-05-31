@@ -37,6 +37,7 @@ func quiet() func() {
 	os.Stdout = null
 	os.Stderr = null
 	log.SetOutput(null)
+
 	return func() {
 		defer null.Close()
 		os.Stdout = sout

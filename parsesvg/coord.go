@@ -287,7 +287,7 @@ func GetImageBoxesForTextFields(textfields map[string]extract.TextField, heightP
 
 		box := optical.Box{
 			Vanilla: vanilla,
-			ID:      tf.Name,
+			ID:      tf.Key,
 			Bounds:  bounds,
 		}
 

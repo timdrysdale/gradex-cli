@@ -328,14 +328,14 @@ func TestCheckFileUsingPDFCoords(t *testing.T) {
 		resultMap[boxes[i].ID] = result
 	}
 
-	assert.Equal(t, true, resultMap["page-001-page-ok"])
-	assert.Equal(t, false, resultMap["page-001-page-bad"])
-	assert.Equal(t, true, resultMap["page-001-q1-section"])
-	assert.Equal(t, true, resultMap["page-001-q1-number"])
-	assert.Equal(t, true, resultMap["page-001-q1-mark"])
-	assert.Equal(t, false, resultMap["page-001-q2-section"])
-	assert.Equal(t, false, resultMap["page-001-q2-number"])
-	assert.Equal(t, false, resultMap["page-001-q2-mark"])
+	assert.Equal(t, true, resultMap["page-ok"])
+	assert.Equal(t, false, resultMap["page-bad"])
+	assert.Equal(t, true, resultMap["q1-section"])
+	assert.Equal(t, true, resultMap["q1-number"])
+	assert.Equal(t, true, resultMap["q1-mark"])
+	assert.Equal(t, false, resultMap["q2-section"])
+	assert.Equal(t, false, resultMap["q2-number"])
+	assert.Equal(t, false, resultMap["q2-mark"])
 
 	reader, err := os.Open(jpgPath)
 	if err != nil {
