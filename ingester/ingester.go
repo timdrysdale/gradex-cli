@@ -36,7 +36,7 @@ func New(path string, msgCh chan chmsg.MessageInfo, logger *zerolog.Logger) (*In
 	g.overlayTemplatePath = "layout.svg"
 	g.ingestTemplatePath = "layout-flatten-312pt.svg"
 	g.backgroundIsVanilla = true
-	g.opticalExpand = -6
+	g.opticalExpand = -10
 
 	err := g.SetupGradexDirs()
 

@@ -589,7 +589,7 @@ func TestAddBars(t *testing.T) {
 	assert.Equal(t, len(expectedCheckerProcessed), len(checkerProcessedPdf))
 
 	assert.True(t, CopyIsComplete(expectedCheckerProcessed, checkerProcessedPdf))
-	CollectFilesFrom(g.GetExamDirNamed(exam, checkerProcessed, actor))
+	CollectFilesFrom(g.GetExamDir(exam, checkerProcessed))
 	assert.NoError(t, err)
 
 	// Now do visual checks

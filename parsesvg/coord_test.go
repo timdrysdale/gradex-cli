@@ -316,7 +316,7 @@ func TestCheckFileUsingPDFCoords(t *testing.T) {
 	}
 
 	assert.NoError(t, err)
-	expandPx := -5
+	expandPx := -10
 	boxes, err := GetImageBoxesForTextFields(textfields, heightPx, widthPx, true, expandPx)
 
 	results, err := optical.CheckBoxFile(jpgPath, boxes)
