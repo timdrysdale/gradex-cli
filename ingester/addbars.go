@@ -339,7 +339,7 @@ func (g *Ingester) AddEnterInactiveBar(exam string) error {
 
 	oc := OverlayCommand{
 		FromPath:       g.GetExamDir(exam, enterInactive),
-		ToPath:         g.GetExamDirSub(exam, enterProcessed, inactive),
+		ToPath:         g.GetExamDirSub(exam, enterBack, inactive),
 		ExamName:       exam,
 		TemplatePath:   g.OverlayLayoutSVG(),
 		SpreadName:     "enter-inactive", //same design

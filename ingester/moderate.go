@@ -2,6 +2,7 @@ package ingester
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -9,7 +10,9 @@ import (
 
 func (g *Ingester) SplitForModeration(exam string, minFiles int, minPercent float64) error {
 
-	files, err := g.GetFileList(g.GetExamDir(exam, markerReady))
+	dir := g.GetExamDir(exam, markerProcessed)
+
+	files, err := g.GetFileList(dir)
 
 	if err != nil {
 		return err
@@ -30,11 +33,24 @@ func (g *Ingester) SplitForModeration(exam string, minFiles int, minPercent floa
 	selectByPercent(&pdfFiles, reqdPercent)
 
 	numErrors := 0
-
+	newCount := 0
 	for k, v := range pdfFiles {
 
 		if v {
-			err = g.MoveToDir(k, g.GetExamDir(exam, moderatorActive))
+			copied, err := g.CopyIfNewerThanDestinationInDir(k, g.GetExamDir(exam, moderatorActive), g.logger)
+			if copied {
+				g.logger.Info().
+					Str("file", k).
+					Str("destination", g.GetExamDir(exam, moderatorActive)).
+					Msg("Copied")
+				newCount++
+			} else {
+				g.logger.Info().
+					Str("file", k).
+					Str("destination", g.GetExamDir(exam, moderatorActive)).
+					Msg("Not copied - not new")
+			}
+
 			if err != nil {
 				numErrors++
 				g.logger.Error().
@@ -44,7 +60,20 @@ func (g *Ingester) SplitForModeration(exam string, minFiles int, minPercent floa
 					Msg("Could not move to moderate-active dir")
 			}
 		} else {
-			err = g.MoveToDir(k, g.GetExamDir(exam, moderatorInactive))
+			copied, err := g.CopyIfNewerThanDestinationInDir(k, g.GetExamDir(exam, moderatorInactive), g.logger)
+			if copied {
+				newCount++
+				g.logger.Info().
+					Str("file", k).
+					Str("destination", g.GetExamDir(exam, moderatorInactive)).
+					Msg("Copied")
+
+			} else {
+				g.logger.Info().
+					Str("file", k).
+					Str("destination", g.GetExamDir(exam, moderatorInactive)).
+					Msg("Not copied - not new")
+			}
 			if err != nil {
 				numErrors++
 				g.logger.Error().
@@ -58,8 +87,17 @@ func (g *Ingester) SplitForModeration(exam string, minFiles int, minPercent floa
 
 	}
 
+	if newCount == 0 {
+		g.logger.Info().
+			Msg("No new files added to moderation task")
+	} else {
+		g.logger.Info().
+			Int("count", newCount).
+			Msg(fmt.Sprintf("%d new files added to moderation task", newCount))
+	}
+
 	if numErrors > 0 {
-		return errors.New("Problems moving files into directories")
+		return errors.New("Problems moving files into directories - check logfile for details")
 	} else {
 
 		return nil

@@ -386,7 +386,6 @@ func (g *Ingester) RemoveEmptySubDirs(dir string) error {
 
 	var lastError error
 
-	removedOk := []string{}
 	newStageMap := make(map[string]bool)
 
 	for _, newstage := range ExamStage {
@@ -409,15 +408,6 @@ func (g *Ingester) RemoveEmptySubDirs(dir string) error {
 
 		if thisError != nil {
 			lastError = thisError
-		} else {
-			removedOk = append(removedOk, emptyDir)
-		}
-	}
-
-	if len(removedOk) > 0 {
-		fmt.Printf("Removed empty deprecated directories:\n")
-		for _, dir := range removedOk {
-			fmt.Println(dir)
 		}
 	}
 

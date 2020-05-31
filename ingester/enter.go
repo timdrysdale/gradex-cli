@@ -2,6 +2,7 @@ package ingester
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/timdrysdale/gradex-cli/pagedata"
@@ -9,7 +10,7 @@ import (
 
 func (g *Ingester) SplitForEnter(exam string) error {
 
-	files, err := g.GetFileList(g.GetExamDir(exam, markerReady))
+	files, err := g.GetFileList(g.GetExamDir(exam, markerProcessed))
 
 	if err != nil {
 		return err
@@ -45,38 +46,72 @@ func (g *Ingester) SplitForEnter(exam string) error {
 
 	}
 	numErrors := 0
-
+	newCount := 0
 	selectByOpticalOnly(&pdfFiles, pdByFile)
 
 	for k, v := range pdfFiles {
 
 		if v {
-			err = g.MoveToDir(k, g.GetExamDir(exam, enterActive))
+			copied, err := g.CopyIfNewerThanDestinationInDir(k, g.GetExamDir(exam, enterActive), g.logger)
+			if copied {
+				g.logger.Info().
+					Str("file", k).
+					Str("destination", g.GetExamDir(exam, enterActive)).
+					Msg("Copied")
+				newCount++
+			} else {
+				g.logger.Info().
+					Str("file", k).
+					Str("destination", g.GetExamDir(exam, enterActive)).
+					Msg("Not copied - not new")
+			}
+
 			if err != nil {
 				numErrors++
 				g.logger.Error().
 					Str("file", k).
 					Str("error", err.Error()).
 					Str("destination", g.GetExamDir(exam, enterActive)).
-					Msg("Could not move to enter-active dir")
+					Msg("Could not copy to enter-active dir")
 			}
 		} else {
-			err = g.MoveToDir(k, g.GetExamDir(exam, enterInactive))
+			copied, err := g.CopyIfNewerThanDestinationInDir(k, g.GetExamDir(exam, enterInactive), g.logger)
+			if copied {
+				newCount++
+				g.logger.Info().
+					Str("file", k).
+					Str("destination", g.GetExamDir(exam, enterInactive)).
+					Msg("Copied")
+
+			} else {
+				g.logger.Info().
+					Str("file", k).
+					Str("destination", g.GetExamDir(exam, enterInactive)).
+					Msg("Not copied - not new")
+			}
+
 			if err != nil {
 				numErrors++
 				g.logger.Error().
 					Str("file", k).
 					Str("error", err.Error()).
 					Str("destination", g.GetExamDir(exam, enterInactive)).
-					Msg("Could not move to enter-inactive dir")
+					Msg("Could not copy to enter-inactive dir")
 			}
 
 		}
 
 	}
-
+	if newCount == 0 {
+		g.logger.Info().
+			Msg("No new files added to enter task")
+	} else {
+		g.logger.Info().
+			Int("count", newCount).
+			Msg(fmt.Sprintf("%d new files added to enter task", newCount))
+	}
 	if numErrors > 0 {
-		return errors.New("Problems moving files into directories")
+		return errors.New("Problems moving files into directories - check logfile for details")
 	} else {
 
 		return nil
