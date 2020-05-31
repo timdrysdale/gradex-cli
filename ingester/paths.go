@@ -35,6 +35,12 @@ func (g *Ingester) MergeProcessedPapersToDir(exam, stage string) (string, error)
 	case "remoderated":
 		dir = reModeratorProcessed
 
+	case "entered":
+		dir = enterProcessed
+
+	case "reentered":
+		dir = reEnterProcessed
+
 	case "checked":
 		dir = checkerProcessed
 

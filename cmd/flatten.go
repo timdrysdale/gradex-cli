@@ -97,13 +97,13 @@ rechecked`,
 
 		g.Redo = redo
 
-		switch strings.ToLower(stage) {
+		switch {
 
-		case "new":
+		case strings.ToLower(stage) == "new":
 
 			err = g.FlattenNewPapers(exam)
 
-		case "marked", "remarked", "moderated", "remoderated", "checked", "rechecked":
+		case ValidStageForProcessedPapers(stage):
 
 			g.SetBackgroundIsVanilla(OpticalVanilla)
 			g.SetOpticalShrink(OpticalShrink)

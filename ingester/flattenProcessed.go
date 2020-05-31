@@ -13,11 +13,11 @@ import (
 
 // initial sanity check on stage that has been specified
 // also used by merge "half" of the process (see merge.go)
-func validStageForProcessedPapers(stage string) bool {
+func ValidStageForProcessedPapers(stage string) bool {
 
 	switch strings.ToLower(stage) {
 
-	case "marked", "remarked", "moderated", "checked", "rechecked":
+	case "marked", "remarked", "moderated", "remoderated", "entered", "reentered", "checked", "rechecked":
 		return true
 	default:
 		return false
@@ -34,6 +34,8 @@ func getSpreadForBoxes(stage string) string {
 		return "remark"
 	case "moderated":
 		return "moderate-active" //we don't get boxes for inactive - NOTE we can know this because no textfields either!
+	case "entered":
+		return "enter-active"
 	case "checked":
 		return "check"
 	case "rechecked":
@@ -49,7 +51,7 @@ func (g *Ingester) FlattenProcessedPapers(exam, stage string) error {
 
 	stage = strings.ToLower(stage)
 
-	if !validStageForProcessedPapers(stage) {
+	if !ValidStageForProcessedPapers(stage) {
 		logger.Error().Msg("Is not a valid stage")
 		return fmt.Errorf("%s is not a valid stage for flatten-processed\n", stage)
 	}

@@ -60,7 +60,7 @@ func (g *Ingester) MergeProcessedPapers(exam, stage string) error {
 
 	stage = strings.ToLower(stage)
 
-	if !validStageForProcessedPapers(stage) {
+	if !ValidStageForProcessedPapers(stage) {
 		logger.Error().Msg("Is not a valid stage")
 		return fmt.Errorf("%s is not a valid stage for flatten-processed\n", stage)
 	}
