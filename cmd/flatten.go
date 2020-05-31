@@ -103,7 +103,7 @@ rechecked`,
 
 			err = g.FlattenNewPapers(exam)
 
-		case ValidStageForProcessedPapers(stage):
+		case ingester.ValidStageForProcessedPapers(stage):
 
 			g.SetBackgroundIsVanilla(OpticalVanilla)
 			g.SetOpticalShrink(OpticalShrink)

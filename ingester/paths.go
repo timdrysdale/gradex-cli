@@ -299,9 +299,9 @@ func (g *Ingester) SetupGradexDirs() error {
 	return nil
 }
 
-func (g *Ingester) MigrateVersionDirStruct(exam string) error {
+func (g *Ingester) MigrateVersionDirStruct(exam string, test bool) error {
 
-	err := g.MigrateTempImages(exam)
+	err := g.MigrateTempImages(exam, test)
 
 	var lastError error
 
@@ -309,24 +309,25 @@ func (g *Ingester) MigrateVersionDirStruct(exam string) error {
 		lastError = fmt.Errorf("Could not migrate temp Images because %s", err)
 	}
 
-	err = g.RemoveEmptySubDirs(exam)
+	err = g.RemoveEmptySubDirs(exam, test)
 
 	if err != nil {
 		return fmt.Errorf("Could not remove old sub-directories because %s", err)
 	}
 
-	err = g.SetupExamDirs(filepath.Base(exam))
+	if !test {
+		err = g.SetupExamDirs(filepath.Base(exam))
 
-	if err != nil {
-		return fmt.Errorf("Could not set up new sub-directories because %s", err)
+		if err != nil {
+			return fmt.Errorf("Could not set up new sub-directories because %s", err)
+		}
 	}
-
 	return lastError
 
 }
 
 // on update from 0.4 -0.5 temp images moved
-func (g *Ingester) MigrateTempImages(exam string) error {
+func (g *Ingester) MigrateTempImages(exam string, test bool) error {
 
 	from := filepath.Join(exam, "03-temporary-images")
 
@@ -338,20 +339,28 @@ func (g *Ingester) MigrateTempImages(exam string) error {
 	}
 
 	to := filepath.Join(exam, tempImages)
-
-	g.EnsureDir(to)
-
-	fmt.Printf("Moved tempImages from: %s\nTo                   : %s\n", from, to)
+	var lastError error
 
 	files, err := g.GetFileList(from)
 
-	var lastError error
+	if err != nil {
+		return fmt.Errorf("Could not get list of temporary image files to migrate because %s", err)
+	}
 
-	for _, file := range files {
-		err := g.MoveToDir(file, to)
+	if test {
+		fmt.Printf("TEST MODE (not moving)\n Migrating %05d FILES\n FROM: %s\n   TO: %s\n", len(files), from, to)
 
-		if err != nil {
-			lastError = fmt.Errorf("Could not migrate temporary image file %s to %s because %s\n", file, to, err)
+	} else {
+
+		g.EnsureDir(to)
+
+		for _, file := range files {
+
+			err := g.MoveToDir(file, to)
+			if err != nil {
+				fmt.Printf("Could not migrate temporary image file %s to %s because %s\n", file, to, err)
+				lastError = fmt.Errorf("Could not migrate temporary image file %s to %s because %s", file, to, err)
+			}
 		}
 	}
 
@@ -382,7 +391,7 @@ func GetSubDirList(dir string) ([]string, error) {
 
 }
 
-func (g *Ingester) RemoveEmptySubDirs(dir string) error {
+func (g *Ingester) RemoveEmptySubDirs(dir string, test bool) error {
 
 	emptySubDirs, err := g.GetEmptySubDirs(dir)
 
@@ -410,10 +419,14 @@ func (g *Ingester) RemoveEmptySubDirs(dir string) error {
 			continue
 		}
 
-		thisError := os.Remove(emptyDir)
+		if test {
+			fmt.Printf("TEST MODE (not deleting): %s\n", emptyDir)
+		} else {
+			thisError := os.Remove(emptyDir)
 
-		if thisError != nil {
-			lastError = thisError
+			if thisError != nil {
+				lastError = thisError
+			}
 		}
 	}
 
@@ -460,7 +473,7 @@ func (g *Ingester) SetupExamDirs(exam string) error {
 		return err
 	}
 
-	err = g.RemoveEmptySubDirs(g.GetExamRoot(exam))
+	err = g.RemoveEmptySubDirs(g.GetExamRoot(exam), false) //not a test
 
 	if err != nil {
 		fmt.Printf("Error cleaning unused directories because %s\n", err.Error())

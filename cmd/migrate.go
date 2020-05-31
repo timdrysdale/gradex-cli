@@ -28,6 +28,10 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
+var (
+	testMigrate bool
+)
+
 // migrateCmd represents the migrate command
 var migrateCmd = &cobra.Command{
 	Use:   "migrate [exam]",
@@ -85,6 +89,16 @@ var migrateCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		if testMigrate {
+			fmt.Printf(`MIGRATION TEST MODE - please check proposed modifications carefully
+When ready, you can perform the actual changes wtih :
+
+gradex-cli migrate %s --test=false
+
+Note that only error messages are shown when running for real
+`, exam)
+		}
+
 		switch exam {
 
 		case "all":
@@ -98,7 +112,7 @@ var migrateCmd = &cobra.Command{
 
 			for _, thisExam := range exams {
 
-				err = g.MigrateVersionDirStruct(thisExam)
+				err = g.MigrateVersionDirStruct(thisExam, testMigrate)
 
 				if err != nil {
 					fmt.Println(err)
@@ -108,7 +122,7 @@ var migrateCmd = &cobra.Command{
 
 		default:
 
-			err = g.MigrateVersionDirStruct(g.GetExamRoot(exam))
+			err = g.MigrateVersionDirStruct(g.GetExamRoot(exam), testMigrate)
 
 			if err != nil {
 				fmt.Println(err)
@@ -121,7 +135,7 @@ var migrateCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(migrateCmd)
-
+	migrateCmd.Flags().BoolVarP(&testMigrate, "test", "t", true, "Don't do, just test? [default true]")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
