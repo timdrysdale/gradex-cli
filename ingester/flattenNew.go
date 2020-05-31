@@ -301,7 +301,7 @@ func (g *Ingester) FlattenOneNewPDF(inputPath, outputPath string, pageDataMap ma
 
 	// convert images to individual pdfs, with form overlay
 
-	pagePath := g.GetExamDir(what, acceptedPapers)
+	pagePath := g.GetExamDir(what, tempPages)
 	pageFileOption := fmt.Sprintf("%s/%s%%04d.pdf", pagePath, basename)
 
 	mergePaths := []string{}
