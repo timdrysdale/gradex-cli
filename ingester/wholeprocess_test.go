@@ -12,17 +12,16 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/timdrysdale/chmsg"
 	"github.com/timdrysdale/gradex-cli/pagedata"
-	"github.com/timdrysdale/gradexpath"
 )
 
 func CollectFilesFrom(path string) error {
-	files, err := gradexpath.GetFileList(path)
+	files, err := GetFileList(path)
 	if err != nil {
 		return err
 	}
 	for _, file := range files {
 		destination := filepath.Join("./example-output", filepath.Base(file))
-		err := gradexpath.Copy(file, destination)
+		err := Copy(file, destination)
 		if err != nil {
 			fmt.Printf("ERROR COPYING FILES %v %s %s\n", err, file, destination)
 		}
