@@ -194,6 +194,11 @@ func (g *Ingester) MergeOverlayOnePDF(mt MergeTask, logger *zerolog.Logger) (int
 
 		newThisPageDataCurrent.Process = mt.ProcessDetail
 
+		newThisPageDataCurrent.Data = append(newThisPageDataCurrent.Data, pagedata.Field{
+			Key:   "merge-message",
+			Value: page.Message,
+		})
+
 		thisPageData.Current = newThisPageDataCurrent
 
 		//---------------------------------------WORK OUT COURSE CODE--------------------------

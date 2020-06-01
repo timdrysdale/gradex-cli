@@ -418,6 +418,57 @@ func makePaperMap1() map[string]map[int]PageCollection {
 
 }
 
+func makePaperMap2() map[string]map[int]PageCollection {
+
+	summaries := []PageSummary{
+		PageSummary{
+			Original:   "A",
+			PageNumber: 1,
+			OwnPath:    "A1-ABC.pdf",
+			Status:     statusMarked,
+			WasFor:     "ABC",
+		},
+		PageSummary{
+			Original:   "A",
+			PageNumber: 1,
+			OwnPath:    "A1-DEF.pdf",
+			Status:     statusBad,
+			WasFor:     "DEF",
+		},
+		PageSummary{
+			Original:   "B",
+			PageNumber: 1,
+			OwnPath:    "B1-ABC.pdf",
+			Status:     statusMarked,
+			WasFor:     "ABC",
+		},
+		PageSummary{
+			Original:   "B",
+			PageNumber: 1,
+			OwnPath:    "B1-DEF.pdf",
+			Status:     statusSeen,
+			WasFor:     "DEF",
+		},
+		PageSummary{
+			Original:   "B",
+			PageNumber: 2,
+			OwnPath:    "B2-ABC.pdf",
+			Status:     statusMarked,
+			WasFor:     "ABC",
+		},
+		PageSummary{
+			Original:   "B",
+			PageNumber: 2,
+			OwnPath:    "B2-DEF.pdf",
+			Status:     statusMarked,
+			WasFor:     "DEF",
+		},
+	}
+
+	return createPaperMap(summaries)
+
+}
+
 func TestSummarisePageCommentOnlyIsMarked(t *testing.T) {
 
 	original := "EL03-B00.pdf"
@@ -490,7 +541,7 @@ func TestSummarisePageCommentOnlyIsMarked(t *testing.T) {
 	summary := summarisePage(pageData)
 
 	assert.Equal(t, wasFor, summary.WasFor)
-	assert.Equal(t, statusMarked, summary.Status)
+	assert.Equal(t, statusMarked, summary.Status) //presence of comment causes it to be rated marked
 	assert.Equal(t, original, summary.Original)
 	assert.Equal(t, ownPath, summary.OwnPath)
 	assert.Equal(t, pageNumber, summary.PageNumber)
@@ -534,6 +585,17 @@ func TestCreatePageList(t *testing.T) {
 	assert.Equal(t, "B2-ABC.pdf", pageList2[0].Path)
 	assert.Equal(t, "B2-DEF.pdf", pageList2[1].Path)
 
+}
+
+//even if a marked page is present, a bad page should also be included
+func TestBadPageIncludedInPageList(t *testing.T) {
+
+	paperMap := makePaperMap2()
+
+	pageList1 := createPageList(paperMap["A"][1])
+	assert.Equal(t, 2, len(pageList1))
+	assert.Equal(t, "A1-ABC.pdf", pageList1[0].Path)
+	assert.Equal(t, "A1-DEF.pdf", pageList1[1].Path)
 }
 
 func TestCreateMergePathMap(t *testing.T) {

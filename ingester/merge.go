@@ -351,18 +351,21 @@ func createPageList(pageCollection PageCollection) []Page {
 		pageList = append(pageList, createPageItem(pageCollection, summary))
 	}
 
-	// the pageList.Message summarises everything else we need to know
-	if len(pageList) > 0 {
-		return pageList
-	}
-
-	// return a single page from any other list of pages
+	// "Bad" is a generic term, so we want to capture these for their comments or other info
+	// om what might be bad (e.g. moderating, checking, etc) - not just poor image quality
 	if len(pageCollection.Bad) > 0 {
 		for _, summary := range pageCollection.Bad {
 			pageList = append(pageList, createPageItem(pageCollection, summary))
 			return pageList
 		}
 	}
+
+	// the pageList.Message summarises everything else we need to know
+	if len(pageList) > 0 {
+		return pageList
+	}
+
+	// return a single page from any other list of pages
 
 	if len(pageCollection.Seen) > 0 {
 		for _, summary := range pageCollection.Seen {
