@@ -6,6 +6,7 @@ parse svg to produce the acroforms needed by **pdf.gradex**™ (an AGPL open sou
 
 ![alt text][status]
 
+
 If you are coming here from pdf.gradex.io, then welcome to the developer side of things where all the details are. We're working on a user workflow that is a piece of cake, that will automate the fiddly bits. Meanwhile, if you like knowing how things work, feel free to take a look around.
 
 ## Context

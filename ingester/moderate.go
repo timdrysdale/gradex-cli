@@ -2,6 +2,7 @@ package ingester
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -9,7 +10,9 @@ import (
 
 func (g *Ingester) SplitForModeration(exam string, minFiles int, minPercent float64) error {
 
-	files, err := g.GetFileList(g.MarkedReady(exam))
+	dir := g.GetExamDir(exam, markerProcessed)
+
+	files, err := g.GetFileList(dir)
 
 	if err != nil {
 		return err
@@ -30,27 +33,53 @@ func (g *Ingester) SplitForModeration(exam string, minFiles int, minPercent floa
 	selectByPercent(&pdfFiles, reqdPercent)
 
 	numErrors := 0
-
+	newCount := 0
 	for k, v := range pdfFiles {
 
 		if v {
-			err = g.MoveToDir(k, g.ModerateActive(exam))
+			copied, err := g.CopyIfNewerThanDestinationInDir(k, g.GetExamDir(exam, moderatorActive), g.logger)
+			if copied {
+				g.logger.Info().
+					Str("file", k).
+					Str("destination", g.GetExamDir(exam, moderatorActive)).
+					Msg("Copied")
+				newCount++
+			} else {
+				g.logger.Info().
+					Str("file", k).
+					Str("destination", g.GetExamDir(exam, moderatorActive)).
+					Msg("Not copied - not new")
+			}
+
 			if err != nil {
 				numErrors++
 				g.logger.Error().
 					Str("file", k).
 					Str("error", err.Error()).
-					Str("destination", g.ModerateActive(exam)).
+					Str("destination", g.GetExamDir(exam, moderatorActive)).
 					Msg("Could not move to moderate-active dir")
 			}
 		} else {
-			err = g.MoveToDir(k, g.ModerateInActive(exam))
+			copied, err := g.CopyIfNewerThanDestinationInDir(k, g.GetExamDir(exam, moderatorInactive), g.logger)
+			if copied {
+				newCount++
+				g.logger.Info().
+					Str("file", k).
+					Str("destination", g.GetExamDir(exam, moderatorInactive)).
+					Msg("Copied")
+
+			} else {
+				g.logger.Info().
+					Str("file", k).
+					Str("destination", g.GetExamDir(exam, moderatorInactive)).
+					Msg("Not copied - not new")
+			}
 			if err != nil {
 				numErrors++
 				g.logger.Error().
 					Str("file", k).
 					Str("error", err.Error()).
-					Str("destination", g.ModerateInActive(exam)).
+					Str("destination", g.GetExamDir(exam, moderatorInactive)).
 					Msg("Could not move to moderate-inactive dir")
 			}
 
@@ -58,8 +87,17 @@ func (g *Ingester) SplitForModeration(exam string, minFiles int, minPercent floa
 
 	}
 
+	if newCount == 0 {
+		g.logger.Info().
+			Msg("No new files added to moderation task")
+	} else {
+		g.logger.Info().
+			Int("count", newCount).
+			Msg(fmt.Sprintf("%d new files added to moderation task", newCount))
+	}
+
 	if numErrors > 0 {
-		return errors.New("Problems moving files into directories")
+		return errors.New("Problems moving files into directories - check logfile for details")
 	} else {
 
 		return nil

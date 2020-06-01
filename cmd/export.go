@@ -103,29 +103,12 @@ Exported files are usually flagged in some way, e.g. being moved to a "sent" fol
 		}
 
 		g.EnsureDirectoryStructure()
-		g.SetupExamPaths(exam)
+		g.SetupExamDirs(exam)
 
-		switch which {
-
-		case "labelling", "label":
-			g.ExportForLabelling(exam, who)
-
-		case "marking", "mark":
-			g.ExportForMarking(exam, who)
-
-		case "moderating", "moderate":
-			g.ExportForModerating(exam, who)
-
-		case "checking", "check":
-			g.ExportForChecking(exam, who)
-
-		case "remarking", "remark":
-			g.ExportForReMarking(exam, who)
-
-		case "rechecking", "recheck":
-			g.ExportForChecking(exam, who)
-
-		} // switch
+		err = g.ExportFiles(exam, which, who)
+		if err != nil {
+			fmt.Println(err)
+		}
 	},
 }
 

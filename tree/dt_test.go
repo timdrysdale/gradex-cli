@@ -1,7 +1,6 @@
 package tree
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,6 +12,8 @@ func TestTree(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	fmt.Println(str)
+	exp := ".\n└──   ─ .\n"
+
+	assert.Equal(t, exp, str)
 
 }

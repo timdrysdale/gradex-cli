@@ -12,8 +12,10 @@ import (
 	"github.com/timdrysdale/gradex-cli/comment"
 	"github.com/timdrysdale/gradex-cli/extract"
 	"github.com/timdrysdale/gradex-cli/merge"
+	"github.com/timdrysdale/gradex-cli/optical"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
+	"github.com/timdrysdale/gradex-cli/util"
 	"github.com/timdrysdale/pool"
 	pdf "github.com/timdrysdale/unipdf/v3/model"
 )
@@ -108,34 +110,28 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 		// get all textfields from the file
 
-		fieldsMapByPage, err := extract.ExtractTextFieldsFromPDF(inPath)
+		fieldsMapByPage, err := extract.ExtractTextFieldsStructFromPDF(inPath)
 
-		// TODO Capture optical check box values here - Fairly expensive process,
-		// so trigger if there are no marks in the whole doc?
-		// anyone marking half and half we will just end up flagging due to "surprise" missing data
-		logger.Warn().Msg("NOT CAPTURING OPTICAL CHECK BOX DATA AT THIS TIME!!")
+		newFieldMap := make(map[int][]pagedata.Field)
 
 		if err == nil {
 
 			for page, fields := range fieldsMapByPage {
 				//https: //stackoverflow.com/questions/17438253/accessing-struct-fields-inside-a-map-value-without-copying
-				pd := pageDataMap[page]
 
 				var data []pagedata.Field
-
-				data = pd.Current.Data
 
 				for key, value := range fields {
 
 					data =
 						append(data,
 							pagedata.Field{
-								Key:   key,
-								Value: value,
+								Key:   util.SafeText(textFieldPrefix + key), //unlikely to get unicode in the fields, but, protect anyway.
+								Value: util.SafeText(value.Value),
 							})
 				}
-				pd.Current.Data = data
-				pageDataMap[page] = pd
+
+				newFieldMap[page] = data
 			}
 
 		} else {
@@ -150,20 +146,19 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 		// this is a file-level task, so we we will sort per-page updates
 		// to pageData at the child step
 		overlayTasks = append(overlayTasks, OverlayTask{
-			InputPath: inPath,
-			PageCount: count,
-			// These now in SharedPD
-			//PreparedFor:   oc.PreparedFor,
-			//ToDo:          oc.ToDo,
-			//NewProcessing: oc.ProcessingDetails, //do dynamic update when processing
-			//NewQuestion:   oc.QuestionDetails,   //do dynamic update when processing
-			ProcessDetail:  oc.ProcessDetail,
-			OldPageDataMap: pageDataMap,
-			OutputPath:     g.OutputPath(oc.ToPath, inPath, oc.PathDecoration),
-			SpreadName:     oc.SpreadName,
-			Template:       oc.TemplatePath,
-			Msg:            oc.Msg,
-			Who:            oc.PathDecoration,
+			InputPath:        inPath,
+			PageCount:        count,
+			ProcessDetail:    oc.ProcessDetail,
+			NewFieldMap:      newFieldMap,
+			OldPageDataMap:   pageDataMap,
+			OutputPath:       g.OutputPath(oc.ToPath, inPath, oc.PathDecoration),
+			SpreadName:       oc.SpreadName,
+			Template:         oc.TemplatePath,
+			Msg:              oc.Msg,
+			Who:              oc.PathDecoration,
+			ReadOpticalBoxes: oc.ReadOpticalBoxes,
+			OpticalBoxSpread: oc.OpticalBoxSpread,
+			TextFields:       fieldsMapByPage,
 		})
 		logger.Info().
 			Str("file", inPath).
@@ -176,8 +171,6 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 	// now process the files
 	N := len(overlayTasks)
-
-	//pcChan := make(chan int, N)
 
 	tasks := []*pool.Task{}
 
@@ -252,9 +245,11 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 	return nil
 }
 
+//-----------------------------OverlayOnePDF-----------------------------------------
 // do one file, dynamically assembling the data we need make the latest pagedata
 // from what we get in the OverlayTask struct
 // return the number of pages
+//-----------------------------------------------------------------------------------
 func (g *Ingester) OverlayOnePDF(ot OverlayTask, logger *zerolog.Logger) (int, error) {
 
 	// need page count to find the jpeg files again later
@@ -280,7 +275,7 @@ OUTER:
 
 	// render to images
 
-	jpegPath := g.PaperImages(courseCode) //ot.PageDataMap[0].Exam.CourseCode)
+	jpegPath := g.GetExamDir(courseCode, tempImages) //ot.PageDataMap[0].Exam.CourseCode)
 
 	suffix := filepath.Ext(ot.InputPath)
 	basename := strings.TrimSuffix(filepath.Base(ot.InputPath), suffix)
@@ -310,6 +305,17 @@ OUTER:
 
 	f.Close()
 
+	//  make comment text safe (ASCII only, no non-space whitespace)
+	//  so they can be represented in standard font without changing
+	//  this helps us avoid pagedata hash errors (e.g. as arised from \r in comment)
+	for key, pageComments := range comments { //map
+		for idx, cmt := range pageComments { //slice
+			cmt.Text = util.SafeText(cmt.Text)
+			pageComments[idx] = cmt
+		}
+		comments[key] = pageComments
+	}
+
 	err = ConvertPDFToJPEGs(ot.InputPath, jpegPath, jpegFileOption)
 	if err != nil {
 		logger.Error().
@@ -322,7 +328,7 @@ OUTER:
 
 	// convert images to individual pdfs, with form overlay
 
-	pagePath := g.PaperPages(courseCode)
+	pagePath := g.GetExamDir(courseCode, tempPages)
 	pageFileOption := fmt.Sprintf("%s/%s%%04d.pdf", pagePath, basename)
 
 	mergePaths := []string{}
@@ -335,14 +341,6 @@ OUTER:
 		pageFilename := fmt.Sprintf(pageFileOption, imgIdx)
 
 		pageNumber := imgIdx - 1 //pageNumber starts at zero
-
-		//if len(ot.PageDataMap[imgIdx]) < 1 {
-		//	logger.Error().
-		//		Str("file", ot.InputPath).
-		//		Int("page-number", imgIdx).
-		//		Msg(fmt.Sprintf("Info: no existing page data for file (%s) on page <%d>\n", ot.InputPath, imgIdx))
-		//	ot.Msg.Send(fmt.Sprintf("Info: no existing page data for file (%s) on page <%d>\n", ot.InputPath, imgIdx))
-		//}
 
 		// FOR THIS PAGE INDIVIDUALLY
 		// we take the "current" pagedata loaded with the extracted field data,
@@ -371,6 +369,21 @@ OUTER:
 		// now add in things we can only know now
 		// like page number, UUID etc.
 
+		// We need a new Own FileDetail to represent the page we are creating
+		newOwn := pagedata.FileDetail{
+			Path:   pageFilename,
+			UUID:   safeUUID(), //do this and the top level UUID ever represent something DIFFERENT?
+			Number: imgIdx,
+			Of:     numPages, //this might be different to the original file's total pagecount
+			// but we might benefit when relating page-decorated textfield indices
+		}
+		newThisPageDataCurrent.Own = newOwn
+
+		// our source file's Own FileDetail is now our Original FileDetail
+		// we can track our way back to the great grand parents by following the
+		// sequence of Original FileDetails in thisPageData.Previous
+		newThisPageDataCurrent.Original = oldThisPageDataCurrent.Own
+
 		newThisPageDataCurrent.UUID = safeUUID()
 
 		newThisPageDataCurrent.Follows = oldThisPageDataCurrent.UUID
@@ -380,6 +393,103 @@ OUTER:
 		// TODO - do we need to update Own? Host?
 
 		thisPageData.Current = newThisPageDataCurrent
+
+		// Add the new field data to the current page
+
+		var data []pagedata.Field
+
+		//data = thisPageData.Current.Data don't carry forward old data
+
+		for _, item := range ot.NewFieldMap[imgIdx] { //CHECK IF PAGENUMER INSTEAD!
+
+			data = append(data, item)
+
+		}
+
+		// Read the text fields optically, unless the previous process was labelled inactive
+		// using the length of custom data fields is not sufficient, because it could be non-zero
+		// due to some future feature needing them
+		// whereas this can be a convention that for post-NewPaperFlattening, you should call
+		// it inactive if there are no optical boxes to read, when there is more than one type of
+		// bar applied in that stage, and some DO have optical boxes to read
+		// (if no bar variant has optical boxes, then no boxes will be found anyway)
+
+		previousProc := (thisPageData.Previous[len(thisPageData.Previous)-1]).Process.ToDo
+
+		if !strings.Contains(strings.ToLower(previousProc), "inactive") {
+
+			// this benchmarks at <60microseconds, so no penalty doing as separate step
+			widthPx, heightPx, err := optical.GetImageDimension(previousImagePath)
+
+			if err != nil {
+				logger.Error().
+					Str("imagePath", previousImagePath).
+					Str("error", err.Error()).
+					Msg("Error getting image dimensions")
+			} else {
+
+				// We use the textfield dimensions we read out of the pdf file itself, and adjust them according to total page size
+				boxes, err := parsesvg.GetImageBoxesForTextFields(ot.TextFields[imgIdx], heightPx, widthPx, g.backgroundIsVanilla, g.opticalExpand)
+
+				if err != nil {
+					logger.Error().
+						Str("imagePath", previousImagePath).
+						Str("ot.OpticalBoxSpread", ot.OpticalBoxSpread).
+						Str("error", err.Error()).
+						Msg("Error getting optical box dimensions")
+
+				} else {
+
+					if len(boxes) > 0 {
+
+						results, err := optical.CheckBoxFile(previousImagePath, boxes)
+
+						if err != nil {
+
+							logger.Error().
+								Str("imagePath", previousImagePath).
+								Str("ot.OpticalBoxSpread", ot.OpticalBoxSpread).
+								Str("error", err.Error()).
+								Msg("Error getting optical box results")
+
+						} else {
+
+							if len(results) != len(boxes) {
+								logger.Error().
+									Str("imagePath", previousImagePath).
+									Str("ot.OpticalBoxSpread", ot.OpticalBoxSpread).
+									Int("resultsCount", len(results)).
+									Int("boxesCount", len(boxes)).
+									Msg("Result count does not match optical box count, skipping")
+							} else {
+
+								for i, result := range results {
+
+									val := ""
+									if result {
+										val = markDetected
+									}
+									item := pagedata.Field{
+										Key:   textFieldPrefix + boxes[i].ID + opticalSuffix,
+										Value: val,
+									}
+
+									data = append(data, item)
+
+								}
+
+							}
+						}
+					}
+				}
+
+			}
+
+		}
+
+		thisPageData.Current.Data = data
+
+		//-------------- PREFILLS -------------------------------------------
 
 		headerPrefills := parsesvg.DocPrefills{}
 
@@ -392,6 +502,8 @@ OUTER:
 		headerPrefills[pageNumber]["date"] = thisPageData.Current.Item.When
 
 		headerPrefills[pageNumber]["title"] = thisPageData.Current.Item.What
+
+		headerPrefills[pageNumber]["for"] = thisPageData.Current.Process.For
 
 		contents := parsesvg.SpreadContents{
 			SvgLayoutPath:         ot.Template,

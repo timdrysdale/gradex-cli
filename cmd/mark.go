@@ -94,6 +94,7 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 		}
 
 		g.EnsureDirectoryStructure()
+		g.SetupExamDirs(exam)
 
 		if markTemplate != "" {
 			err := g.SetOverlayTemplatePath(markTemplate)
@@ -116,7 +117,7 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 
 func init() {
 	rootCmd.AddCommand(markCmd)
-	markCmd.Flags().StringVarP(&markTemplate, "layout", "l", "layout.svg", "Use this layout [defaul layout.svg]")
+	markCmd.Flags().StringVarP(&markTemplate, "layout", "l", "layout.svg", "Use this layout [default layout.svg]")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

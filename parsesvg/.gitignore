@@ -7,10 +7,13 @@
 *~
 *#
 .#*
-*.pdf
+test/*.pdf
 # Test binary, built with `go test -c`
 *.test
 draft/
+expected/*.jpg
+test/*.jpg
+test/*.pdf
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 

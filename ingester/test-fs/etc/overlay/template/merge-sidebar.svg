@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="10mm"
+   height="312mm"
+   viewBox="0 0 10 312"
+   version="1.1"
+   id="svg5625"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="merge-sidebar.svg">
+  <defs
+     id="defs5619" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="19.996393"
+     inkscape:cy="641.06153"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer2"
+     showgrid="false"
+     inkscape:snap-page="true"
+     inkscape:snap-global="false"
+     inkscape:window-width="1850"
+     inkscape:window-height="1136"
+     inkscape:window-x="70"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:snap-center="true" />
+  <metadata
+     id="metadata5622">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="chrome"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,15)">
+    <path
+       style="display:inline;fill:none;stroke:#008eaa;stroke-width:9;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686"
+       d="M 4.9999998,6.8894676 V -14.355326"
+       id="path35573"
+       inkscape:connector-curvature="0" />
+    <rect
+       transform="rotate(-90)"
+       style="display:inline;opacity:0.98999999;fill:none;fill-opacity:1;stroke:#008eaa;stroke-width:0.96844614;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:0.99215686"
+       id="rect35345"
+       width="311.03156"
+       height="9.0315542"
+       x="-296.51578"
+       y="0.48422289"
+       rx="0"
+       ry="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.17499995px;line-height:1.25;font-family:comfortaa;-inkscape-font-specification:comfortaa;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;display:inline;fill:#ffffff;fill-opacity:0.99215686;stroke:none;stroke-width:0.26458332"
+       x="-11.533566"
+       y="-6.538342"
+       id="text36308"
+       transform="rotate(90)"><tspan
+         sodipodi:role="line"
+         id="tspan36306"
+         x="-11.533566"
+         y="-6.538342"
+         style="font-size:3.17499995px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:0.99215686;stroke-width:0.26458332">merge</tspan><tspan
+         sodipodi:role="line"
+         x="-11.533566"
+         y="-2.569592"
+         style="font-size:3.17499995px;text-align:start;text-anchor:start;fill:#ffffff;fill-opacity:0.99215686;stroke-width:0.26458332"
+         id="tspan3725">summary</tspan></text>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="textprefills">
+    <rect
+       style="opacity:0.81300001;fill:#ea1aed;fill-opacity:0.81568627;stroke:none;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.72941176"
+       id="rect6217"
+       width="4.1577382"
+       height="287.2619"
+       x="4.0065475"
+       y="22.848206">
+      <desc
+         id="desc6221">{&quot;text&quot;:&quot;-------&quot;,&quot;textSize&quot;:14,&quot;angle&quot;:270}</desc>
+      <title
+         id="title6219">message</title>
+    </rect>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="anchors">
+    <path
+       style="opacity:0.81300001;fill:#ed671a;fill-opacity:0.81568627;stroke:none;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.72941176"
+       id="path6235"
+       sodipodi:type="arc"
+       sodipodi:cx="0"
+       sodipodi:cy="1.2715657e-05"
+       sodipodi:rx="9.4494047"
+       sodipodi:ry="9.4494047"
+       sodipodi:start="3.3679619"
+       sodipodi:end="3.3449061"
+       sodipodi:open="true"
+       d="M -9.2083287,-2.1208201 A 9.4494047,9.4494047 0 0 1 2.0677215,-9.2203873 9.4494047,9.4494047 0 0 1 9.2321651,2.0145542 9.4494047,9.4494047 0 0 1 -1.9612946,9.2436361 9.4494047,9.4494047 0 0 1 -9.2547746,-1.9079698">
+      <title
+         id="title6239">ref-anchor</title>
+    </path>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="textfields" />
+</svg>

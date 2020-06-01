@@ -41,6 +41,13 @@ Ghostscript downloads can be found [here](https://www.ghostscript.com/download.h
 
 For Windows, choose the 64bit version.
 
+You must put the executable on your path.
+
+#### For testing
+
+ImageMagick must be [installed](https://imagemagick.org/script/download.php), and on the path, so as to allow visual comparisons of rendered PDFs. 
+
+
 #### Optional
 
 Logging messages can read directly from logging file in ```$GRADEX_CLI_ROOT/var/log/gradex-cli.log```. They're in JSON format, one message per line, with the latest message appearing at the bottom of the file.
@@ -115,7 +122,7 @@ We require a system for swapping the known identity for an anonymous one. The ``
 You can prepare the pages by
 
 ```
-gradex-cli flatten Demo
+gradex-cli flatten new Demo
 ```
 
 You can manually inspect the flattened paper directory to see the newly flattened files
@@ -147,6 +154,8 @@ You can manually inspect them to see that they end up in
 ls $GRADEX_CLI_ROOT/usr/exam/Demo/10-question-back/X
 ```
 
+### Marking
+
 We want to prepare a set of pages for a marker with the initials ABC, so we issue
 
 ```
@@ -163,28 +172,118 @@ $GRADEX_CLI_ROOT/export/Demo-marker-ready-ABC/
 
 You can try marking these files yourself, and save direct back to ingest (no need to change the filename, it will see from the hidden data what file it is). With the files back in the ingest directory after marking, we ingest again (same command as before)
 
-The bit that handles merging questions coming back from markers is not integrated yet, so for this demo, we just manually move our files to where they will be after marking is analysed:
+
+### Processing marked files
+
+We flatten the files to preserve the comments, read the textfields and optical boxes and store the data in the file, then we assemble documents that merge together the relevant pages for each file, by script.
+
+Each page is categorised into exactly one of four categories, in order lowest to highest priority
+
+    -- ```skipped``` - no indication from marker that they saw it
+	-- ```seen``` - page-ok has had a character entered in a textfield or a stylus mark has been made in more than 2% of the area of the box (or a smaller amount if the box is rectangular)
+	-- ```marked``` - something has been entered in one of the other textfields, by keyboard or stylus
+	-- ```bad``` - the page-bad box has been ticked
+
+Note that the priority is used to resolve what status to use when more than one applies. For example, a ```marked``` page that is also ```bad```, is given the status ```bad```. A page that is both ```marked``` and ```seen``` is given status ```marked```.
+
+
+#### Page merge rules
+
+Every page in the script is included at least once, for context. There is a merge summary bar on the side of each page, so you can tell at a glance if you should expect to see a duplicate copy of the page. If there are no ```marked``` pages, then one of the other pages is chosen. If there are more than one pages that are ```marked```, then all ```marked``` pages are included (e.g. if two markers share a question, and there are one or more pages that have material they both ended up marking).
+
+#### Processing adjustments
+
+Textfields are not easily edited by stylus, so for these markers, we expect them to annotate by hand. Then we'll get someone to key in the mark later. So as to retain the benefits of automation, we can use "optical" methods to check whether hand annotations have been made in the textfields, and if so, trigger the same actions as would have happened by typing into the ```page-ok``` and ```page-bad``` boxes.
+
+##### Background colour for optical boxes
+
+We assume a vanilla background (#ffffff) for the boxes, unless the flag ```--background-vanilla=false``` is given, e.g.
 
 ```
-cp -r $GRADEX_CLI_ROOT/usr/exam/Demo/22-marker-back/* $GRADEX_CLI_ROOT/usr/exam/Demo/26-marked-ready/
+gradex-cli flatten marked 'Some Exam' --background-vanilla=false
 ```
 
-Now we can prepare for moderating. The bit of the system that puts papers back into by-script files is not currently integrated. At this stage of the workflow, both by-script and by-questions processes return to the same path. With many scripts in this folder, the system automatically splits the set of scripts into a set to be actively moderated, with a green sidebar. The rest get a smaller grey "inactive" sidebar.
+in which case, the background is assumed to be chocolate (#000000).
+
+###### Optical Box boundaries
+There are some occasions when you get false positives from the optical-boxes, which is attributed without 100% certainty to artefacts from the boundary edges. It's even been the case in testing (before default shrinkage was increased to 6 pixels) where one marker's scripts threw 100% false positives on the ```page-bad``` box, but the other Marker on that script threw far fewer false positives. If you get a bunch of false positives (no marks in box visually, but pagedata contains "markDetected") then try setting the box shrinkage to a higher number. The number is the number of pixels in each direction. A 10mm by 10mm box at 175dpi has 69x69 pixels. The default shrink reduces that to (69-6-6)x(69-6-6) = 57x57 pixels. If you wanted to shrink some more, you could try for (69-10-10)x(69-10-10) = 49x49 pixels with
+
+```
+gradex-cli flatten marked 'Some exam' --box-shrink=10
+```
+Either or both flags can be issued in the same command. Note that flags must come AFTER the exam.
+
+Also note the change from an imperative "mark" from the mark command, to the adjective "marked". Just to keep you on your toes, like. The imperative (command) here is "flatten."
+
+#### Limitations
+
+This page flattening and merging process _should_ work on the by-question batches (but has not been tested yet for that). Note that the flatten and merge phases of this step are implemented separately behind the scenes (for now), but are always performed at the same time, so the single command "flatten" is used to trigger one after the other.
 
 
-### TODO -- FINISH THIS SECTION
+### Moderating
+
+Once our marked work is flattened, we are ready to put on the moderating bars. Since we might be doing this for more than one moderator, we don't link it to the previous step. At this stage of the workflow, both by-script and by-questions processes have return to the same path (```26-marked-ready```). With many scripts in this folder, the system automatically splits the set of scripts into a set to be actively moderated, with a green sidebar. The rest get a smaller grey "inactive" sidebar. Let's say we have moderate FFF who will moderate 10% or 10 scripts (whichever is greater) for 'Some Exam':
 
 
+```
+gradex-cli moderate FFF 'Some Exam'
+gradex-cli export moderating FFF 'Some Exam'
 
+```
+
+Note: we don't currently support any other split ratios other than 10% or 10, whichever is bigger, but it is straightforward to add flags to do this if needed.
+
+
+### Entering
+
+For markers who have used a stylus, there is a set of bars that can be added so assistants can key in the stylus marks. This can be done in parallel to moderation.
+
+```
+gradex-cli enter X 'Some-Exam'
+gradex-cli export entering X 'Some-Exam'
+```
+
+Note that enter bars will only be added to scripts that have marks in the question boxes, but NO keyed textfield value - so skipped pages are not included, for example.
+
+### Checking
+
+After entering, all scripts (including those already keyed) can be prepared for checking.
+
+This step is incomplete - the front cover is currently not yet implemented
+```
+gradex-cli ingest
+gradex-xli flatten entered 'Some-Exam'
+gradex-cli check X 'Some-Exam'
+gradex-cli export checking X 'Some-Exam'
+```
+
+
+## Further procesing steps
+
+There are further processing steps which are currently partly supported (check bars etc). These will be updated in a future release.
 
 ## Guidance to markers
 
 Markers need only use Adobe Acrobat Reader (Free). The onedrive PDF app works on ipad, and Master PDF works on Linux. Most other viewers don't implement enough support for acroforms.
 
-Markers:
+### Markers:
 
 - can use a keyboard, or stylus
 - do not need to rename their file
+
+
+### Tech to avoid:
+
+   -- Apple Preview (Quartz PDF) trashes the page catalog and prevents unipdf from reading the file
+   -- Chrome lets you edit, but doesn't save
+   -- Edge doesn't autosize the text in the boxes so it is not nice to use
+   -- Almost everything on linux
+   
+
+### What to use on Linux:
+
+Master PDF which can fill forms without registration being required
+
 
 ## Custom templates
 
@@ -205,23 +304,55 @@ For detailed information on how to customise the templates using Inkscape, [see 
     - merge pages
 	- report bad pages detected by markers
 	- report results into csv, similar to [this](https://github.com/timdrysdale/gradex-extract)
+
+- report results into csv, similar to [this](https://github.com/timdrysdale/gradex-extract)
+
+### Done
+
 - integrate [optical check box](https://github.com/timdrysdale/opticalcheckbox)
-- integrate reporting
-- integrate [optical handwriting recognition](https://github.com/sausheong/gonn)
-- live marking tool to show staff running averages/totals/percentage completion
 - integrate tree view [from here](https://github.com/timdrysdale/dt)
 
+### Deferred
+
+- integrate [optical handwriting recognition](https://github.com/sausheong/gonn)
+- live marking tool to show staff running averages/totals/percentage completion
 
 ## Test coverage
 
 ```
-ok  	github.com/timdrysdale/gradex-cli/comment	0.031s	coverage: 93.8% of statements
-ok  	github.com/timdrysdale/gradex-cli/extract	0.041s	coverage: 49.3% of statements
-ok  	github.com/timdrysdale/gradex-cli/ingester	14.762s	coverage: 59.1% of statements
-ok  	github.com/timdrysdale/gradex-cli/pagedata	0.122s	coverage: 74.2% of statements
-ok  	github.com/timdrysdale/gradex-cli/parselearn	0.010s	coverage: 87.6% of statements
-ok  	github.com/timdrysdale/gradex-cli/parsesvg	15.017s	coverage: 81.6% of statements
+comment	    coverage: 93.8% of statements
+ingester	coverage: 58.1% of statements
+optical	    coverage: 81.5% of statements
+pagedata    coverage: 74.2% of statements
+parselearn  coverage: 87.6% of statements
+parsesvg    coverage: 81.8% of statements
+tree        coverage: 63.4% of statements
 ```
+
+## Codebase
+
+Now over 12 KLOC ....
+
+```
+--------------------------------------------------------------------------------
+ Language             Files        Lines        Blank      Comment         Code
+--------------------------------------------------------------------------------
+ Go                      88        18040         3945         1229        12866
+ Markdown                 9          790          254            0          536
+ Plain Text              18          291           72            0          219
+ JSON                     1            1            0            0            1
+ Bourne Shell             1            5            2            2            1
+--------------------------------------------------------------------------------
+ Total                  117        19127         4273         1231        13623
+--------------------------------------------------------------------------------
+```
+
+Most of the libraries are sub 1K, but the largest are:
+```
+ingester 6111
+parsesvg  2753
+```
+
 
 [identity]: ./img/identity.png "csv file with anoynmous identity"
 [flattened]: ./img/flattened.png "scanned page with header added"

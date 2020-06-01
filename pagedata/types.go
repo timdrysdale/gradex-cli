@@ -1,5 +1,7 @@
 package pagedata
 
+import "github.com/timdrysdale/gradex-cli/comment"
+
 const (
 	IsPage    = "page"
 	IsRegion  = "region"
@@ -32,16 +34,17 @@ type PageData struct {
 // else use a group id e.g. group-<uuid> which has the individual authors recorded
 // elsewhere, along with the original submission.
 type PageDetail struct {
-	Is       string        `json:"is"` //page, region
-	Own      FileDetail    `json:"own"`
-	Original FileDetail    `json:"original"`
-	Current  FileDetail    `json:"current"`
-	Item     ItemDetail    `json:"item"`
-	Process  ProcessDetail `json:"process"`
-	UUID     string        `json:"UUID"` //for mapping the previous page datas later
-	Follows  string        `json:"follows"`
-	Revision int           `json:"revision"` //if we want to rewrite history ....
-	Data     []Field       `json:"data"`
+	Is       string            `json:"is"` //page, region
+	Own      FileDetail        `json:"own"`
+	Original FileDetail        `json:"original"`
+	Current  FileDetail        `json:"current"`
+	Item     ItemDetail        `json:"item"`
+	Process  ProcessDetail     `json:"process"`
+	UUID     string            `json:"UUID"` //for mapping the previous page datas later
+	Follows  string            `json:"follows"`
+	Revision int               `json:"revision"` //if we want to rewrite history ....
+	Data     []Field           `json:"data"`
+	Comments []comment.Comment `json:"comments"`
 }
 
 type FileDetail struct {

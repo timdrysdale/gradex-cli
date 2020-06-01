@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
@@ -30,17 +31,27 @@ import (
 
 // flattenCmd represents the flatten command
 var flattenCmd = &cobra.Command{
-	Use:   "flatten [exam]",
+	Use:   "flatten [exam] [stage]",
 	Short: "Validates and anonymises PDF files submitted via Learn",
-	Args:  cobra.ExactArgs(1),
-	Long: `You must specify the exam for which you wish to flatten files. You should have already ingested the files.
+	Args:  cobra.ExactArgs(2),
+	Long: `You must specify the exam and the stage for which you wish to flatten files. You should have already ingested the files.
 Example usage:
 
-gradex-cli flatten SomeExam
-`,
+gradex-cli flatten SomeExam new
+
+Possible stages to flatten
+
+new
+marked
+remarked
+remoderated
+checked
+rechecked`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		exam := os.Args[2]
+		exam := os.Args[3]
+
+		stage := os.Args[2]
 
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
@@ -83,10 +94,35 @@ gradex-cli flatten SomeExam
 		}
 
 		g.EnsureDirectoryStructure()
+		g.SetupExamDirs(exam)
 
 		g.Redo = redo
 
-		err = g.FlattenNewPapers(exam)
+		switch {
+
+		case strings.ToLower(stage) == "new":
+
+			err = g.FlattenNewPapers(exam)
+
+		case ingester.ValidStageForProcessedPapers(stage):
+
+			g.SetBackgroundIsVanilla(OpticalVanilla)
+			g.SetOpticalShrink(OpticalShrink)
+
+			err = g.FlattenProcessedPapers(exam, stage)
+
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
+			err = g.MergeProcessedPapers(exam, stage)
+
+		default:
+
+			fmt.Printf("Stage [%s] not known\n", stage)
+
+		}
 
 		if err != nil {
 			fmt.Println(err)

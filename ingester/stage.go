@@ -170,7 +170,7 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 
 		// these aren't usually exported, but we may be repopulating a new ingester or
 		// manually correcting something, so we consider our options
-		origin := g.AnonymousPapers(t.What)
+		origin := g.GetExamDir(t.What, anonPapers)
 		moved, err := g.MoveIfNewerThanDestinationInDir(path, origin, logger)
 		if err != nil {
 			g.logger.Error().Str("file", path).Str("destination", origin).Msg("Couldn't move flattened PDF into origin dir")
@@ -186,9 +186,9 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		// leave the file in ingest if we don't want it
 	case "labelling":
 		// these could be marked, or just being returned by DSA if prematurely exported
-		origin := g.QuestionSent(t.What, t.For)
+		origin := g.GetExamDirNamed(t.What, questionSent, t.For)
 
-		preOrigin := g.QuestionReady(t.What, t.For)
+		preOrigin := g.GetExamDirNamed(t.What, questionReady, t.For)
 
 		if g.IsSameAsSelfInDir(path, origin) {
 			// put the file back in Ready (we keep this incoming version _just_in_case_ it had mods
@@ -206,7 +206,7 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		} else {
 			// it's (probably) been marked at least partly, so see if it is newer
 			// than a version we might already have
-			destination := g.QuestionBack(t.What, t.For)
+			destination := g.GetExamDirNamed(t.What, questionBack, t.For)
 
 			moved, err := g.MoveIfNewerThanDestinationInDir(path, destination, logger)
 
@@ -263,9 +263,9 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		return
 	case "marking":
 		// these could be marked, or just being returned by DSA if prematurely exported
-		origin := g.MarkerSent(t.What, t.For)
+		origin := g.GetExamDirNamed(t.What, markerSent, t.For)
 
-		preOrigin := g.MarkerReady(t.What, t.For)
+		preOrigin := g.GetExamDirNamed(t.What, markerReady, t.For)
 
 		if g.IsSameAsSelfInDir(path, origin) {
 			// put the file back in Ready (we keep this incoming version _just_in_case_ it had mods
@@ -283,7 +283,7 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		} else {
 			// it's (probably) been marked at least partly, so see if it is newer
 			// than a version we might already have
-			destination := g.MarkerBack(t.What, t.For)
+			destination := g.GetExamDirNamed(t.What, markerBack, t.For)
 
 			moved, err := g.MoveIfNewerThanDestinationInDir(path, destination, logger)
 
@@ -337,11 +337,12 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 			} //switch
 
 		}
+
 	case "moderating":
 
-		origin := g.ModeratorSent(t.What, t.For)
+		origin := g.GetExamDirNamed(t.What, moderatorSent, t.For)
 
-		preOrigin := g.ModeratorReady(t.What, t.For)
+		preOrigin := g.GetExamDirNamed(t.What, moderatorReady, t.For)
 
 		if g.IsSameAsSelfInDir(path, origin) {
 			// put the file back in Ready (we keep this incoming version _just_in_case_ it had mods
@@ -359,15 +360,16 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		} else {
 			// it's (probably) been marked at least partly, so see if it is newer
 			// than a version we might already have
-			destination := g.ModeratorBack(t.What, t.For)
+			destination := g.GetExamDirNamed(t.What, moderatorBack, t.For)
 			g.MoveIfNewerThanDestinationInDir(path, destination, logger)
 			return
 		}
-	case "checking":
 
-		origin := g.CheckerSent(t.What, t.For)
+	case "entering":
 
-		preOrigin := g.CheckerReady(t.What, t.For)
+		origin := g.GetExamDirNamed(t.What, enterSent, t.For)
+
+		preOrigin := g.GetExamDirNamed(t.What, enterReady, t.For)
 
 		if g.IsSameAsSelfInDir(path, origin) {
 			// put the file back in Ready (we keep this incoming version _just_in_case_ it had mods
@@ -385,7 +387,34 @@ func (g *Ingester) handleIngestPDF(path string, logger *zerolog.Logger) {
 		} else {
 			// it's (probably) been marked at least partly, so see if it is newer
 			// than a version we might already have
-			destination := g.CheckerBack(t.What, t.For)
+			destination := g.GetExamDirNamed(t.What, enterBack, t.For)
+			g.MoveIfNewerThanDestinationInDir(path, destination, logger)
+			return
+		}
+
+	case "checking":
+
+		origin := g.GetExamDirNamed(t.What, checkerSent, t.For)
+
+		preOrigin := g.GetExamDirNamed(t.What, checkerReady, t.For)
+
+		if g.IsSameAsSelfInDir(path, origin) {
+			// put the file back in Ready (we keep this incoming version _just_in_case_ it had mods
+			// despite having original time stamp and size!
+			err := os.Rename(path, filepath.Join(preOrigin, filepath.Base(path)))
+			if err != nil {
+				return
+			}
+
+			// delete the version we had "sent" - this could be DSA re-ingesting exports before sending them
+			err = os.Remove(filepath.Join(origin, filepath.Base(path)))
+			if err != nil {
+				return
+			}
+		} else {
+			// it's (probably) been marked at least partly, so see if it is newer
+			// than a version we might already have
+			destination := g.GetExamDirNamed(t.What, checkerBack, t.For)
 			g.MoveIfNewerThanDestinationInDir(path, destination, logger)
 			return
 		}

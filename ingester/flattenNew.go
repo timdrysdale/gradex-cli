@@ -22,7 +22,7 @@ import (
 
 func (g *Ingester) FlattenNewPapers(exam string) error {
 
-	logger := g.logger.With().Str("process", "flatten").Logger()
+	logger := g.logger.With().Str("process", "flatten-new").Logger()
 
 	//assume someone hits a button to ask us to do this ...
 
@@ -39,10 +39,10 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 
 	flattenTasks := []FlattenTask{}
 
-	receipts, err := g.GetFileList(g.AcceptedReceipts(exam))
+	receipts, err := g.GetFileList(g.GetExamDir(exam, acceptedReceipts))
 	if err != nil {
 		logger.Error().
-			Str("file", g.AcceptedReceipts(exam)).
+			Str("dir", g.GetExamDir(exam, acceptedReceipts)).
 			Str("course", exam).
 			Str("error", err.Error()).
 			Msg("Cannot get list of accepted Receipts")
@@ -61,12 +61,12 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 			continue
 		}
 
-		pdfPath, err := GetPDFPath(sub.Filename, g.AcceptedPapers(exam))
+		pdfPath, err := GetPDFPath(sub.Filename, g.GetExamDir(exam, acceptedPapers))
 
 		if err != nil {
 			logger.Error().
 				Str("file", sub.Filename).
-				Str("dir", g.AcceptedPapers(exam)).
+				Str("dir", g.GetExamDir(exam, acceptedPapers)).
 				Str("course", exam).
 				Str("error", err.Error()).
 				Msg(fmt.Sprintf("couldn't get PDF filename for %s because %v", sub.Filename, err))
@@ -168,7 +168,7 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 		}
 
 		renamedBase := g.GetAnonymousFileName(sub.Assignment, anonymousIdentity)
-		outputPath := filepath.Join(g.AnonymousPapers(sub.Assignment), renamedBase)
+		outputPath := filepath.Join(g.GetExamDir(sub.Assignment, anonPapers), renamedBase)
 
 		flattenTasks = append(flattenTasks, FlattenTask{
 			PreparedFor: "ingester",
@@ -193,7 +193,7 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 		pdataMap := flattenTasks[i].PageDataMap
 
 		newtask := pool.NewTask(func() error {
-			pc, err := g.FlattenOnePDF(inputPath, outputPath, pdataMap, &logger)
+			pc, err := g.FlattenOneNewPDF(inputPath, outputPath, pdataMap, &logger)
 			pcChan <- pc
 			if err == nil {
 				setDone(inputPath, &logger) // so we don't have to do it again
@@ -246,7 +246,7 @@ func (g *Ingester) FlattenNewPapers(exam string) error {
 
 }
 
-func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageDataMap map[int]pagedata.PageData, logger *zerolog.Logger) (int, error) {
+func (g *Ingester) FlattenOneNewPDF(inputPath, outputPath string, pageDataMap map[int]pagedata.PageData, logger *zerolog.Logger) (int, error) {
 
 	if strings.ToLower(filepath.Ext(inputPath)) != ".pdf" {
 		logger.Error().
@@ -260,7 +260,7 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageDataMap map[i
 
 	// render to images
 	what := pageDataMap[1].Current.Item.What
-	jpegPath := g.AcceptedPaperImages(what) //exam/coursecode
+	jpegPath := g.GetExamDir(what, tempImages) //exam/coursecode
 
 	suffix := filepath.Ext(inputPath)
 	basename := strings.TrimSuffix(filepath.Base(inputPath), suffix)
@@ -301,7 +301,7 @@ func (g *Ingester) FlattenOnePDF(inputPath, outputPath string, pageDataMap map[i
 
 	// convert images to individual pdfs, with form overlay
 
-	pagePath := g.AcceptedPaperPages(what)
+	pagePath := g.GetExamDir(what, tempPages)
 	pageFileOption := fmt.Sprintf("%s/%s%%04d.pdf", pagePath, basename)
 
 	mergePaths := []string{}
