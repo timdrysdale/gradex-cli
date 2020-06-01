@@ -47,8 +47,8 @@ func newPageFSM() *fsm.FSM {
 		statusSkipped,
 		fsm.Events{
 			{Name: statusSeen, Src: []string{statusSkipped}, Dst: statusSeen},
-			{Name: statusBad, Src: []string{statusSkipped, statusSeen}, Dst: statusBad},
-			{Name: statusMarked, Src: []string{statusSkipped, statusSeen, statusBad}, Dst: statusMarked},
+			{Name: statusBad, Src: []string{statusSkipped, statusSeen, statusMarked}, Dst: statusBad},
+			{Name: statusMarked, Src: []string{statusSkipped, statusSeen}, Dst: statusMarked},
 		},
 		fsm.Callbacks{},
 	)
