@@ -108,6 +108,7 @@ rechecked`,
 
 			g.SetBackgroundIsVanilla(OpticalVanilla)
 			g.SetOpticalShrink(OpticalShrink)
+			fmt.Printf("box-shrink = %d\n", OpticalShrink)
 
 			err = g.FlattenProcessedPapers(exam, stage)
 
