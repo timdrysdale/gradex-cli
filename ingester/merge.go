@@ -47,8 +47,8 @@ func newPageFSM() *fsm.FSM {
 		statusSkipped,
 		fsm.Events{
 			{Name: statusSeen, Src: []string{statusSkipped}, Dst: statusSeen},
-			{Name: statusBad, Src: []string{statusSkipped, statusSeen}, Dst: statusBad},
-			{Name: statusMarked, Src: []string{statusSkipped, statusSeen, statusBad}, Dst: statusMarked},
+			{Name: statusBad, Src: []string{statusSkipped, statusSeen, statusMarked}, Dst: statusBad},
+			{Name: statusMarked, Src: []string{statusSkipped, statusSeen}, Dst: statusMarked},
 		},
 		fsm.Callbacks{},
 	)
@@ -351,18 +351,21 @@ func createPageList(pageCollection PageCollection) []Page {
 		pageList = append(pageList, createPageItem(pageCollection, summary))
 	}
 
-	// the pageList.Message summarises everything else we need to know
-	if len(pageList) > 0 {
-		return pageList
-	}
-
-	// return a single page from any other list of pages
+	// "Bad" is a generic term, so we want to capture these for their comments or other info
+	// om what might be bad (e.g. moderating, checking, etc) - not just poor image quality
 	if len(pageCollection.Bad) > 0 {
 		for _, summary := range pageCollection.Bad {
 			pageList = append(pageList, createPageItem(pageCollection, summary))
 			return pageList
 		}
 	}
+
+	// the pageList.Message summarises everything else we need to know
+	if len(pageList) > 0 {
+		return pageList
+	}
+
+	// return a single page from any other list of pages
 
 	if len(pageCollection.Seen) > 0 {
 		for _, summary := range pageCollection.Seen {
@@ -393,5 +396,9 @@ func getOwnPath(pageData pagedata.PageData) string {
 	return pageData.Current.Own.Path
 }
 func getWasFor(pageData pagedata.PageData) string {
-	return GetShortActorName((pageData.Previous[len(pageData.Previous)-1]).Process.For)
+	if len(pageData.Previous) > 1 {
+		return GetShortActorName((pageData.Previous[len(pageData.Previous)-1]).Process.For)
+	} else {
+		return ""
+	}
 }

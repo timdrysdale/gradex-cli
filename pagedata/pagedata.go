@@ -116,7 +116,42 @@ func GetLen(input map[int]PageData) int {
 
 //>>>>>>>>>>>>>>>>>>>>>>>> PRIVATE FUNCTIONS >>>>>>>>>>>>>>>>>>>>>>>
 
-/// >>>>>>>>>>>>>>>>>>>>>>>>> TEXT <-> STRUCT >>>>>>>>>>>>>>>>>>>>>>>>
+// for testing
+func getPageDataMapFromText(text string) map[int]PageData {
+	return convertSliceIntoMap(getPageDataSliceFromText(text))
+}
+
+func convertSliceIntoMap(pds []PageData) map[int]PageData {
+
+	pdMap := make(map[int]PageData)
+
+	for i, pd := range pds {
+		pdMap[i] = pd
+	}
+	return pdMap
+}
+
+func getPageDataSliceFromText(text string) []PageData {
+
+	pds := []PageData{}
+
+	rawpds := extractPageDatasFromText(text)
+
+	for _, rawpd := range rawpds {
+
+		pd, err := unMarshalPageData(rawpd)
+
+		if err != nil {
+			continue
+		}
+		pds = append(pds, pd)
+	}
+
+	return pds
+
+}
+
+// >>>>>>>>>>>>>>>>>>>>>>>>> TEXT <-> STRUCT >>>>>>>>>>>>>>>>>>>>>>>>
 
 func unMarshalPageData(text string) (PageData, error) {
 

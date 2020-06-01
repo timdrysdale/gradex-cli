@@ -1954,7 +1954,7 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="0.78279599"
-     inkscape:cx="-167.11475"
+     inkscape:cx="-407.2795"
      inkscape:cy="566.3869"
      inkscape:document-units="mm"
      inkscape:current-layer="layer7"
@@ -2785,7 +2785,7 @@
        rx="0"
        ry="0">
       <title
-         id="title25233">not-sure</title>
+         id="title25233">page-bad</title>
     </rect>
     <rect
        ry="0"
@@ -2798,7 +2798,7 @@
        style="display:inline;opacity:1;fill:#00ffff;fill-opacity:1;stroke:none;stroke-width:0.5;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
        inkscape:label="#rect1156b">
       <title
-         id="title1154">fixed</title>
+         id="title1154">page-ok</title>
     </rect>
     <rect
        ry="0"

@@ -30,6 +30,46 @@ func CollectFilesFrom(path string) error {
 	return err //only tracking last error for this out of convenience
 }
 
+func checkPageData(t *testing.T, path string) {
+
+	pdMap, err := pagedata.UnMarshalAllFromFile(path)
+
+	assert.NoError(t, err)
+
+	dataFields := pdMap[1].Current.Data
+
+	mergeMessageCount := 0
+	pageOKCount := 0
+	pageBadCount := 0
+	pageOKOpticalCount := 0
+	pageBadOpticalCount := 0
+
+	for _, item := range dataFields {
+		if item.Key == "merge-message" {
+			mergeMessageCount++
+		}
+		if item.Key == "tf-page-bad" {
+			pageBadCount++
+		}
+		if item.Key == "tf-page-ok" {
+			pageOKCount++
+		}
+		if item.Key == "tf-page-bad-optical" {
+			pageBadOpticalCount++
+		}
+		if item.Key == "tf-page-ok-optical" {
+			pageOKOpticalCount++
+		}
+
+	}
+
+	assert.Equal(t, 1, mergeMessageCount)
+	assert.Equal(t, 1, pageOKCount)
+	assert.Equal(t, 1, pageBadCount)
+	assert.Equal(t, 1, pageOKOpticalCount)
+	assert.Equal(t, 1, pageBadOpticalCount)
+}
+
 func TestAddBars(t *testing.T) {
 
 	if testing.Short() {
@@ -327,6 +367,9 @@ func TestAddBars(t *testing.T) {
 		assert.NoError(t, err)
 	}
 
+	//>>>>>>>>>>>>>>> Check PageData has (one) merge message >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	checkPageData(t, processedPdf[0])
+
 	//>>>>>>>>>>>>>>>>>>>>>>>>> ADD ACTIVE MODERATE BAR  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	actor = "ABC"
 	err = g.AddModerateActiveBar(exam, actor)
@@ -414,7 +457,10 @@ func TestAddBars(t *testing.T) {
 
 	assert.True(t, CopyIsComplete(expectedModeratedProcessedPdf, moderatedProcessedPdf))
 
-	///>>>>>>>>>>>>>>>>>>>>>>>> ADD ENTER BARS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	//>>>>>>>>>>>>>>>>>>>> Check page data for one merge message >>>>>>>>>>>>>>>>>>>>>>>>
+	checkPageData(t, moderatedProcessedPdf[0])
+
+	//>>>>>>>>>>>>>>>>>>>>>>>> ADD ENTER BARS >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 	for _, path := range processedPdf[0:2] {
 		err := g.CopyToDir(path, g.GetExamDir(exam, enterActive))
@@ -515,6 +561,9 @@ func TestAddBars(t *testing.T) {
 
 	assert.True(t, CopyIsComplete(expectedProcessedEnter, processedEnterPdf))
 
+	//>>>>>>>>>>> Check for one merge message >>>>>>>>>>>>>>
+	checkPageData(t, processedEnterPdf[0])
+
 	//>>>>>>>>>>>>>>>>>>>>>>>>> ADD CHECK BAR  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 	actor = "LD"
@@ -589,8 +638,11 @@ func TestAddBars(t *testing.T) {
 	assert.Equal(t, len(expectedCheckerProcessed), len(checkerProcessedPdf))
 
 	assert.True(t, CopyIsComplete(expectedCheckerProcessed, checkerProcessedPdf))
-	CollectFilesFrom(g.GetExamDirNamed(exam, checkerProcessed, actor))
+	CollectFilesFrom(g.GetExamDir(exam, checkerProcessed))
 	assert.NoError(t, err)
+
+	//>>>>>>>>>>> Check for one merge message >>>>>>>>>>>>>>
+	checkPageData(t, checkerProcessedPdf[0])
 
 	// Now do visual checks
 

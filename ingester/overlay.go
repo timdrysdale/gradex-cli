@@ -398,7 +398,7 @@ OUTER:
 
 		var data []pagedata.Field
 
-		data = thisPageData.Current.Data
+		//data = thisPageData.Current.Data don't carry forward old data
 
 		for _, item := range ot.NewFieldMap[imgIdx] { //CHECK IF PAGENUMER INSTEAD!
 
