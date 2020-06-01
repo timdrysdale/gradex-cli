@@ -68,10 +68,12 @@ func (g *Ingester) FlattenProcessedPapers(exam, stage string) error {
 		return err
 	}
 
+	taskName := fmt.Sprintf("flatten-%s", stage)
+
 	mc := chmsg.MessagerConf{
 		ExamName:     exam,
 		FunctionName: "overlay",
-		TaskName:     "flatten-processed-papers",
+		TaskName:     taskName,
 	}
 
 	cm := chmsg.New(mc, g.msgCh, g.timeout)
@@ -79,7 +81,7 @@ func (g *Ingester) FlattenProcessedPapers(exam, stage string) error {
 	procDetail := pagedata.ProcessDetail{
 		UUID:     safeUUID(),
 		UnixTime: time.Now().UnixNano(),
-		Name:     "flatten-processed-papers",
+		Name:     taskName,
 		By:       "gradex-cli",
 		ToDo:     "further-processing",
 		For:      "ingester",
@@ -100,15 +102,15 @@ func (g *Ingester) FlattenProcessedPapers(exam, stage string) error {
 	err = g.OverlayPapers(oc, &logger)
 
 	if err == nil {
-		cm.Send(fmt.Sprintf("Finished Processing flatten-processed-paper UUID=%s\n", procDetail.UUID))
+		cm.Send(fmt.Sprintf("Finished Processing %s UUID=%s\n", taskName, procDetail.UUID))
 		logger.Info().
 			Str("UUID", procDetail.UUID).
-			Msg("Finished flatten-processed-paper")
+			Msg(fmt.Sprintf("Finished %s", taskName))
 	} else {
 		logger.Error().
 			Str("UUID", procDetail.UUID).
 			Str("error", err.Error()).
-			Msg("Error flatten-processed-paper")
+			Msg(fmt.Sprintf("Error %s", taskName))
 	}
 
 	return err
