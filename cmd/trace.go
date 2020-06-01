@@ -32,18 +32,18 @@ import (
 var (
 	traceWho    string
 	refreshAnon bool
+	showOK      bool
 )
 
 // traceCmd represents the trace command
 var traceCmd = &cobra.Command{
-	Use:   "trace [stage] [step] [exam] --who=XXX",
-	Short: "Verify that UUID link in pagedata of all files",
-	Args:  cobra.ExactArgs(3),
-	Long:  `Select [stage] and [step] to compare to 05-anonymous papers; with the option to compare in a subdirectory`,
+	Use:   "trace [stage] [exam] [--verbose=true]",
+	Short: "Trace and report issues with files at specified step",
+	Args:  cobra.ExactArgs(2),
+	Long:  `The verbose flag shows OK files too, if true`,
 	Run: func(cmd *cobra.Command, args []string) {
 		stage := strings.ToLower(os.Args[2])
-		step := strings.ToLower(os.Args[3])
-		exam := os.Args[4]
+		exam := os.Args[3]
 
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
@@ -85,7 +85,6 @@ var traceCmd = &cobra.Command{
 			Timestamp().
 			Str("command", "trace").
 			Str("stage", stage).
-			Str("step", step).
 			Str("exam", exam).
 			Logger()
 
@@ -95,86 +94,37 @@ var traceCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		// setup dirs for later when writing report
 		g.EnsureDirectoryStructure()
 		g.SetupExamDirs(exam)
 
-		targetDir := ""
+		dir, err := g.MergeProcessedPapersToDir(exam, stage)
 
-		switch step {
+		fmt.Println(dir)
 
-		case "back":
-			targetDir, err := g.FlattenProcessedPapersFromDir(exam, stage)
-			if err != nil {
-				fmt.Printf("Failed to find step %s in stage %s\n", step, stage)
-				os.Exit(1)
-			}
-
-		case "flattened":
-			targetDir, err := g.FlattenProcessedPapersToDir(exam, stage)
-			if err != nil {
-				fmt.Printf("Failed to find step %s in stage %s\n", step, stage)
-				os.Exit(1)
-			}
-		case "processed":
-			targetDir, err := g.MergeProcessedPapersToDir(exam, stage)
-			if err != nil {
-				fmt.Printf("Failed to find step %s in stage %s\n", step, stage)
-				os.Exit(1)
-			}
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
 		}
 
-		// treat who as subdir without constraining the name - for max flexibility in troubleshooting, e.g. inactive sets
-		// or (!) misnamed directories (that will during dev only, obvs)
-		targetDir = filepath.Join(targetDir, traceWho)
+		tokens, err := g.ReportOnProcessedDir(dir, showOK)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 
-		/*
+		for _, token := range tokens {
+			fmt.Println(token)
+		}
 
-			case "badpage", "badpages", "pagebad":
-				files, err := g.GetFileList(g.GetExamDir(exam, ingester.PageBad))
-				if err != nil {
-					return
-				}
-				for _, file := range files {
-					fmt.Println(file)
-				}
-
-			case "tree":
-
-				lines, err := tree.Tree(g.GetExamRoot(exam), false)
-
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				fmt.Println(lines)
-
-			case "pagetree":
-
-				lines, err := tree.Tree(g.GetExamRoot(exam), true)
-
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-
-				fmt.Println(lines)
-
-			case "sortcheck":
-
-				g.SortCheck(exam)
-
-			default:
-				fmt.Printf("Unknown list type: %s\n", what)
-			} // switch
-		*/
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(traceCmd)
 	traceCmd.Flags().StringVarP(&traceWho, "who", "w", "", "Name of actor to which to confine the check [default is to read all files at that stage]")
-	rootCmd.Flags().BoolVarP(&refreshAnon, "refresh-anon", "r", false, "Reread the pagedata from the first stage (normally only needed after new un-seen submission added) [default false]")
+	traceCmd.Flags().BoolVarP(&refreshAnon, "refresh-anon", "r", false, "Reread the pagedata from the first stage (normally only needed after new un-seen submission added) [default false]")
+	traceCmd.Flags().BoolVarP(&showOK, "verbose", "v", false, "Show the OK files as well [default false]")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
