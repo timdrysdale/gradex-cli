@@ -41,6 +41,8 @@ Ghostscript downloads can be found [here](https://www.ghostscript.com/download.h
 
 For Windows, choose the 64bit version.
 
+You must put the executable on your path.
+
 #### For testing
 
 ImageMagick must be [installed](https://imagemagick.org/script/download.php), and on the path, so as to allow visual comparisons of rendered PDFs. 
@@ -120,7 +122,7 @@ We require a system for swapping the known identity for an anonymous one. The ``
 You can prepare the pages by
 
 ```
-gradex-cli flatten Demo
+gradex-cli flatten new Demo
 ```
 
 You can manually inspect the flattened paper directory to see the newly flattened files
@@ -225,10 +227,35 @@ Once our marked work is flattened, we are ready to put on the moderating bars. S
 
 ```
 gradex-cli moderate FFF 'Some Exam'
+gradex-cli export moderating FFF 'Some Exam'
 
 ```
 
 Note: we don't currently support any other split ratios other than 10% or 10, whichever is bigger, but it is straightforward to add flags to do this if needed.
+
+
+### Entering
+
+For markers who have used a stylus, there is a set of bars that can be added so assistants can key in the stylus marks. This can be done in parallel to moderation.
+
+```
+gradex-cli enter X 'Some-Exam'
+gradex-cli export entering X 'Some-Exam'
+```
+
+Note that enter bars will only be added to scripts that have marks in the question boxes, but NO keyed textfield value - so skipped pages are not included, for example.
+
+### Checking
+
+After entering, all scripts (including those already keyed) can be prepared for checking.
+
+This step is incomplete - the front cover is currently not yet implemented
+```
+gradex-cli ingest
+gradex-xli flatten entered 'Some-Exam'
+gradex-cli check X 'Some-Exam'
+gradex-cli export checking X 'Some-Exam'
+```
 
 
 ## Further procesing steps
@@ -304,25 +331,25 @@ tree        coverage: 63.4% of statements
 
 ## Codebase
 
-Very close to 10 KLOC ....
+Now over 12 KLOC ....
 
 ```
 --------------------------------------------------------------------------------
  Language             Files        Lines        Blank      Comment         Code
 --------------------------------------------------------------------------------
- Go                      74        15873         3427         1273        11173
- Markdown                 8          788          254            0          534
+ Go                      88        18040         3945         1229        12866
+ Markdown                 9          790          254            0          536
  Plain Text              18          291           72            0          219
- Bourne Shell             1            5            2            2            1
  JSON                     1            1            0            0            1
+ Bourne Shell             1            5            2            2            1
 --------------------------------------------------------------------------------
- Total                  102        16958         3755         1275        11928
+ Total                  117        19127         4273         1231        13623
 --------------------------------------------------------------------------------
 ```
 
 Most of the libraries are sub 1K, but the largest are:
 ```
-ingester 4155
+ingester 6111
 parsesvg  2753
 ```
 
