@@ -50,8 +50,8 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().BoolVar(&redo, "redo", false, "Force redo of already processed files")
-	rootCmd.Flags().BoolVarP(&OpticalVanilla, "background-vanilla", "b", true, "Assume vanilla background for optical checkboxes? [default true]")
-	rootCmd.Flags().IntVarP(&OpticalShrink, "box-shrink", "s", 6, "Number of pixels to shrink optical boxes to avoid false positives from boundaries [default 6]")
+	rootCmd.PersistentFlags().BoolVarP(&OpticalVanilla, "background-vanilla", "b", true, "Assume vanilla background for optical checkboxes? [default true]")
+	rootCmd.PersistentFlags().IntVarP(&OpticalShrink, "box-shrink", "s", 15, "Number of pixels to shrink optical boxes to avoid false positives from boundaries [default 15]")
 }
 
 func initConfig() {
