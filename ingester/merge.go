@@ -194,11 +194,11 @@ func summarisePage(pageData pagedata.PageData) PageSummary {
 	pageFSM := newPageFSM()
 
 	// Original.Number, Original.Of
-
+	noTextFields := true
 	for _, item := range pageData.Current.Data {
 
 		if strings.Contains(item.Key, textFieldPrefix) {
-
+			noTextFields = false
 			if strings.Contains(item.Key, "page-ok") && item.Value != "" {
 				pageFSM.Event(statusSeen)
 			}
@@ -209,6 +209,10 @@ func summarisePage(pageData pagedata.PageData) PageSummary {
 				pageFSM.Event(statusMarked)
 			}
 		}
+	}
+	// if a page has no textfields (e.f. inactive), we'll rate it seen
+	if noTextFields {
+		pageFSM.Event(statusSeen)
 	}
 	// if a page only has comments, we still need to catch it
 	if len(pageData.Current.Comments) > 0 {
