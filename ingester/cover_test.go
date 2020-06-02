@@ -309,7 +309,7 @@ func TestCoverPage(t *testing.T) {
 		For:      "X",
 	}
 
-	questions := []string{"A1", "A2", "a3", "b1", " B3"} //deliberate case and white space
+	questions := []string{"A1", "A2", "a3", "b1", " B2", " B3"} //deliberate case and white space
 
 	cp := CoverPageCommand{
 		Questions:      questions,

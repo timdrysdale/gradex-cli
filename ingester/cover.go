@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -13,7 +14,7 @@ import (
 	"github.com/timdrysdale/chmsg"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
-	"github.com/timdrysdale/gradex-cli/util"
+	"vbom.ml/util/sortorder"
 )
 
 //not implemented
@@ -293,7 +294,12 @@ func (g *Ingester) CoverPage(cp CoverPageCommand, logger *zerolog.Logger) error 
 
 		Qmap := getQMap(pageDetails)
 
-		util.PrettyPrintStruct(Qmap)
+		for _, k := range cp.Questions {
+			k = strings.TrimSpace(strings.ToUpper(k))
+			if _, ok := Qmap[k]; !ok {
+				Qmap[k] = "-"
+			}
+		}
 
 		pageNumber := 0 //starts at zero
 
@@ -329,14 +335,29 @@ func (g *Ingester) CoverPage(cp CoverPageCommand, logger *zerolog.Logger) error 
 
 		Prefills[pageNumber]["for"] = thisPageData.Current.Process.For
 
-		idx := 0
-		for k, v := range Qmap {
+		var qkeys []string
+		for k := range Qmap {
+			qkeys = append(qkeys, k)
+		}
+
+		sort.Sort(sortorder.Natural(qkeys))
+
+		for idx, qk := range qkeys {
 			question := fmt.Sprintf("question-%02d", idx)
 			mark := fmt.Sprintf("mark-awarded-%02d", idx)
-			Prefills[pageNumber][question] = k
-			Prefills[pageNumber][mark] = v
-			idx++
+			Prefills[pageNumber][question] = qk
+			Prefills[pageNumber][mark] = Qmap[qk]
+
 		}
+
+		//idx := 0
+		//for k, v := range Qmap {
+		//	question := fmt.Sprintf("question-%02d", idx)
+		//	mark := fmt.Sprintf("mark-awarded-%02d", idx)
+		//	Prefills[pageNumber][question] = k
+		//	Prefills[pageNumber][mark] = v
+		//	idx++
+		//}
 
 		pageFilename := filepath.Join(cp.ToPath, strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))+"-cover.pdf")
 
