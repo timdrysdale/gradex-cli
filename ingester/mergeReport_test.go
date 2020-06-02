@@ -15,7 +15,7 @@ func TestPageReport(t *testing.T) {
 	ownPath := "a/b/c.pdf"
 	cmt0 := "So this is a pretty long commment but we will probably see longer"
 	cmt1 := "And here is another commment"
-	cmtCombined := strings.Join([]string{"[0]" + cmt0, "[1]" + cmt1}, "; ")
+	cmtCombined := strings.Join([]string{"[0]: " + cmt0, "[1]: " + cmt1}, "; ")
 	pdMap := map[int]pagedata.PageData{
 		1: pagedata.PageData{
 			Current: pagedata.PageDetail{
@@ -32,11 +32,11 @@ func TestPageReport(t *testing.T) {
 				},
 				Comments: []comment.Comment{
 					comment.Comment{
-						Label: "[0]",
+						Label: "0",
 						Text:  cmt0,
 					},
 					comment.Comment{
-						Label: "[1]",
+						Label: "1",
 						Text:  cmt1,
 					},
 				},
