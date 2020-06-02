@@ -2,13 +2,18 @@ package ingester
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/gocarina/gocsv"
 	"github.com/timdrysdale/gradex-cli/comment"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
 type PageReport struct {
+	Error        string `csv:"error"`
 	What         string `csv:"what"`
 	Who          string `csv:"who"`
 	When         string `csv:"when"`
@@ -46,32 +51,51 @@ func (g *Ingester) ReportOnProcessedDir(exam, dir string, showOK bool, reconcile
 		return []string{}, err
 	}
 
+	noLinkError := true
+
+	errorPageReports := []PageReport{}
+
 	destMap := make(map[string]map[int]PageReport)
 
 	for _, file := range files {
 
+		if !IsPDF(file) {
+			continue
+		}
+
 		prMap, err := GetPageSummaryMapFromFile(file)
 
+		destMap[file] = prMap
+
 		if err != nil { // linkError
-
-			destMap[file] = prMap
-
-			for _, pr := range prMap {
-
-				tokens = append(tokens, "LINK: "+pr.String())
-			}
-		} else {
+			noLinkError = false
 
 			for _, pr := range prMap {
-				if pr.Status == statusBad {
-					tokens = append(tokens, "BAD : "+pr.String())
-				} else if pr.Status == statusSkipped {
-					tokens = append(tokens, "SKIP: "+pr.String())
-				} else if showOK {
-					tokens = append(tokens, "OK  : "+pr.String())
+				if !pr.IsLinked {
+					tokens = append(tokens, "BROKEN-LINK: "+pr.String())
+					pr.Error = "BROKEN-LINK"
+					errorPageReports = append(errorPageReports, pr)
 				}
 			}
 
+		}
+
+		for _, pr := range prMap {
+			if pr.Status == statusBad {
+				tokens = append(tokens, "BAD : "+pr.String())
+				pr.Error = "BAD-PAGE"
+				errorPageReports = append(errorPageReports, pr)
+
+			} else if pr.Status == statusSkipped {
+				tokens = append(tokens, "SKIP: "+pr.String())
+				pr.Error = "SKIPPED"
+				errorPageReports = append(errorPageReports, pr)
+
+			} else if showOK {
+				tokens = append(tokens, "OK  : "+pr.String())
+				pr.Error = "OK"
+				errorPageReports = append(errorPageReports, pr)
+			}
 		}
 
 	}
@@ -80,18 +104,33 @@ func (g *Ingester) ReportOnProcessedDir(exam, dir string, showOK bool, reconcile
 		return tokens, nil
 	}
 
+	destPages := make(map[string]int)
+
+	// populate the source map
+	for _, reportMap := range destMap {
+		for _, report := range reportMap {
+			destPages[report.FirstLink] = 0
+		}
+	}
+
+	fmt.Printf("Destination: Found %d files and %d unique pages in %s\n", len(files), len(destPages), dir)
+
 	srcDir := g.GetExamDir(exam, anonPapers)
-	files, err = g.GetFileList(srcDir)
+	sourceFiles, err := g.GetFileList(srcDir)
 
 	if err != nil {
 		return []string{}, err
 	}
 
 	srcMap := make(map[string]map[int]PageReport)
-	for _, file := range files {
 
+	for _, file := range sourceFiles {
+
+		if !IsPDF(file) {
+			continue
+		}
 		prMap, _ := GetPageSummaryMapFromFile(file) //ignore link errors
-		destMap[file] = prMap
+		srcMap[file] = prMap
 
 	}
 
@@ -99,34 +138,80 @@ func (g *Ingester) ReportOnProcessedDir(exam, dir string, showOK bool, reconcile
 
 	uuidMap := make(map[string]PageReport)
 
+	// populate the source map
 	for _, reportMap := range srcMap {
 		for _, report := range reportMap {
 			srcPages[report.FirstLink] = 0
 			uuidMap[report.FirstLink] = report
 		}
 	}
+
+	fmt.Printf("Source     : Found %d files and %d unique pages in %s\n", len(sourceFiles), len(srcPages), srcDir)
+
+	if len(files) != len(sourceFiles) {
+		fmt.Printf("WARNING: number of files differs in each location (%d != %d) ", len(files), len(sourceFiles))
+		fmt.Printf("(This may not be an issue, because files may have been merged into batches or split)\n")
+	}
+	if len(destPages) != len(srcPages) {
+		fmt.Printf("ERROR: number of uniqe pages differs in each location (%d != %d) ", len(destPages), len(srcPages))
+		fmt.Printf("(This is a problem because it means actual pages have been lost or found!)\n")
+	}
+
 	for _, reportMap := range destMap {
 		for _, report := range reportMap {
-			srcPages[report.FirstLink] = srcPages[report.FirstLink] + 1
+			if _, ok := srcPages[report.FirstLink]; ok {
+				srcPages[report.FirstLink] = srcPages[report.FirstLink] + 1
+			} else {
+				noLinkError = false
+				report.Error = "NO-ORIGINAL-PAGE-FOR"
+				errorPageReports = append(errorPageReports, report)
+				fmt.Printf("%s: %s-%s %s PAGE %d\n", report.Error, report.What, report.Who, report.When, report.PageNumber)
+			}
 		}
 	}
 
-	noError := true
 	for key, count := range srcPages {
 		if count < 1 {
-			noError = false
+			noLinkError = false
 			pr := uuidMap[key]
-			fmt.Printf("MISSING: %s-%s %s PAGE %d", pr.What, pr.Who, pr.When, pr.PageNumber)
+			pr.Error = "MISSING-PROCESSED-PAGE-FOR"
+			fmt.Printf("%s: %s-%s %s PAGE %d\n", pr.Error, pr.What, pr.Who, pr.When, pr.PageNumber)
+			errorPageReports = append(errorPageReports, pr)
 		}
 	}
 
-	if noError {
-		fmt.Printf("SUCCESS: All %d pages in %s link to a page in dir:\n%s\n", len(srcPages), dir, srcDir)
+	if noLinkError {
+		errorPageReports = append(errorPageReports, PageReport{
+			Error: fmt.Sprintf("SUCCESS: %d unique original and processed pages are all correctly linked betwen %s and %s", len(srcPages), srcDir, dir),
+		})
+		fmt.Printf("SUCCESS: %d unique original and processed pages are all correctly linked betwen %s and %s\n", len(srcPages), srcDir, dir)
+	}
 
+	//write to reports folder
+	reportPath := filepath.Join(g.GetExamDir(exam, reports),
+		fmt.Sprintf("%s-%s-%d.csv",
+			shortenAssignment(exam),
+			filepath.Base(dir),
+			time.Now().Unix()))
+
+	err = WritePageReportsToCSV(errorPageReports, reportPath)
+	if err != nil {
+		fmt.Printf("Error writing report to %s\n", reportPath)
 	}
 	return tokens, nil
 
 }
+
+func WritePageReportsToCSV(reports []PageReport, outputPath string) error {
+	// wrap the marshalling library in case we need converters etc later
+	file, err := os.OpenFile(outputPath, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	return gocsv.MarshalFile(&reports, file)
+}
+
 func GetPageSummaryMapFromFile(path string) (map[int]PageReport, error) {
 
 	pdMap, err := pagedata.UnMarshalAllFromFile(path)
@@ -186,7 +271,7 @@ func CommentsToString(comments []comment.Comment) string {
 	cmts := []string{}
 
 	for _, cmt := range comments {
-		cmts = append(cmts, cmt.Label+cmt.Text)
+		cmts = append(cmts, "["+cmt.Label+"]: "+cmt.Text)
 	}
 
 	return strings.Join(cmts, "; ")
