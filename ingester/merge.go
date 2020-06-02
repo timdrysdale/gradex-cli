@@ -56,13 +56,14 @@ func newPageFSM() *fsm.FSM {
 
 func (g *Ingester) MergeProcessedPapers(exam, stage string) error {
 
-	logger := g.logger.With().Str("process", "merge-processed-papers").Str("stage", stage).Str("exam", exam).Logger()
-
 	stage = strings.ToLower(stage)
+	taskName := fmt.Sprintf("merge-%s", stage)
+
+	logger := g.logger.With().Str("process", taskName).Str("stage", stage).Str("exam", exam).Logger()
 
 	if !ValidStageForProcessedPapers(stage) {
 		logger.Error().Msg("Is not a valid stage")
-		return fmt.Errorf("%s is not a valid stage for flatten-processed\n", stage)
+		return fmt.Errorf("%s is not a valid stage for merge-processed\n", stage)
 	}
 
 	fromDir, err := g.MergeProcessedPapersFromDir(exam, stage)
@@ -128,7 +129,7 @@ func (g *Ingester) MergeProcessedPapers(exam, stage string) error {
 	procDetail := pagedata.ProcessDetail{
 		UUID:     safeUUID(),
 		UnixTime: time.Now().UnixNano(),
-		Name:     "merge",
+		Name:     taskName,
 		By:       "gradex-cli",
 		ToDo:     "further-processing",
 		For:      "ingester",
@@ -193,11 +194,11 @@ func summarisePage(pageData pagedata.PageData) PageSummary {
 	pageFSM := newPageFSM()
 
 	// Original.Number, Original.Of
-
+	noTextFields := true
 	for _, item := range pageData.Current.Data {
 
 		if strings.Contains(item.Key, textFieldPrefix) {
-
+			noTextFields = false
 			if strings.Contains(item.Key, "page-ok") && item.Value != "" {
 				pageFSM.Event(statusSeen)
 			}
@@ -208,6 +209,10 @@ func summarisePage(pageData pagedata.PageData) PageSummary {
 				pageFSM.Event(statusMarked)
 			}
 		}
+	}
+	// if a page has no textfields (e.f. inactive), we'll rate it seen
+	if noTextFields {
+		pageFSM.Event(statusSeen)
 	}
 	// if a page only has comments, we still need to catch it
 	if len(pageData.Current.Comments) > 0 {

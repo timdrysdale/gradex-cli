@@ -365,6 +365,61 @@ func TestSummarisePageMarked(t *testing.T) {
 
 }
 
+// ensure inactive pages are Seen (else they'd be flagged as skipped)
+func TestSummarisePageNoTextFields(t *testing.T) {
+
+	original := "EL03-B00.pdf"
+	originalPath := "a/file/some/where.pdf"
+	ownPath := "a/b/c.pdf"
+	pageNumber := 3
+	wasFor := "DEF"
+
+	pageData := pagedata.PageData{
+		Current: pagedata.PageDetail{
+			Item: pagedata.ItemDetail{
+				What: "EL03",
+				Who:  "B00",
+			},
+			Own: pagedata.FileDetail{
+				Path: ownPath,
+			},
+			Original: pagedata.FileDetail{
+				Path:   originalPath,
+				Number: pageNumber,
+			},
+			Data: []pagedata.Field{
+				pagedata.Field{
+					Key:   "not a textfield",
+					Value: "happy days",
+				},
+			},
+		},
+		Previous: []pagedata.PageDetail{
+			pagedata.PageDetail{
+				Process: pagedata.ProcessDetail{
+					ToDo: "FirstProcess",
+					For:  "ABC",
+				},
+			},
+			pagedata.PageDetail{
+				Process: pagedata.ProcessDetail{
+					For:  wasFor,
+					ToDo: "SecondProcess",
+				},
+			},
+		},
+	}
+
+	summary := summarisePage(pageData)
+
+	assert.Equal(t, wasFor, summary.WasFor)
+	assert.Equal(t, statusSeen, summary.Status)
+	assert.Equal(t, original, summary.Original)
+	assert.Equal(t, ownPath, summary.OwnPath)
+	assert.Equal(t, pageNumber, summary.PageNumber)
+
+}
+
 func makePaperMap1() map[string]map[int]PageCollection {
 
 	summaries := []PageSummary{
@@ -698,7 +753,6 @@ func TestMergeOverlay(t *testing.T) {
 	if !result {
 		fmt.Println(actualPdf)
 	}
-
 	os.RemoveAll("./tmp-delete-me")
 
 }

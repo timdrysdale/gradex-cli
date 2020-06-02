@@ -91,7 +91,7 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 
 		g.EnsureDirectoryStructure()
 
-		err = g.AddCheckBar(exam, checker)
+		err = g.AddCheckCoverBar(exam, checker)
 
 		if err != nil {
 			fmt.Println(err)
