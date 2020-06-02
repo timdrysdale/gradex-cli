@@ -410,7 +410,7 @@ func (g *Ingester) AddCheckCoverBar(exam string, checker string) error {
 	questions := []string{}
 	qfile := filepath.Join(g.GetExamDir(exam, config), "questions.csv")
 	qbytes, err := ioutil.ReadFile(qfile)
-	if err != nil {
+	if err == nil {
 		questions = strings.Split(string(qbytes), ",")
 		logger.Info().
 			Str("UUID", procDetail.UUID).

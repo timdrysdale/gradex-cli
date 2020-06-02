@@ -16,6 +16,8 @@ tmp-delete-me
 ingester/draft
 ingester/example-output
 ingester/tmp-delete-me
+ingester/tmp-cover
+ingester/test-cover-out
 gradex
 *.zip
 doc
