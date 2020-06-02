@@ -280,7 +280,7 @@ func (g *Ingester) AddEnterActiveBar(exam string, enterer string) error {
 	procDetail := pagedata.ProcessDetail{
 		UUID:     safeUUID(),
 		UnixTime: time.Now().UnixNano(),
-		Name:     "enter-bar",
+		Name:     "enter-active-bar",
 		By:       "gradex-cli",
 		ToDo:     "entering",
 		For:      enterer,

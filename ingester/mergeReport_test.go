@@ -78,6 +78,14 @@ func TestPageReport(t *testing.T) {
 						Key:   "not a textfield",
 						Value: "happy days",
 					},
+					pagedata.Field{
+						Key:   "tf-question-01-section-optical",
+						Value: "",
+					},
+					pagedata.Field{
+						Key:   "tf-page-bad-optical",
+						Value: "",
+					},
 				},
 			},
 		},

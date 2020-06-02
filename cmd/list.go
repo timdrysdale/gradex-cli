@@ -26,20 +26,25 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/timdrysdale/chmsg"
 	"github.com/timdrysdale/gradex-cli/ingester"
+	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/tree"
+	"github.com/timdrysdale/gradex-cli/util"
 )
 
 // listCmd represents the list command
 var listCmd = &cobra.Command{
-	Use:   "list [what] [exam]",
+	Use:   "list [what] [exam/file]",
 	Args:  cobra.ExactArgs(2),
-	Short: "show a list of [what] for [exam]",
+	Short: "show a list of [what] for [exam/file]",
 	Long: `Shows selected information about an exam
 
 for example
 
 badpages - pages marked with badpage
 tree - tree diagram of exam folder with file/done counts
+pagetree - as above but with page counts
+sortcheck - checks the sort was ok
+pagedata - read and prettyprint the pagedata from a file
 
 For example:
 
@@ -139,6 +144,30 @@ gradex-cli list badpages 'PGEE00000 A B D Exam'
 
 			g.SortCheck(exam)
 
+		case "pagedata":
+
+			pageDataMap, err := pagedata.UnMarshalAllFromFile(exam)
+
+			if err != nil {
+				msg := fmt.Sprintf("Skipping (%s): error obtaining pagedata\n", exam)
+				logger.Error().
+					Str("file", exam).
+					Str("error", err.Error()).
+					Msg(msg)
+				fmt.Println(msg)
+				os.Exit(1)
+			}
+
+			if pagedata.GetLen(pageDataMap) < 1 {
+				msg := fmt.Sprintf("Skipping (%s): no pagedata in file\n", exam)
+				logger.Error().
+					Str("file", exam).
+					Msg(msg)
+				fmt.Println(msg)
+				os.Exit(1)
+			}
+
+			util.PrettyPrintStruct(pageDataMap)
 		default:
 			fmt.Printf("Unknown list type: %s\n", what)
 		} // switch

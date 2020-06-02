@@ -63,10 +63,56 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 		return err
 	}
 
+	// >>>>>>>>>>>>>>>>>> PREPARE FOR USING COVERS BY MAKING MAP OF AVAILABLE COVERS >>>>>>>>>>>>>>>>>>
+	coverPaths := []string{}
+	coverMap := make(map[string]string)
+
+	if oc.CoverPath != "" {
+
+		coverPaths, err = g.GetFileList(oc.CoverPath)
+		if err != nil {
+			oc.Msg.Send(fmt.Sprintf("Stopping early; couldn't get cover page files because %v\n", err))
+			logger.Error().
+				Str("cover-dir", oc.CoverPath).
+				Str("error", err.Error()).
+				Msg(fmt.Sprintf("Stopping early; couldn't get cover page files because %v\n", err))
+			return err
+		}
+
+		for _, coverPath := range coverPaths {
+			if !g.IsPDF(coverPath) { //ignore the done files
+				continue
+			}
+
+			//use a key we can guess later just by stripping the extension of our original pdf filename
+			key := strings.TrimSuffix(filepath.Base(coverPath), filepath.Ext(coverPath))
+
+			if !strings.HasSuffix(key, "-cover") {
+				continue
+			}
+
+			key = strings.TrimSuffix(key, "-cover")
+
+			coverMap[key] = coverPath
+
+		}
+
+	}
+
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PROCESS INDIVIDUAL FILES >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	for _, inPath := range inPaths {
 
 		if !g.IsPDF(inPath) { //ignore the done files
 			continue
+		}
+
+		// see if we have a cover file
+		coverPath := ""
+
+		key := strings.TrimSuffix(filepath.Base(inPath), filepath.Ext(inPath))
+
+		if cf, ok := coverMap[key]; ok {
+			coverPath = cf
 		}
 
 		if !g.Redo { //prevent skipping if --redo flag given
@@ -147,6 +193,7 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 		// to pageData at the child step
 		overlayTasks = append(overlayTasks, OverlayTask{
 			InputPath:        inPath,
+			CoverPath:        coverPath,
 			PageCount:        count,
 			ProcessDetail:    oc.ProcessDetail,
 			NewFieldMap:      newFieldMap,
@@ -332,6 +379,11 @@ OUTER:
 	pageFileOption := fmt.Sprintf("%s/%s%%04d.pdf", pagePath, basename)
 
 	mergePaths := []string{}
+
+	// add cover if we got given one
+	if ot.CoverPath != "" {
+		mergePaths = append(mergePaths, ot.CoverPath)
+	}
 
 	// gs starts indexing at 1
 	for imgIdx := 1; imgIdx <= numPages; imgIdx = imgIdx + 1 {

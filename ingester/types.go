@@ -23,6 +23,7 @@ type FlattenTask struct {
 
 type OverlayTask struct {
 	InputPath        string
+	CoverPath        string //no cover page if empty ""
 	Msg              *chmsg.Messager
 	NewFieldMap      map[int][]pagedata.Field
 	OldPageDataMap   map[int]pagedata.PageData //this has the individual bits filled in?
@@ -44,6 +45,7 @@ type OverlayTask struct {
 //exactly match our internal representation
 
 type OverlayCommand struct {
+	CoverPath        string //get a cover page from here if it exists, and if cover page exists
 	FromPath         string
 	ToPath           string
 	ExamName         string
@@ -54,6 +56,17 @@ type OverlayCommand struct {
 	PathDecoration   string //this is the "-ma1" for marker1, "mo2" for moderator 2, "d" for done etc
 	OpticalBoxSpread string
 	ReadOpticalBoxes bool
+}
+
+type CoverPageCommand struct {
+	Questions      []string
+	FromPath       string
+	ToPath         string
+	ExamName       string
+	TemplatePath   string
+	SpreadName     string
+	ProcessDetail  pagedata.ProcessDetail
+	PathDecoration string
 }
 
 var (
@@ -167,6 +180,7 @@ const (
 	moderatorBack        = "32-moderator-back"
 	moderatorFlattened   = "33-moderator-flattened"
 	moderatorProcessed   = "34-moderator-processed"
+	moderatorCover       = "35-moderator-cover"
 	enterInactive        = "38-enter-inactive"
 	enterActive          = "39-enter-active"
 	enterReady           = "40-enter-ready"
@@ -174,6 +188,7 @@ const (
 	enterBack            = "42-enter-back"
 	enterFlattened       = "43-enter-flattened"
 	enterProcessed       = "44-enter-processed"
+	checkerCover         = "49-checker-cover"
 	checkerReady         = "50-checker-ready"
 	checkerSent          = "51-checker-sent"
 	checkerBack          = "52-checker-back"
@@ -193,6 +208,7 @@ const (
 	reModeratorBack      = "72-remoderator-back"
 	reModeratorFlattened = "73-remoderator-flattened"
 	reModeratorProcessed = "74-remoderator-processed"
+	reModeratorCover     = "75-remoderator-cover"
 	reEnterInactive      = "78-reenter-inactive"
 	reEnterActive        = "79-reenter-active"
 	reEnterReady         = "80-reenter-ready"
@@ -200,6 +216,7 @@ const (
 	reEnterBack          = "82-reenter-back"
 	reEnterFlattened     = "83-reenter-flattened"
 	reEnterProcessed     = "84-reenter-processed"
+	reCheckerCover       = "89-rechecker-cover"
 	reCheckerReady       = "90-rechecker-ready"
 	reCheckerSent        = "91-rechecker-sent"
 	reCheckerBack        = "92-rechecker-back"
