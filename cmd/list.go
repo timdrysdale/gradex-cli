@@ -105,11 +105,11 @@ gradex-cli list badpages 'PGEE00000 A B D Exam'
 		}
 
 		g.EnsureDirectoryStructure()
-		g.SetupExamDirs(exam)
 
 		switch what {
 
 		case "badpage", "badpages", "pagebad":
+
 			files, err := g.GetFileList(g.GetExamDir(exam, ingester.PageBad))
 			if err != nil {
 				return
