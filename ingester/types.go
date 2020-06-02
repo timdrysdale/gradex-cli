@@ -58,6 +58,17 @@ type OverlayCommand struct {
 	ReadOpticalBoxes bool
 }
 
+type CoverPageCommand struct {
+	Questions      []string
+	FromPath       string
+	ToPath         string
+	ExamName       string
+	TemplatePath   string
+	SpreadName     string
+	ProcessDetail  pagedata.ProcessDetail
+	PathDecoration string
+}
+
 var (
 	textFieldPrefix = "tf-"
 	markDetected    = "mark-detected"
