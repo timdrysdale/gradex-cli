@@ -30,6 +30,10 @@ type Q struct {
 
 func isQ(key string) (string, string, bool) {
 
+	if strings.Contains(key, "optical") {
+		return "", "", false
+	}
+
 	re := regexp.MustCompile("tf-q([0-9]*)-(\\w*)")
 
 	tokens := re.FindStringSubmatch(key)
@@ -41,6 +45,20 @@ func isQ(key string) (string, string, bool) {
 
 		return "", "", false
 	}
+}
+
+func getQNum(num string) (string, error) {
+
+	re := regexp.MustCompile("^(\\w?[0-9]*)")
+
+	tokens := re.FindStringSubmatch(strings.TrimSpace(num))
+
+	if len(tokens) == 2 {
+		return tokens[1], nil
+	} else {
+		return "", fmt.Errorf("Number %s not recognised as a Qnumber", num)
+	}
+
 }
 
 func getNum(mark string) (float64, error) {
@@ -75,6 +93,8 @@ func selectPageDetailsWithMarks(pdMap map[int]pagedata.PageData) []pagedata.Page
 
 	option1 := "enter-active-bar"
 	option2 := "merge-marked"
+	option3 := "flatten-marked"
+
 	// get the custom data fields for each process
 	// page -> process -> PageDetail
 	processMap := make(map[int]map[string]pagedata.PageDetail)
@@ -114,6 +134,10 @@ func selectPageDetailsWithMarks(pdMap map[int]pagedata.PageData) []pagedata.Page
 			//	Int("page", pageNumber).
 			//	Msg("Using merge-marked for add-cover question data")
 
+		} else if pd, ok := pm[option3]; ok {
+
+			pageDetails = append(pageDetails, pd)
+
 		} else {
 
 			//logger.Error().
@@ -148,29 +172,38 @@ func getQMap(pageDetails []pagedata.PageDetail) map[string]string {
 			// one by one as we find the textfields
 			// in the pagedata
 
-			n, what, is := isQ(item.Key)
+			if item.Value != "" {
+				n, what, is := isQ(item.Key)
 
-			if is {
+				if is {
 
-				if _, ok := pqm[n]; !ok {
-					pqm[n] = Q{}
+					if _, ok := pqm[n]; !ok {
+						pqm[n] = Q{}
+					}
+
+					qn := pqm[n] //get struct, update, and put back
+
+					Val := strings.ToUpper(item.Value)
+
+					switch what {
+					case "mark":
+						qn.Mark = item.Value
+					case "section":
+						qn.Section = Val
+					case "number":
+						num, err := getQNum(Val)
+						if err == nil {
+							qn.Number = num
+						} else {
+							qn.Number = Val
+						}
+					}
+
+					pqm[n] = qn
+
 				}
-
-				qn := pqm[n] //get struct, update, and put back
-
-				switch what {
-				case "mark":
-					qn.Mark = item.Value
-				case "section":
-					qn.Section = strings.ToUpper(item.Value)
-				case "number":
-					qn.Number = strings.ToUpper(item.Value)
-				}
-
-				pqm[n] = qn
 
 			}
-
 		}
 		pageQmap[page] = pqm
 	}
