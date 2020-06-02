@@ -2,6 +2,9 @@ package ingester
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/timdrysdale/chmsg"
@@ -415,6 +418,118 @@ func (g *Ingester) AddCheckBar(exam string, checker string) error {
 			Str("exam", exam).
 			Str("error", err.Error()).
 			Msg("Error add-checker-bar")
+	}
+	return err
+
+}
+
+// Add a cover page summarising the marking done so far
+func (g *Ingester) AddCheckCoverBar(exam string, checker string) error {
+	logger := g.logger.With().Str("process", "add-check-cover-bar").Logger()
+	mc := chmsg.MessagerConf{
+		ExamName:     exam,
+		FunctionName: "overlay",
+		TaskName:     "add-check-cover-bar",
+	}
+
+	cm := chmsg.New(mc, g.msgCh, g.timeout)
+
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
+		UnixTime: time.Now().UnixNano(),
+		Name:     "check-cover",
+		By:       "gradex-cli",
+		ToDo:     "checking",
+		For:      checker,
+	}
+
+	questions := []string{}
+	qfile := filepath.Join(g.GetExamDir(exam, config), "questions.csv")
+	qbytes, err := ioutil.ReadFile(qfile)
+	if err == nil {
+		questions = strings.Split(string(qbytes), ",")
+		logger.Info().
+			Str("UUID", procDetail.UUID).
+			Str("checker", checker).
+			Str("exam", exam).
+			Str("file", qfile).
+			Str("questions", string(qbytes)).
+			Msg("Got questions for cover page")
+	} else {
+		logger.Info().
+			Str("UUID", procDetail.UUID).
+			Str("checker", checker).
+			Str("exam", exam).
+			Str("file", qfile).
+			Str("questions", string(qbytes)).
+			Msg("Error opening questions file for cover page")
+	}
+
+	cp := CoverPageCommand{
+		Questions:      questions,
+		FromPath:       g.GetExamDir(exam, enterProcessed),
+		ToPath:         g.GetExamDir(exam, checkerCover),
+		ExamName:       exam,
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "addition",
+		ProcessDetail:  procDetail,
+		PathDecoration: "-cover",
+	}
+
+	err = g.CoverPage(cp, &logger)
+	if err == nil {
+		cm.Send(fmt.Sprintf("Finished check-cover UUID=%s\n", procDetail.UUID))
+		logger.Info().
+			Str("UUID", procDetail.UUID).
+			Str("checker", checker).
+			Str("exam", exam).
+			Msg("Finished add-check-cover")
+	} else {
+		logger.Error().
+			Str("UUID", procDetail.UUID).
+			Str("checker", checker).
+			Str("exam", exam).
+			Str("error", err.Error()).
+			Msg("Error add-check-cover")
+	}
+
+	procDetail = pagedata.ProcessDetail{
+		UUID:     safeUUID(),
+		UnixTime: time.Now().UnixNano(),
+		Name:     "check-bar",
+		By:       "gradex-cli",
+		ToDo:     "checking",
+		For:      checker,
+	}
+
+	oc := OverlayCommand{
+		CoverPath:      g.GetExamDir(exam, checkerCover),
+		FromPath:       g.GetExamDir(exam, enterProcessed),
+		ToPath:         g.GetExamDirNamed(exam, checkerReady, checker),
+		ExamName:       exam,
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "check",
+		ProcessDetail:  procDetail,
+		Msg:            cm,
+		PathDecoration: g.GetNamedTaskDecoration(checking, checker),
+	}
+
+	err = g.OverlayPapers(oc, &logger)
+
+	if err == nil {
+		cm.Send(fmt.Sprintf("Finished Processing add-check-cover-bar UUID=%s\n", procDetail.UUID))
+		logger.Info().
+			Str("UUID", procDetail.UUID).
+			Str("checker", checker).
+			Str("exam", exam).
+			Msg("Finished add-check-bar")
+	} else {
+		logger.Error().
+			Str("UUID", procDetail.UUID).
+			Str("checker", checker).
+			Str("exam", exam).
+			Str("error", err.Error()).
+			Msg("Error add-check-bar")
 	}
 	return err
 

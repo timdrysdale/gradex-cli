@@ -753,7 +753,6 @@ func TestMergeOverlay(t *testing.T) {
 	if !result {
 		fmt.Println(actualPdf)
 	}
-
 	os.RemoveAll("./tmp-delete-me")
 
 }
