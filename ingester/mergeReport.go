@@ -271,7 +271,7 @@ func CommentsToString(comments []comment.Comment) string {
 	cmts := []string{}
 
 	for _, cmt := range comments {
-		cmts = append(cmts, cmt.Label+cmt.Text)
+		cmts = append(cmts, "["+cmt.Label+"]: "+cmt.Text)
 	}
 
 	return strings.Join(cmts, "; ")
