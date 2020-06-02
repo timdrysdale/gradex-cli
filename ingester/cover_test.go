@@ -194,16 +194,37 @@ func TestQMap(t *testing.T) {
 			},
 		},
 	}
+	winnerC := pagedata.PageDetail{
+		Data: []pagedata.Field{
+			pagedata.Field{
+				Key:   "not a textfield",
+				Value: "happy days",
+			},
+			pagedata.Field{
+				Key:   "tf-q1-mark",
+				Value: "5-20",
+			},
+			pagedata.Field{
+				Key:   "tf-q1-section",
+				Value: "B",
+			},
+			pagedata.Field{
+				Key:   "tf-q1-number",
+				Value: "1",
+			},
+		},
+	}
 
 	pageDetails := []pagedata.PageDetail{
 		winnerA,
 		winnerB,
+		winnerC,
 	}
 
 	expectedQMap := map[string]string{
 		"A1": "0.5",
 		"A2": "7",
-		"B1": "13",
+		"B1": "18", //involves adding up two part marks
 	}
 
 	QMap := getQMap(pageDetails)
