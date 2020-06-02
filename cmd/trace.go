@@ -33,6 +33,7 @@ var (
 	traceWho    string
 	refreshAnon bool
 	showOK      bool
+	reconcile   bool
 )
 
 // traceCmd represents the trace command
@@ -107,7 +108,7 @@ var traceCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		tokens, err := g.ReportOnProcessedDir(dir, showOK)
+		tokens, err := g.ReportOnProcessedDir(exam, dir, showOK, reconcile)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -125,6 +126,7 @@ func init() {
 	traceCmd.Flags().StringVarP(&traceWho, "who", "w", "", "Name of actor to which to confine the check [default is to read all files at that stage]")
 	traceCmd.Flags().BoolVarP(&refreshAnon, "refresh-anon", "r", false, "Reread the pagedata from the first stage (normally only needed after new un-seen submission added) [default false]")
 	traceCmd.Flags().BoolVarP(&showOK, "verbose", "v", false, "Show the OK files as well [default false]")
+	traceCmd.Flags().BoolVarP(&reconcile, "cross-ref", "c", false, "cross-ref all source pages link to a page in specified dir [default false]")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

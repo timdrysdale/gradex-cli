@@ -36,7 +36,7 @@ func (p *PageReport) String() string {
 
 }
 
-func (g *Ingester) ReportOnProcessedDir(dir string, showOK bool) ([]string, error) {
+func (g *Ingester) ReportOnProcessedDir(exam, dir string, showOK bool, reconcile bool) ([]string, error) {
 
 	tokens := []string{}
 
@@ -46,11 +46,15 @@ func (g *Ingester) ReportOnProcessedDir(dir string, showOK bool) ([]string, erro
 		return []string{}, err
 	}
 
+	destMap := make(map[string]map[int]PageReport)
+
 	for _, file := range files {
 
 		prMap, err := GetPageSummaryMapFromFile(file)
 
 		if err != nil { // linkError
+
+			destMap[file] = prMap
 
 			for _, pr := range prMap {
 
@@ -72,9 +76,57 @@ func (g *Ingester) ReportOnProcessedDir(dir string, showOK bool) ([]string, erro
 
 	}
 
-	return tokens, nil
-}
+	if !reconcile {
+		return tokens, nil
+	}
 
+	srcDir := g.GetExamDir(exam, anonPapers)
+	files, err = g.GetFileList(srcDir)
+
+	if err != nil {
+		return []string{}, err
+	}
+
+	srcMap := make(map[string]map[int]PageReport)
+	for _, file := range files {
+
+		prMap, _ := GetPageSummaryMapFromFile(file) //ignore link errors
+		destMap[file] = prMap
+
+	}
+
+	srcPages := make(map[string]int)
+
+	uuidMap := make(map[string]PageReport)
+
+	for _, reportMap := range srcMap {
+		for _, report := range reportMap {
+			srcPages[report.FirstLink] = 0
+			uuidMap[report.FirstLink] = report
+		}
+	}
+	for _, reportMap := range destMap {
+		for _, report := range reportMap {
+			srcPages[report.FirstLink] = srcPages[report.FirstLink] + 1
+		}
+	}
+
+	noError := true
+	for key, count := range srcPages {
+		if count < 1 {
+			noError = false
+			pr := uuidMap[key]
+			fmt.Printf("MISSING: %s-%s %s PAGE %d", pr.What, pr.Who, pr.When, pr.PageNumber)
+		}
+	}
+
+	if noError {
+		fmt.Printf("SUCCESS: All %d pages in %s link to a page in dir:\n%s\n", len(srcPages), dir, srcDir)
+
+	}
+	return tokens, nil
+
+}
 func GetPageSummaryMapFromFile(path string) (map[int]PageReport, error) {
 
 	pdMap, err := pagedata.UnMarshalAllFromFile(path)

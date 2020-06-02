@@ -140,8 +140,9 @@ func TestSelectPageDetailsWithMarks(t *testing.T) {
 
 	pageDetails := selectPageDetailsWithMarks(pdMap)
 
-	assert.Equal(t, winnerA, pageDetails[0])
-	assert.Equal(t, winnerB, pageDetails[1])
+	result := pageDetails[0].Process.For + pageDetails[1].Process.For
+
+	assert.True(t, result == "AE" || result == "EA")
 	assert.Equal(t, 2, len(pageDetails))
 }
 
