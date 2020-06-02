@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/chmsg"
 	"github.com/timdrysdale/gradex-cli/pagedata"
+	"github.com/timdrysdale/gradex-cli/parsesvg"
 	"github.com/timdrysdale/gradex-cli/util"
 )
 
@@ -161,9 +162,9 @@ func getQMap(pageDetails []pagedata.PageDetail) map[string]string {
 				case "mark":
 					qn.Mark = item.Value
 				case "section":
-					qn.Section = item.Value
+					qn.Section = strings.ToUpper(item.Value)
 				case "number":
-					qn.Number = item.Value
+					qn.Number = strings.ToUpper(item.Value)
 				}
 
 				pqm[n] = qn
@@ -261,6 +262,70 @@ func (g *Ingester) CoverPage(cp CoverPageCommand, logger *zerolog.Logger) error 
 
 		util.PrettyPrintStruct(Qmap)
 
+		pageNumber := 0 //starts at zero
+
+		Prefills := parsesvg.DocPrefills{}
+
+		Prefills[pageNumber] = make(map[string]string)
+
+		Prefills[pageNumber]["page-number"] = "add"
+
+		var thisPageData pagedata.PageData
+		// get first page data
+		for _, pdm := range pdMap {
+			thisPageData = pdm
+			break
+		}
+
+		fields := []pagedata.Field{}
+
+		for k, v := range Qmap {
+			fields = append(fields, pagedata.Field{
+				Key:   "pf-q-" + k,
+				Value: v,
+			})
+		}
+
+		thisPageData.Current.Data = fields
+
+		Prefills[pageNumber]["author"] = thisPageData.Current.Item.Who
+
+		Prefills[pageNumber]["date"] = thisPageData.Current.Item.When
+
+		Prefills[pageNumber]["title"] = shortenAssignment(thisPageData.Current.Item.What)
+
+		Prefills[pageNumber]["for"] = thisPageData.Current.Process.For
+
+		idx := 0
+		for k, v := range Qmap {
+			question := fmt.Sprintf("question-%02d", idx)
+			mark := fmt.Sprintf("mark-awarded-%02d", idx)
+			Prefills[pageNumber][question] = k
+			Prefills[pageNumber][mark] = v
+			idx++
+		}
+
+		pageFilename := filepath.Join(cp.ToPath, strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))+"-cover.pdf")
+
+		contents := parsesvg.SpreadContents{
+			SvgLayoutPath:         cp.TemplatePath,
+			SpreadName:            cp.SpreadName,
+			PageNumber:            pageNumber,
+			PdfOutputPath:         pageFilename,
+			PageData:              thisPageData,
+			TemplatePathsRelative: true,
+			Prefills:              Prefills,
+		}
+
+		err = parsesvg.RenderSpreadExtra(contents)
+		if err != nil {
+			msg := fmt.Sprintf("Error rendering spread for cover page for (%s) because %v\n", path, err)
+			logger.Error().
+				Str("file", path).
+				Str("error", err.Error()).
+				Msg(msg)
+			fmt.Println(msg)
+		}
 	}
 
 	//sorting!! use order in the csv file, in a list, to get the keys out

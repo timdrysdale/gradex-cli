@@ -1,9 +1,15 @@
 package ingester
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/chmsg"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
@@ -231,4 +237,92 @@ func TestQMap(t *testing.T) {
 
 	assert.Equal(t, expectedQMap, QMap)
 
+}
+
+func TestCoverPage(t *testing.T) {
+
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+
+	verbose := false
+
+	mch := make(chan chmsg.MessageInfo)
+
+	closed := make(chan struct{})
+	defer close(closed)
+	go func() {
+		for {
+			select {
+			case <-closed:
+				break
+			case msg := <-mch:
+				if verbose {
+					fmt.Printf("MC:%s\n", msg.Message)
+				}
+			}
+
+		}
+	}()
+
+	logFile := "./cover-testing.log"
+
+	f, err := os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0755)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	defer f.Close()
+
+	logger := zerolog.New(f).With().Timestamp().Logger()
+
+	//logger := zerolog.Nop()
+
+	g, err := New("./tmp-cover", mch, &logger)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "./tmp-cover", g.Root())
+
+	//>>>>>>>>>>>>>>>>>>>>>>>>> SETUP >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	// don't use GetRoot() here
+	// JUST in case we kill a whole working installation
+
+	os.RemoveAll("./tmp-cover")
+
+	g.EnsureDirectoryStructure()
+
+	templateFiles, err := g.GetFileList("./test-fs/etc/overlay/template")
+	assert.NoError(t, err)
+
+	for _, file := range templateFiles {
+		destination := filepath.Join(g.OverlayTemplate(), filepath.Base(file))
+		err := Copy(file, destination)
+		assert.NoError(t, err)
+	}
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
+		UnixTime: time.Now().UnixNano(),
+		Name:     "check-cover",
+		By:       "gradex-cli",
+		ToDo:     "checking",
+		For:      "X",
+	}
+
+	questions := []string{"A1", "A2", "a3", "b1", " B3"} //deliberate case and white space
+
+	cp := CoverPageCommand{
+		Questions:      questions,
+		FromPath:       "test-cover",
+		ToPath:         "test-cover-out",
+		ExamName:       "Exam",
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "addition",
+		ProcessDetail:  procDetail,
+		PathDecoration: "-cover",
+	}
+
+	err = g.CoverPage(cp, &logger)
+
+	assert.NoError(t, err)
 }
