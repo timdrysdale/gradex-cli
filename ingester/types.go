@@ -248,5 +248,8 @@ const (
 
 	//External directories
 
-	PageBad = pageBad
+	PageBad           = pageBad
+	MarkerProcessed   = markerProcessed
+	ModeratorActive   = moderatorActive
+	ModeratorInactive = moderatorInactive
 )

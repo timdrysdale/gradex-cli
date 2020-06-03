@@ -100,6 +100,22 @@ func (g *Ingester) EnsureDirectoryStructure() error {
 	return g.SetupGradexDirs()
 }
 
+func CountPDFInDir(dir string) (int, error) {
+
+	count := 0
+
+	files, err := GetFileList(dir)
+
+	for _, file := range files {
+		if IsPDF(file) {
+			count++
+		}
+	}
+
+	return count, err
+
+}
+
 //need to be case insensitive
 func IsPDF(path string) bool {
 	suffix := strings.ToLower(filepath.Ext(path))
