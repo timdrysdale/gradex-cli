@@ -348,6 +348,7 @@ func createPageItem(pageCollection PageCollection, thisPage PageSummary) Page {
 
 }
 
+//TODO request to order pages so that if two markers mark on the same page, because they are "handing over" from one to another half way down a page, that the first of the two pages is the same author as the previous single page - sounds simple but at first glance this data structure may not offer a quick fix
 func createPageList(pageCollection PageCollection) []Page {
 
 	pageList := []Page{}

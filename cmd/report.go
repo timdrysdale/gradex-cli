@@ -20,39 +20,26 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/timdrysdale/chmsg"
 	"github.com/timdrysdale/gradex-cli/ingester"
-	"github.com/timdrysdale/gradex-cli/pagedata"
-	"github.com/timdrysdale/gradex-cli/tree"
-	"github.com/timdrysdale/gradex-cli/util"
 )
 
-// listCmd represents the list command
-var listCmd = &cobra.Command{
-	Use:   "list [what] [exam/file]",
+// reportCmd represents the report command
+var reportCmd = &cobra.Command{
+	Use:   "report [what] [exam]",
+	Short: "produce a report of type [what]",
 	Args:  cobra.ExactArgs(2),
-	Short: "show a list of [what] for [exam/file]",
-	Long: `Shows selected information about an exam
-
-for example
-
-badpages - pages marked with badpage
-tree - tree diagram of exam folder with file/done counts
-pagetree - as above but with page counts
-sortcheck - checks the sort was ok
-pagedata - read and prettyprint the pagedata from a file
-
-For example:
-
-gradex-cli list badpages 'PGEE00000 A B D Exam'
-
+	Long: `Produce a report and put in the 99-reports folder. 
+Types of report currently implemented:
+marks-provisional (csv format marks from cover sheets in 49-checker-cover)
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		what := os.Args[2]
+		what := strings.ToLower(os.Args[2])
 		exam := os.Args[3]
 
 		var s Specification
@@ -93,7 +80,7 @@ gradex-cli list badpages 'PGEE00000 A B D Exam'
 			New(f).
 			With().
 			Timestamp().
-			Str("command", "list").
+			Str("command", "report").
 			Str("what", what).
 			Str("exam", exam).
 			Logger()
@@ -104,85 +91,30 @@ gradex-cli list badpages 'PGEE00000 A B D Exam'
 			os.Exit(1)
 		}
 
+		// setup dirs for later when writing report
 		g.EnsureDirectoryStructure()
 
 		switch what {
-
-		case "badpage", "badpages", "pagebad":
-
-			files, err := g.GetFileList(g.GetExamDir(exam, ingester.PageBad))
-			if err != nil {
-				return
-			}
-			for _, file := range files {
-				fmt.Println(file)
-			}
-
-		case "tree":
-
-			lines, err := tree.Tree(g.GetExamRoot(exam), false)
-
+		case "marks-provisional":
+			err = g.CheckReport(exam)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-
-			fmt.Println(lines)
-
-		case "pagetree":
-
-			lines, err := tree.Tree(g.GetExamRoot(exam), true)
-
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
-			fmt.Println(lines)
-
-		case "sortcheck":
-
-			g.SortCheck(exam)
-
-		case "pagedata":
-
-			pageDataMap, err := pagedata.UnMarshalAllFromFile(exam)
-
-			if err != nil {
-				msg := fmt.Sprintf("Skipping (%s): error obtaining pagedata\n", exam)
-				logger.Error().
-					Str("file", exam).
-					Str("error", err.Error()).
-					Msg(msg)
-				fmt.Println(msg)
-				os.Exit(1)
-			}
-
-			if pagedata.GetLen(pageDataMap) < 1 {
-				msg := fmt.Sprintf("Skipping (%s): no pagedata in file\n", exam)
-				logger.Error().
-					Str("file", exam).
-					Msg(msg)
-				fmt.Println(msg)
-				os.Exit(1)
-			}
-
-			util.PrettyPrintStruct(pageDataMap)
-		default:
-			fmt.Printf("Unknown list type: %s\n", what)
-		} // switch
+		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(reportCmd)
+
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// listCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// reportCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// listCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// reportCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
