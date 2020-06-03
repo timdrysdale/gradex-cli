@@ -6,6 +6,8 @@ import (
 	"math"
 	"math/rand"
 	"time"
+
+	"github.com/timdrysdale/gradex-cli/util"
 )
 
 func (g *Ingester) SplitForModeration(exam string, minFiles int, minPercent float64) error {
@@ -20,18 +22,42 @@ func (g *Ingester) SplitForModeration(exam string, minFiles int, minPercent floa
 
 	pdfFiles := make(map[string]bool)
 
+	inputCount := 0
+
 	for _, file := range files {
 
 		if g.IsPDF(file) {
 			pdfFiles[file] = false
+			inputCount++
 		}
-
 	}
+
+	fmt.Printf("We think we have %d files to split for moderating\n", inputCount)
 
 	reqdPercent := requiredPercent(len(pdfFiles), minFiles, minPercent)
 
+	predictedActiveCount := float64(inputCount) * reqdPercent / 100
+
+	fmt.Printf("We think we want %f percent of the files, which equates to  %f files, to be active; minpercent was %f\n", reqdPercent, predictedActiveCount, minPercent)
+
 	selectByPercent(&pdfFiles, reqdPercent)
 
+	util.PrettyPrintStruct(pdfFiles)
+
+	activeCount := 0
+	inactiveCount := 0
+
+	for _, isActive := range pdfFiles {
+		if isActive {
+			activeCount++
+		} else {
+			inactiveCount++
+		}
+	}
+
+	predictedInactiveCount := inputCount - int(math.Round(predictedActiveCount))
+
+	fmt.Printf("We think we have %d active files (wanted %d), and %d inactive files (should be %d)\n", activeCount, int(predictedActiveCount), inactiveCount, predictedInactiveCount)
 	numErrors := 0
 	newCount := 0
 	for k, v := range pdfFiles {
@@ -128,9 +154,14 @@ func selectByPercent(fileMap *map[string]bool, percent float64) {
 	r := rand.New(s) // initialize local pseudorandom generator
 
 	numRequired := int(math.Ceil(float64(len(*fileMap)) * percent / 100.0))
-	inverted := false
 
-	if float64(len(*fileMap)-1) < percent {
+	// is the percentage high enough that selecting one less than the total is not enough?
+
+	nMinusOnePercentage := float64(len(*fileMap)-1) / float64(len(*fileMap))
+
+	nMinusOneIsNotEnough := nMinusOnePercentage < (percent / 100)
+
+	if nMinusOneIsNotEnough {
 		// we need to select everything to meet the criteria
 		// so just do that, save time!
 		for k, _ := range *fileMap {
@@ -142,9 +173,11 @@ func selectByPercent(fileMap *map[string]bool, percent float64) {
 	}
 
 	// perform the smallest number of selections possible
+	// Note that inverting the percentage is all we need to do
+	// We do NOT need to invert the logic values afterwards
+	// that will just mean we select fewer than intended
 	if percent > 50 {
 		percent = 100 - percent
-		inverted = true
 	}
 
 LOOP:
@@ -163,13 +196,6 @@ LOOP:
 			}
 		}
 
-	}
-
-	if inverted {
-		for k, v := range *fileMap {
-
-			(*fileMap)[k] = !v
-		}
 	}
 
 }
