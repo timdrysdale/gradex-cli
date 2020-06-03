@@ -99,15 +99,69 @@ active/inactive directory according to whether they are to be moderated or not
 		g.EnsureDirectoryStructure()
 		g.SetupExamDirs(exam)
 
-		// TODO handling redo flag to redo the split is starting to get into
-		// unclear territory - do you remove all files from moderation sets?
-		// what if they have been sent?
-		// do you block if any moderation files have been exported?
-		// better to handle these cases manually
-		err = g.SplitForModeration(exam, 10, 10) //TODO set these from flag
+		splitDonePath := filepath.Join(g.GetExamDir(exam, ingester.MarkerProcessed), "split")
+
+		if !ingester.GetDone(splitDonePath) {
+			fmt.Println("This looks like the first time you have run a split on this exam")
+			// TODO handling redo flag to redo the split is starting to get into
+			// unclear territory - do you remove all files from moderation sets?
+			// what if they have been sent?
+			// do you block if any moderation files have been exported?
+			// better to handle these cases manually
+			err = g.SplitForModeration(exam, 10, 10) //TODO set these from flag
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			ingester.SetDone(splitDonePath, &logger)
+		}
+
+		markedCount, err := ingester.CountPDFInDir(g.GetExamDir(exam, ingester.MarkerProcessed))
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
+		}
+
+		activeCount, err := ingester.CountPDFInDir(g.GetExamDir(exam, ingester.ModeratorActive))
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		inactiveCount, err := ingester.CountPDFInDir(g.GetExamDir(exam, ingester.ModeratorInactive))
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		if activeCount+inactiveCount == markedCount {
+
+			fmt.Printf("Status: %d marked files split into %d active and %d inactive (good, we want %d == %d)\n", markedCount, activeCount, inactiveCount, markedCount, inactiveCount+activeCount)
+
+		} else {
+			fmt.Printf("Status: %d marked files split into %d active and %d inactive\n", markedCount, activeCount, inactiveCount)
+
+			fmt.Printf("There should be %d inactive and active files in total, but there are %d\n", markedCount, activeCount+inactiveCount)
+			fmt.Println("ERROR - INCONSISTENT SPLIT COUNT- PLEASE FIX BEFORE CONTINUING")
+
+			os.Exit(1)
+		}
+
+		//Check for file duplication
+
+		activeFiles, err := ingester.GetFileList(g.GetExamDir(exam, ingester.ModeratorActive))
+		inactiveFiles, err := ingester.GetFileList(g.GetExamDir(exam, ingester.ModeratorInactive))
+
+		ifm := make(map[string]bool)
+
+		for _, file := range inactiveFiles {
+			ifm[file] = true
+		}
+
+		for _, file := range activeFiles {
+			if _, ok := ifm[file]; ok {
+				fmt.Printf("ERROR - File %s is in both active and inactive!\n", file)
+				os.Exit(1)
+			}
 		}
 
 		err = g.AddModerateActiveBar(exam, moderator)

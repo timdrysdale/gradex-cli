@@ -37,6 +37,13 @@ func setDone(path string, logger *zerolog.Logger) {
 	}
 }
 
+func SetDone(path string, logger *zerolog.Logger) {
+	setDone(path, logger)
+}
+func GetDone(path string) bool {
+	return getDone(path)
+}
+
 func getDone(path string) bool {
 
 	donefile := doneFilePath(path)

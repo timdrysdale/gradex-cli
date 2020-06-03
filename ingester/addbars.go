@@ -444,26 +444,31 @@ func (g *Ingester) AddCheckCoverBar(exam string, checker string) error {
 	}
 
 	questions := []string{}
-	qfile := filepath.Join(g.GetExamDir(exam, config), "questions.csv")
-	qbytes, err := ioutil.ReadFile(qfile)
-	if err == nil {
-		questions = strings.Split(string(qbytes), ",")
-		logger.Info().
-			Str("UUID", procDetail.UUID).
-			Str("checker", checker).
-			Str("exam", exam).
-			Str("file", qfile).
-			Str("questions", string(qbytes)).
-			Msg("Got questions for cover page")
-	} else {
-		logger.Info().
-			Str("UUID", procDetail.UUID).
-			Str("checker", checker).
-			Str("exam", exam).
-			Str("file", qfile).
-			Str("questions", string(qbytes)).
-			Msg("Error opening questions file for cover page")
+	if !g.SkipQuestionFile {
+		qfile := filepath.Join(g.GetExamDir(exam, config), "questions.csv")
+		qbytes, err := ioutil.ReadFile(qfile)
+		if err == nil {
+			questions = strings.Split(string(qbytes), ",")
+			logger.Info().
+				Str("UUID", procDetail.UUID).
+				Str("checker", checker).
+				Str("exam", exam).
+				Str("file", qfile).
+				Str("questions", string(qbytes)).
+				Msg("Got questions for cover page")
+		} else {
+			logger.Info().
+				Str("UUID", procDetail.UUID).
+				Str("checker", checker).
+				Str("exam", exam).
+				Str("file", qfile).
+				Str("questions", string(qbytes)).
+				Msg("Error opening questions file for cover page")
+			return fmt.Errorf("Error opening questions file %s for cover page", qfile)
+		}
 	}
+
+	fmt.Printf("Questions: %s\n", strings.Join(questions, ","))
 
 	cp := CoverPageCommand{
 		Questions:      questions,
@@ -476,7 +481,7 @@ func (g *Ingester) AddCheckCoverBar(exam string, checker string) error {
 		PathDecoration: "-cover",
 	}
 
-	err = g.CoverPage(cp, &logger)
+	err := g.CoverPage(cp, &logger)
 	if err == nil {
 		cm.Send(fmt.Sprintf("Finished check-cover UUID=%s\n", procDetail.UUID))
 		logger.Info().

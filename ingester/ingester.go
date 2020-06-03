@@ -21,6 +21,7 @@ type Ingester struct {
 	ingestTemplatePath    string
 	backgroundIsVanilla   bool
 	opticalExpand         int
+	SkipQuestionFile      bool
 }
 
 func New(path string, msgCh chan chmsg.MessageInfo, logger *zerolog.Logger) (*Ingester, error) {
@@ -54,6 +55,11 @@ func (g *Ingester) SetBackgroundIsVanilla(vanilla bool) {
 func (g *Ingester) SetOpticalShrink(shrink int) {
 	g.logger.Info().Int("shrink", shrink).Msg(fmt.Sprintf("Changing optical shrink from %d to %d", -1*g.opticalExpand, shrink))
 	g.opticalExpand = -1 * shrink
+}
+
+func (g *Ingester) SetSkipQuestionFile(skip bool) {
+	g.logger.Info().Bool("skip", skip).Msg(fmt.Sprintf("Changing skipQuestionFile from %v to %v", g.SkipQuestionFile, skip))
+	g.SkipQuestionFile = skip
 }
 
 func (g *Ingester) SetOverlayTemplatePath(path string) error {
