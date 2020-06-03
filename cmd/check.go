@@ -28,6 +28,10 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
+var (
+	SkipQuestionFile bool
+)
+
 // checkCmd represents the check command
 var checkCmd = &cobra.Command{
 	Use:   "check [checker] [exam]",
@@ -42,6 +46,10 @@ this will produce a bunch of files in the readyToMark folder, e.g
 $GRADEX_CLI_ROOT/usr/demo-exam/40.ReadyToCheck/X/<original-filename>-maTDD.pdf
 
 Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT/usr/exam/
+
+If you do not have a question file installed, you will get an error. You can proceed without a question by using the flag as follows
+
+gradex-cli checker x demo-exam --ignore-question-file
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -91,6 +99,8 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 
 		g.EnsureDirectoryStructure()
 
+		g.SetSkipQuestionFile(SkipQuestionFile)
+
 		err = g.AddCheckCoverBar(exam, checker)
 
 		if err != nil {
@@ -104,7 +114,7 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 
 func init() {
 	rootCmd.AddCommand(checkCmd)
-
+	checkCmd.Flags().BoolVarP(&SkipQuestionFile, "ignore-question-file", "", false, "Ignore the question file, even if present [default false]")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
