@@ -21,7 +21,8 @@ type Ingester struct {
 	ingestTemplatePath    string
 	backgroundIsVanilla   bool
 	opticalExpand         int
-	SkipQuestionFile      bool
+	SkipQuestionFile      bool //TODO revert to private, probably
+	changeAncestor        bool
 }
 
 func New(path string, msgCh chan chmsg.MessageInfo, logger *zerolog.Logger) (*Ingester, error) {
@@ -60,6 +61,11 @@ func (g *Ingester) SetOpticalShrink(shrink int) {
 func (g *Ingester) SetSkipQuestionFile(skip bool) {
 	g.logger.Info().Bool("skip", skip).Msg(fmt.Sprintf("Changing skipQuestionFile from %v to %v", g.SkipQuestionFile, skip))
 	g.SkipQuestionFile = skip
+}
+
+func (g *Ingester) SetChangeAncestor(change bool) {
+	g.logger.Info().Bool("change", change).Msg(fmt.Sprintf("Changing changeAncestor from %v to %v", g.changeAncestor, change))
+	g.changeAncestor = change
 }
 
 func (g *Ingester) SetOverlayTemplatePath(path string) error {

@@ -41,11 +41,24 @@ func shortenBaseFileName(baseFileName string) string {
 
 	shortName := baseFileName
 
-	if len(shortLearnNameMatches) > 0 {
+	if len(shortLearnNameMatches) > 1 {
 		shortName = shortLearnNameMatches[1]
 	}
 
 	return shortName
+
+}
+
+//looks for the word between - and .pdf (case insensitive) at the end of the string
+func GetAnonymousFromPath(path string) string {
+	var anonymous string
+
+	re := regexp.MustCompile("-(\\w*).[pP][dD][fF]$")
+	matches := re.FindStringSubmatch(path)
+	if len(matches) > 1 {
+		anonymous = matches[1]
+	}
+	return anonymous
 
 }
 
