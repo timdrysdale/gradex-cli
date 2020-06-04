@@ -53,6 +53,19 @@ func shortenBaseFileName(baseFileName string) string {
 func GetAnonymousFromPath(path string) string {
 	var anonymous string
 
+	re := regexp.MustCompile("-(B[0-9]*)-")
+	matches := re.FindStringSubmatch(filepath.Base(path))
+	if len(matches) > 1 {
+		anonymous = matches[1]
+	}
+	return anonymous
+
+}
+
+//looks for the word between - and .pdf (case insensitive) at the end of the string
+func GetAnonymousFromPathBasic(path string) string {
+	var anonymous string
+
 	re := regexp.MustCompile("-(\\w*).[pP][dD][fF]$")
 	matches := re.FindStringSubmatch(path)
 	if len(matches) > 1 {

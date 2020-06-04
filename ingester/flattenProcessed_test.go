@@ -20,6 +20,8 @@ import (
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
 	"github.com/timdrysdale/gradex-cli/util"
+	"github.com/timdrysdale/unipdf/v3/creator"
+	"github.com/timdrysdale/unipdf/v3/model/optimize"
 )
 
 func TestOpticalBoxReading(t *testing.T) {
@@ -523,6 +525,48 @@ func TestFlattenProcessedMarkedAncestor(t *testing.T) {
 
 	assert.NoError(t, err)
 
+	longname := "Practice Examination - A Huge Long Name"
+
+	pds := []pagedata.PageData{
+		pagedata.PageData{
+			Current: pagedata.PageDetail{
+				Item: pagedata.ItemDetail{
+					Who:  "B999999",
+					What: longname,
+				},
+				UUID:    "ancestorp1",
+				Follows: "",
+			},
+		},
+		pagedata.PageData{
+			Current: pagedata.PageDetail{
+				Item: pagedata.ItemDetail{
+					Who:  "B999999",
+					What: longname,
+				},
+				UUID:    "ancestorp2",
+				Follows: "",
+			},
+		},
+		pagedata.PageData{
+			Current: pagedata.PageDetail{
+				Item: pagedata.ItemDetail{
+					Who:  "B999999",
+					What: longname,
+				},
+				UUID:    "ancestorp3",
+				Follows: "",
+			},
+		},
+	}
+
+	ancestorPath := filepath.Join(g.GetExamDir(exam, anonPapers), "Practice-B999999-ancestor.pdf")
+
+	err = createPDF(ancestorPath, pds)
+
+	assert.NoError(t, err)
+
+	g.SetChangeAncestor(true)
 	err = g.FlattenProcessedPapers(exam, stage)
 
 	assert.NoError(t, err)
@@ -544,85 +588,69 @@ func TestFlattenProcessedMarkedAncestor(t *testing.T) {
 	numPages, err := count.Pages(flattenedPath)
 
 	assert.NoError(t, err)
+	assert.Equal(t, 3, numPages)
 
-	actualFields := make(map[int]map[string]string)
+	_, err = g.ReportOnProcessedDir(exam, g.GetExamDir(exam, markerFlattened), true, false)
+	assert.NoError(t, err)
 
-	for i := 1; i <= numPages; i++ {
-		fieldsForPage := make(map[string]string)
+	pdA, err := pagedata.UnMarshalAllFromFile(ancestorPath)
+	assert.NoError(t, err)
 
-		for _, item := range pdMap[i].Current.Data {
-			fieldsForPage[item.Key] = item.Value
-		}
+	pdN, err := pagedata.UnMarshalAllFromFile(flattenedPath)
+	assert.NoError(t, err)
 
-		actualFields[i] = fieldsForPage
+	assert.Equal(t, pdA[1].Current.Item.What, pdN[1].Current.Item.What)
+
+	aA, err := GetPageSummaryMap(pdA)
+	assert.NoError(t, err)
+
+	aN, err := GetPageSummaryMap(pdN)
+	assert.NoError(t, err)
+
+	assert.Equal(t, true, aN[1].IsLinked)
+
+	//these are the root UUID in the ancestor and the new file...
+	assert.Equal(t, aA[1].FirstLink, aN[1].FirstLink)
+	assert.Equal(t, aA[2].FirstLink, aN[2].FirstLink)
+	assert.Equal(t, aA[3].FirstLink, aN[3].FirstLink)
+
+	os.RemoveAll("./tmp-delete-me")
+}
+
+func createPDF(path string, pds []pagedata.PageData) error {
+
+	c := creator.New()
+	c.SetPageMargins(0, 0, 0, 0) // we're not printing so use the whole page
+	c.SetPageSize(creator.PageSizeA4)
+
+	for idx, pd := range pds {
+
+		c.NewPage()
+		p := c.NewParagraph(fmt.Sprintf("Ancestor Page %d", idx))
+		p.SetFontSize(12)
+		p.SetPos(200, 10)
+		c.Draw(p)
+
+		pagedata.MarshalOneToCreator(c, &pd)
 	}
 
-	expectedFields := make(map[int]map[string]string)
+	c.SetOptimizer(optimize.New(optimize.Options{
+		CombineDuplicateDirectObjects:   true,
+		CombineIdenticalIndirectObjects: true,
+		CombineDuplicateStreams:         true,
+		CompressStreams:                 true,
+		UseObjectStreams:                true,
+		ImageQuality:                    90,
+		ImageUpperPPI:                   150,
+	}))
 
-	expectedFields[1] = map[string]string{
-		"tf-page-ok":             "X",
-		"tf-q1-mark":             "6/12",
-		"tf-q1-number":           "1",
-		"tf-q1-section":          "A",
-		"tf-subtotal-00":         "1/2",
-		"tf-subtotal-04":         "2/4",
-		"tf-subtotal-09":         "3/6",
-		"tf-page-ok-optical":     markDetected,
-		"tf-q1-mark-optical":     markDetected,
-		"tf-q1-number-optical":   markDetected,
-		"tf-q1-section-optical":  markDetected,
-		"tf-subtotal-00-optical": markDetected,
-		"tf-subtotal-04-optical": markDetected,
-		"tf-subtotal-09-optical": markDetected,
+	of, err := os.Create(path)
+	if err != nil {
+		return err
 	}
 
-	expectedFields[2] = map[string]string{
-		"tf-page-bad":         "X",
-		"tf-page-bad-optical": markDetected,
-	}
+	defer of.Close()
 
-	expectedFields[3] = map[string]string{
-		"tf-page-ok":             "x",
-		"tf-q1-mark":             "17",
-		"tf-q1-number":           "1",
-		"tf-q1-section":          "B",
-		"tf-subtotal-01":         "2",
-		"tf-subtotal-03":         "2",
-		"tf-subtotal-06":         "1",
-		"tf-subtotal-08":         "2",
-		"tf-subtotal-10":         "2",
-		"tf-subtotal-11":         "3",
-		"tf-subtotal-14":         "5",
-		"tf-page-ok-optical":     markDetected,
-		"tf-q1-mark-optical":     markDetected,
-		"tf-q1-number-optical":   markDetected,
-		"tf-q1-section-optical":  markDetected,
-		"tf-subtotal-01-optical": markDetected,
-		"tf-subtotal-03-optical": markDetected,
-		"tf-subtotal-06-optical": markDetected,
-		"tf-subtotal-08-optical": markDetected,
-		"tf-subtotal-10-optical": markDetected,
-		"tf-subtotal-11-optical": markDetected,
-		"tf-subtotal-14-optical": markDetected,
-	}
-
-	// checking by actual field value allows check for false positive optical marks
-	// without specifying all the null fields in the expected values - it is
-	// assumed automatically
-	for page, fields := range actualFields {
-		for k, v := range fields {
-			expectedValue := "" //assume MUST BE empty field if not specified
-			if _, ok := expectedFields[page][k]; ok {
-				expectedValue = expectedFields[page][k]
-			}
-			assert.Equal(t, expectedValue, v)
-			if expectedValue != v {
-				fmt.Println(k)
-			}
-
-		}
-	}
-
-	//os.RemoveAll("./tmp-delete-me")
-
+	c.Write(of)
+	return nil
 }

@@ -90,6 +90,7 @@ func (g *Ingester) FlattenProcessedPapers(exam, stage string) error {
 	oc := OverlayCommand{
 		FromPath:         fromDir,
 		ToPath:           toDir,
+		AncestorPath:     g.GetExamDir(exam, anonPapers),
 		ExamName:         exam,
 		TemplatePath:     g.OverlayLayoutSVG(),
 		SpreadName:       "flatten-processed",
