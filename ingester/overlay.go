@@ -351,7 +351,11 @@ func (g *Ingester) OverlayOnePDF(ot OverlayTask, logger *zerolog.Logger) (int, e
 	// need page count to find the jpeg files again later
 	numPages, err := CountPages(ot.InputPath)
 
-	// find coursecode in these pages - assume belong SAME assignment. Not true of future bu-page mode
+	// find coursecode in these pages - assume belong SAME exam/assignment
+	// different authors can be present in same file
+	// but if mixing actual exams for processing - then this needs modifying to work per page
+	// there is an element of protecting against partially-present pagedata, but
+	// that was from before pagedata had been "proven" in usage.
 	var courseCode string
 OUTER:
 	for _, v := range ot.OldPageDataMap {
@@ -540,6 +544,7 @@ OUTER:
 		// Now we CONSTRUCT the NEW current PageData
 		// copy over what we had, first:
 		newThisPageDataCurrent := oldThisPageDataCurrent
+		ancestorFor := oldThisPageDataCurrent.Process.For
 
 		// swap in new ancestor's item description (mainly to get the "what" so that
 		// the processed version of this file can be ingested correctly)
@@ -559,6 +564,9 @@ OUTER:
 
 			newThisPageDataCurrent.Item = newItem
 
+			aLink := ancestorPageSummaryMap[imgIdx].FirstLink
+			cLink := currentPageSummaryMap[imgIdx].FirstLink
+
 			logger.Info().
 				Str("file", ot.InputPath).
 				Str("old-what", oldItem.What).
@@ -567,26 +575,27 @@ OUTER:
 				Str("new-what", newItem.What).
 				Str("new-who", newItem.Who).
 				Str("new-when", newItem.When).
-				Str("ancestor-first-link", ancestorPageSummaryMap[imgIdx].FirstLink).
-				Str("current-first-link", currentPageSummaryMap[imgIdx].FirstLink).
-				Msg("No ancestor pagedata in file")
+				Str("ancestor-first-link", aLink).
+				Str("current-first-link", cLink).
+				Msg("ChangeAncestor pagedata summary")
 
 			linkPD := pagedata.PageDetail{
 				Item:    newItem,
-				UUID:    currentPageSummaryMap[imgIdx].FirstLink,
-				Follows: ancestorPageSummaryMap[imgIdx].FirstLink,
+				UUID:    cLink,
+				Follows: aLink,
 				Process: pagedata.ProcessDetail{
 					UUID:     safeUUID(),
 					UnixTime: time.Now().UnixNano(),
 					Name:     "change-ancestor",
 					By:       "gradex-cli",
 					ToDo:     "inject",
+					For:      ancestorFor,
 				},
 			}
 
 			rootPD := pagedata.PageDetail{
 				Item:    newItem,
-				UUID:    ancestorPageSummaryMap[imgIdx].FirstLink,
+				UUID:    aLink,
 				Follows: "",
 				Process: pagedata.ProcessDetail{
 					UUID:     safeUUID(),
@@ -594,11 +603,15 @@ OUTER:
 					Name:     "change-ancestor",
 					By:       "gradex-cli",
 					ToDo:     "inject",
+					For:      ancestorFor,
 				},
 			}
 
-			previousPageData = append(previousPageData, linkPD)
-			previousPageData = append(previousPageData, rootPD)
+			if aLink != cLink { //only update if not already an ancestor
+				//this should hopefully avoid a cycle in the page.
+				previousPageData = append(previousPageData, linkPD)
+				previousPageData = append(previousPageData, rootPD)
+			}
 
 		}
 

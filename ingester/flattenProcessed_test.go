@@ -614,6 +614,8 @@ func TestFlattenProcessedMarkedAncestor(t *testing.T) {
 	assert.Equal(t, aA[2].FirstLink, aN[2].FirstLink)
 	assert.Equal(t, aA[3].FirstLink, aN[3].FirstLink)
 
+	assert.Equal(t, "TDD", aN[1].WasFor)
+
 	os.RemoveAll("./tmp-delete-me")
 }
 
