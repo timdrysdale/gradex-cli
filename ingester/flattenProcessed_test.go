@@ -20,6 +20,8 @@ import (
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
 	"github.com/timdrysdale/gradex-cli/util"
+	"github.com/timdrysdale/unipdf/v3/creator"
+	"github.com/timdrysdale/unipdf/v3/model/optimize"
 )
 
 func TestOpticalBoxReading(t *testing.T) {
@@ -468,4 +470,187 @@ func TestFlattenProcessedStylus(t *testing.T) {
 
 	os.RemoveAll("./tmp-delete-me")
 
+}
+
+func TestFlattenProcessedMarkedAncestor(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+	// process a marked paper with keyed entries
+	// check that keyed entries are picked up
+	mch := make(chan chmsg.MessageInfo)
+
+	logFile := "./flatten-process-testing.log"
+
+	f, err := os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0755)
+	assert.NoError(t, err)
+
+	defer f.Close()
+
+	logger := zerolog.New(f).With().Timestamp().Logger()
+
+	g, err := New("./tmp-delete-me", mch, &logger)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, "./tmp-delete-me", g.Root())
+
+	os.RemoveAll("./tmp-delete-me")
+
+	g.EnsureDirectoryStructure()
+
+	templateFiles, err := g.GetFileList("./test-fs/etc/overlay/template")
+	assert.NoError(t, err)
+
+	for _, file := range templateFiles {
+		destination := filepath.Join(g.OverlayTemplate(), filepath.Base(file))
+		err := Copy(file, destination)
+		assert.NoError(t, err)
+	}
+
+	exam := "Practice"
+	stage := "marked"
+
+	err = g.SetupExamDirs(exam)
+
+	assert.NoError(t, err)
+
+	source := "./test-flatten/Practice-B999999-maTDD-marked-comments.pdf"
+
+	destinationDir := g.GetExamDirNamed(exam, markerBack, "XX")
+
+	assert.NoError(t, err)
+
+	err = g.CopyToDir(source, destinationDir)
+
+	assert.NoError(t, err)
+
+	longname := "Practice Examination - A Huge Long Name"
+
+	pds := []pagedata.PageData{
+		pagedata.PageData{
+			Current: pagedata.PageDetail{
+				Item: pagedata.ItemDetail{
+					Who:  "B999999",
+					What: longname,
+				},
+				UUID:    "ancestorp1",
+				Follows: "",
+			},
+		},
+		pagedata.PageData{
+			Current: pagedata.PageDetail{
+				Item: pagedata.ItemDetail{
+					Who:  "B999999",
+					What: longname,
+				},
+				UUID:    "ancestorp2",
+				Follows: "",
+			},
+		},
+		pagedata.PageData{
+			Current: pagedata.PageDetail{
+				Item: pagedata.ItemDetail{
+					Who:  "B999999",
+					What: longname,
+				},
+				UUID:    "ancestorp3",
+				Follows: "",
+			},
+		},
+	}
+
+	ancestorPath := filepath.Join(g.GetExamDir(exam, anonPapers), "Practice-B999999-ancestor.pdf")
+
+	err = createPDF(ancestorPath, pds)
+
+	assert.NoError(t, err)
+
+	g.SetChangeAncestor(true)
+	err = g.FlattenProcessedPapers(exam, stage)
+
+	assert.NoError(t, err)
+
+	// pagedata check
+	flattenedPath := "tmp-delete-me/usr/exam/Practice/23-marker-flattened/Practice-B999999-maTDD-marked-comments.pdf"
+	pdMap, err := pagedata.UnMarshalAllFromFile(flattenedPath)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// check question values, and comments on page 1 in currentData
+	// check previousData has one set, with null values for comments and values
+
+	assert.Equal(t, "B999999", pdMap[1].Current.Item.Who)
+	assert.Equal(t, "further-processing", pdMap[1].Current.Process.ToDo)
+	assert.Equal(t, "ingester", pdMap[1].Current.Process.For)
+
+	numPages, err := count.Pages(flattenedPath)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 3, numPages)
+
+	_, err = g.ReportOnProcessedDir(exam, g.GetExamDir(exam, markerFlattened), true, false)
+	assert.NoError(t, err)
+
+	pdA, err := pagedata.UnMarshalAllFromFile(ancestorPath)
+	assert.NoError(t, err)
+
+	pdN, err := pagedata.UnMarshalAllFromFile(flattenedPath)
+	assert.NoError(t, err)
+
+	assert.Equal(t, pdA[1].Current.Item.What, pdN[1].Current.Item.What)
+
+	aA, err := GetPageSummaryMap(pdA)
+	assert.NoError(t, err)
+
+	aN, err := GetPageSummaryMap(pdN)
+	assert.NoError(t, err)
+
+	assert.Equal(t, true, aN[1].IsLinked)
+
+	//these are the root UUID in the ancestor and the new file...
+	assert.Equal(t, aA[1].FirstLink, aN[1].FirstLink)
+	assert.Equal(t, aA[2].FirstLink, aN[2].FirstLink)
+	assert.Equal(t, aA[3].FirstLink, aN[3].FirstLink)
+
+	os.RemoveAll("./tmp-delete-me")
+}
+
+func createPDF(path string, pds []pagedata.PageData) error {
+
+	c := creator.New()
+	c.SetPageMargins(0, 0, 0, 0) // we're not printing so use the whole page
+	c.SetPageSize(creator.PageSizeA4)
+
+	for idx, pd := range pds {
+
+		c.NewPage()
+		p := c.NewParagraph(fmt.Sprintf("Ancestor Page %d", idx))
+		p.SetFontSize(12)
+		p.SetPos(200, 10)
+		c.Draw(p)
+
+		pagedata.MarshalOneToCreator(c, &pd)
+	}
+
+	c.SetOptimizer(optimize.New(optimize.Options{
+		CombineDuplicateDirectObjects:   true,
+		CombineIdenticalIndirectObjects: true,
+		CombineDuplicateStreams:         true,
+		CompressStreams:                 true,
+		UseObjectStreams:                true,
+		ImageQuality:                    90,
+		ImageUpperPPI:                   150,
+	}))
+
+	of, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+
+	defer of.Close()
+
+	c.Write(of)
+	return nil
 }

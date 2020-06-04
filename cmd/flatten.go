@@ -29,6 +29,10 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
+var (
+	ensureAncestor bool
+)
+
 // flattenCmd represents the flatten command
 var flattenCmd = &cobra.Command{
 	Use:   "flatten [exam] [stage]",
@@ -108,6 +112,7 @@ rechecked`,
 
 			g.SetBackgroundIsVanilla(OpticalVanilla)
 			g.SetOpticalShrink(OpticalShrink)
+			g.SetChangeAncestor(ensureAncestor)
 
 			err = g.FlattenProcessedPapers(exam, stage)
 
@@ -136,7 +141,7 @@ rechecked`,
 
 func init() {
 	rootCmd.AddCommand(flattenCmd)
-
+	flattenCmd.Flags().BoolVar(&ensureAncestor, "ensure-ancestor", false, "Force rewriting of pagedata to ensure link to ancestor in anonPapers [default false]")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
