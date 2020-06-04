@@ -48,13 +48,17 @@ func GetComments(reader *pdf.PdfReader) (Comments, error) {
 						if err != nil {
 							return comments, err
 						}
-
+						if annot.Contents == nil {
+							continue
+						}
 						newComment := Comment{
 							Pos:  geo.Point{X: x, Y: y},
 							Text: annot.Contents.String(),
 							Page: p,
 						} // we fill in Label at render time
-
+						if _, ok := comments[p]; !ok {
+							comments[p] = []Comment{}
+						}
 						comments[p] = append(comments[p], newComment)
 
 					}

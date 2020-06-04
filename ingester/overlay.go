@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/gradex-cli/comment"
@@ -63,6 +64,35 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 		return err
 	}
 
+	// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ANCESTOR PATH MAP BY ANONYMOUS IDENTITY >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	// Map in the anonymous identities contained in the filenames in the ancestor path
+	// there is little advantage to reading pagedata, but it is much slower. If need be,
+	// the ancestor and the injected filename can be modified to suit theconvention this feature
+	// relies on, should that somehow not already be the case
+	ancestorMap := make(map[string]string)
+
+	if g.changeAncestor {
+		fmt.Printf("Ancestor Directory: %s\n", oc.AncestorPath)
+		ancestorPaths, err := g.GetFileList(oc.AncestorPath)
+
+		if err != nil {
+			oc.Msg.Send(fmt.Sprintf("Stopping early; couldn't get ancestor files because %v\n", err))
+			logger.Error().
+				Str("source-dir", oc.AncestorPath).
+				Str("error", err.Error()).
+				Msg(fmt.Sprintf("Stopping early; couldn't get ancestor files because %v\n", err))
+			return err
+		}
+
+		for _, file := range ancestorPaths {
+			anonKey := GetAnonymousFromPath(file)
+			if anonKey != "" {
+				ancestorMap[anonKey] = file
+			}
+			fmt.Printf("[%s] %s\n", anonKey, file)
+		}
+
+	}
 	// >>>>>>>>>>>>>>>>>> PREPARE FOR USING COVERS BY MAKING MAP OF AVAILABLE COVERS >>>>>>>>>>>>>>>>>>
 	coverPaths := []string{}
 	coverMap := make(map[string]string)
@@ -189,11 +219,30 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 		}
 
+		// figure out if we have an ancestorPath, if we are in changeAncestor mode
+		ancestorPath := "" //default to being "off"
+
+		if g.changeAncestor {
+
+			key := GetAnonymousFromPath(inPath)
+
+			if ap, ok := ancestorMap[key]; ok {
+				ancestorPath = ap
+				fmt.Printf("FOUND: %s->%s\n", key, ap)
+			} else {
+				msg := fmt.Sprintf("Error: Can't find ancestor for %s using key %s in this map:", inPath, key)
+				fmt.Println(msg)
+				util.PrettyPrintStruct(ancestorMap)
+				return errors.New(msg)
+			}
+		}
+
 		// this is a file-level task, so we we will sort per-page updates
 		// to pageData at the child step
 		overlayTasks = append(overlayTasks, OverlayTask{
 			InputPath:        inPath,
 			CoverPath:        coverPath,
+			AncestorPath:     ancestorPath,
 			PageCount:        count,
 			ProcessDetail:    oc.ProcessDetail,
 			NewFieldMap:      newFieldMap,
@@ -302,7 +351,11 @@ func (g *Ingester) OverlayOnePDF(ot OverlayTask, logger *zerolog.Logger) (int, e
 	// need page count to find the jpeg files again later
 	numPages, err := CountPages(ot.InputPath)
 
-	// find coursecode in these pages - assume belong SAME assignment. Not true of future bu-page mode
+	// find coursecode in these pages - assume belong SAME exam/assignment
+	// different authors can be present in same file
+	// but if mixing actual exams for processing - then this needs modifying to work per page
+	// there is an element of protecting against partially-present pagedata, but
+	// that was from before pagedata had been "proven" in usage.
 	var courseCode string
 OUTER:
 	for _, v := range ot.OldPageDataMap {
@@ -363,6 +416,83 @@ OUTER:
 		comments[key] = pageComments
 	}
 
+	// >>>>>>>>>>>>>>>>>> Get ancestor pagedata >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	// do this before we need it so we don't waste time on image processing
+	// if there is an issue
+
+	var ancestorPageDataMap, currentPageDataMap map[int]pagedata.PageData
+	var currentPageSummaryMap, ancestorPageSummaryMap map[int]PageReport
+
+	if ot.AncestorPath != "" {
+
+		ancestorPageDataMap, err = pagedata.UnMarshalAllFromFile(ot.AncestorPath)
+
+		if err != nil {
+			msg := fmt.Sprintf("Can't read from ancestor file (%s) because: %v\n", ot.InputPath, err)
+			logger.Error().
+				Str("file", ot.InputPath).
+				Str("ancestor", ot.AncestorPath).
+				Str("error", err.Error()).
+				Msg(msg)
+			ot.Msg.Send(msg)
+			fmt.Println(msg)
+			return 0, err
+		}
+
+		if len(ancestorPageDataMap) != numPages {
+			msg := fmt.Sprintf("Wrong number of pages in ancestor pagedata, got %d, want %d\n", len(ancestorPageDataMap), numPages)
+			logger.Error().
+				Str("file", ot.InputPath).
+				Str("ancestor", ot.AncestorPath).
+				Str("error", err.Error()).
+				Msg(msg)
+			ot.Msg.Send(msg)
+			fmt.Println(msg)
+			return 0, err
+		}
+
+		ancestorPageSummaryMap, err = GetPageSummaryMap(ancestorPageDataMap)
+		if err != nil {
+			msg := fmt.Sprintf("Ancestor pagedata does not link correctly")
+			logger.Error().
+				Str("file", ot.InputPath).
+				Str("ancestor", ot.AncestorPath).
+				Str("error", err.Error()).
+				Msg(msg)
+			ot.Msg.Send(msg)
+			fmt.Println(msg)
+			return 0, err
+		}
+
+		currentPageDataMap, err = pagedata.UnMarshalAllFromFile(ot.InputPath)
+
+		if err != nil {
+			msg := fmt.Sprintf("Can't read from current file (%s) because: %v\n", ot.InputPath, err)
+			logger.Error().
+				Str("file", ot.InputPath).
+				Str("error", err.Error()).
+				Msg(msg)
+			ot.Msg.Send(msg)
+			fmt.Println(msg)
+			return 0, err
+		}
+
+		currentPageSummaryMap, err = GetPageSummaryMap(currentPageDataMap)
+		if err != nil {
+			msg := fmt.Sprintf("Current pagedata does not link correctly")
+			logger.Error().
+				Str("file", ot.InputPath).
+				Str("ancestor", ot.AncestorPath).
+				Str("error", err.Error()).
+				Msg(msg)
+			ot.Msg.Send(msg)
+			fmt.Println(msg)
+			return 0, err
+		}
+	}
+
+	// >>>>>>>>>>>>>>>>>>>>> START PROCESSING IMAGES >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 	err = ConvertPDFToJPEGs(ot.InputPath, jpegPath, jpegFileOption)
 	if err != nil {
 		logger.Error().
@@ -411,12 +541,82 @@ OUTER:
 
 		previousPageData = append(previousPageData, oldThisPageDataCurrent)
 
-		thisPageData.Previous = previousPageData
-
 		// Now we CONSTRUCT the NEW current PageData
 		// copy over what we had, first:
-
 		newThisPageDataCurrent := oldThisPageDataCurrent
+		ancestorFor := oldThisPageDataCurrent.Process.For
+
+		// swap in new ancestor's item description (mainly to get the "what" so that
+		// the processed version of this file can be ingested correctly)
+		if g.changeAncestor {
+			//change item
+			ancestorPage, ok := ancestorPageDataMap[imgIdx]
+			if !ok {
+				logger.Error().
+					Str("file", ot.InputPath).
+					Msg("No ancestor pagedata in file")
+				return 0, err
+			}
+
+			oldItem := newThisPageDataCurrent.Item
+
+			newItem := ancestorPage.Current.Item
+
+			newThisPageDataCurrent.Item = newItem
+
+			aLink := ancestorPageSummaryMap[imgIdx].FirstLink
+			cLink := currentPageSummaryMap[imgIdx].FirstLink
+
+			logger.Info().
+				Str("file", ot.InputPath).
+				Str("old-what", oldItem.What).
+				Str("old-who", oldItem.Who).
+				Str("old-when", oldItem.When).
+				Str("new-what", newItem.What).
+				Str("new-who", newItem.Who).
+				Str("new-when", newItem.When).
+				Str("ancestor-first-link", aLink).
+				Str("current-first-link", cLink).
+				Msg("ChangeAncestor pagedata summary")
+
+			linkPD := pagedata.PageDetail{
+				Item:    newItem,
+				UUID:    cLink,
+				Follows: aLink,
+				Process: pagedata.ProcessDetail{
+					UUID:     safeUUID(),
+					UnixTime: time.Now().UnixNano(),
+					Name:     "change-ancestor",
+					By:       "gradex-cli",
+					ToDo:     "inject",
+					For:      ancestorFor,
+				},
+			}
+
+			rootPD := pagedata.PageDetail{
+				Item:    newItem,
+				UUID:    aLink,
+				Follows: "",
+				Process: pagedata.ProcessDetail{
+					UUID:     safeUUID(),
+					UnixTime: time.Now().UnixNano(),
+					Name:     "change-ancestor",
+					By:       "gradex-cli",
+					ToDo:     "inject",
+					For:      ancestorFor,
+				},
+			}
+
+			if aLink != cLink { //only update if not already an ancestor
+				//this should hopefully avoid a cycle in the page.
+				previousPageData = append(previousPageData, linkPD)
+				previousPageData = append(previousPageData, rootPD)
+			}
+
+		}
+
+		// delay this til after doing ancestor changes to previousPageData
+		thisPageData.Previous = previousPageData
 
 		// now add in things we can only know now
 		// like page number, UUID etc.
@@ -540,6 +740,8 @@ OUTER:
 		}
 
 		thisPageData.Current.Data = data
+
+		//------------- ANCESTRY --------------------------------------------
 
 		//-------------- PREFILLS -------------------------------------------
 

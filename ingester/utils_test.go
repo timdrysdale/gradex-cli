@@ -6,6 +6,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGetAnonymousFromPath(t *testing.T) {
+	assert.Equal(t, "B999999", GetAnonymousFromPath("Practice-B999999-maTDD-marked-comments.pdf"))
+	assert.Equal(t, "B999999", GetAnonymousFromPath("Some- Really Long PDF NAme thing Practice-B999999.pdf"))
+}
+
 func TestShortenBaseFileName(t *testing.T) {
 
 	assert.Equal(t, "s0000000_attempt_2020-05-01-02-00-00", shortenBaseFileName("PGEEnnnn A Super Long Exam Name - Exam Dropbox_s0000000_attempt_2020-05-01-02-00-00_PGEEnnnn-B000000"))

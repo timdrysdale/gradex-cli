@@ -110,8 +110,7 @@ func TestSelectSetsBelow10(t *testing.T) {
 
 		expectedActiveCount := setSize
 
-		countOK := expectedActiveCount == countActive(fm) || (expectedActiveCount+1) == countActive(fm)
-
+		countOK := expectedActiveCount == countActive(fm)
 		if !countOK {
 			failedSizes = append(failedSizes, countActive(fm))
 		}
@@ -142,7 +141,7 @@ func TestSelectSets11To100(t *testing.T) {
 
 		selectByPercent(&fm, requiredPercent(setSize, 10, 10))
 
-		countOK := expectedActiveCount == countActive(fm) || (expectedActiveCount+1) == countActive(fm)
+		countOK := expectedActiveCount == countActive(fm)
 
 		if !countOK {
 			failedSizes = append(failedSizes, countActive(fm))
@@ -172,9 +171,9 @@ func TestSelectSetsAbove100(t *testing.T) {
 
 		selectByPercent(&fm, requiredPercent(setSize, 10, 10))
 
-		expectedActiveCount := int(0.1 * float64(setSize))
+		expectedActiveCount := int(math.Ceil(0.1 * float64(setSize)))
 
-		countOK := expectedActiveCount == countActive(fm) || (expectedActiveCount+1) == countActive(fm)
+		countOK := expectedActiveCount == countActive(fm)
 
 		if !countOK {
 			failedSizes = append(failedSizes, countActive(fm))

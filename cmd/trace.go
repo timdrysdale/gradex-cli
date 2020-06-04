@@ -126,7 +126,7 @@ func init() {
 	traceCmd.Flags().StringVarP(&traceWho, "who", "w", "", "Name of actor to which to confine the check [default is to read all files at that stage]")
 	traceCmd.Flags().BoolVarP(&refreshAnon, "refresh-anon", "r", false, "Reread the pagedata from the first stage (normally only needed after new un-seen submission added) [default false]")
 	traceCmd.Flags().BoolVarP(&showOK, "verbose", "v", false, "Show the OK files as well [default false]")
-	traceCmd.Flags().BoolVarP(&reconcile, "cross-ref", "c", false, "cross-ref all source pages link to a page in specified dir [default false]")
+	traceCmd.Flags().BoolVar(&reconcile, "cross-ref", false, "cross-ref all source pages link to a page in specified dir [default false]")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

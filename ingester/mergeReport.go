@@ -113,7 +113,7 @@ func (g *Ingester) ReportOnProcessedDir(exam, dir string, showOK bool, reconcile
 		}
 	}
 
-	fmt.Printf("Destination: Found %d files and %d unique pages in %s\n", len(files), len(destPages), dir)
+	fmt.Printf("Destination: Found %d files and %d unique pages in %s\n", len(destMap), len(destPages), dir)
 
 	srcDir := g.GetExamDir(exam, anonPapers)
 	sourceFiles, err := g.GetFileList(srcDir)
@@ -146,10 +146,10 @@ func (g *Ingester) ReportOnProcessedDir(exam, dir string, showOK bool, reconcile
 		}
 	}
 
-	fmt.Printf("Source     : Found %d files and %d unique pages in %s\n", len(sourceFiles), len(srcPages), srcDir)
+	fmt.Printf("Source     : Found %d files and %d unique pages in %s\n", len(srcMap), len(srcPages), srcDir)
 
-	if len(files) != len(sourceFiles) {
-		fmt.Printf("WARNING: number of files differs in each location (%d != %d) ", len(files), len(sourceFiles))
+	if len(destMap) != len(srcMap) {
+		fmt.Printf("WARNING: number of files differs in each location (%d != %d) ", len(destMap), len(srcMap))
 		fmt.Printf("(This may not be an issue, because files may have been merged into batches or split)\n")
 	}
 	if len(destPages) != len(srcPages) {

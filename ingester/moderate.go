@@ -153,7 +153,7 @@ func selectByPercent(fileMap *map[string]bool, percent float64) {
 
 	r := rand.New(s) // initialize local pseudorandom generator
 
-	numRequired := int(math.Ceil(float64(len(*fileMap)) * percent / 100.0))
+	numRequired := int(math.Ceil(float64(len(*fileMap))*percent/100.0 - 1e-9))
 
 	// is the percentage high enough that selecting one less than the total is not enough?
 

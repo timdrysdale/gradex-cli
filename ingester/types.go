@@ -24,6 +24,7 @@ type FlattenTask struct {
 type OverlayTask struct {
 	InputPath        string
 	CoverPath        string //no cover page if empty ""
+	AncestorPath     string //no redo of ancestry if empty
 	Msg              *chmsg.Messager
 	NewFieldMap      map[int][]pagedata.Field
 	OldPageDataMap   map[int]pagedata.PageData //this has the individual bits filled in?
@@ -56,6 +57,7 @@ type OverlayCommand struct {
 	PathDecoration   string //this is the "-ma1" for marker1, "mo2" for moderator 2, "d" for done etc
 	OpticalBoxSpread string
 	ReadOpticalBoxes bool
+	AncestorPath     string
 }
 
 type CoverPageCommand struct {
