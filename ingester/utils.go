@@ -53,7 +53,7 @@ func shortenBaseFileName(baseFileName string) string {
 func GetAnonymousFromPath(path string) string {
 	var anonymous string
 
-	re := regexp.MustCompile("-(B[0-9]*)-")
+	re := regexp.MustCompile("-(B[0-9]*)[-.]")
 	matches := re.FindStringSubmatch(filepath.Base(path))
 	if len(matches) > 1 {
 		anonymous = matches[1]

@@ -72,8 +72,9 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 	ancestorMap := make(map[string]string)
 
 	if g.changeAncestor {
-
+		fmt.Printf("Ancestor Directory: %s\n", oc.AncestorPath)
 		ancestorPaths, err := g.GetFileList(oc.AncestorPath)
+
 		if err != nil {
 			oc.Msg.Send(fmt.Sprintf("Stopping early; couldn't get ancestor files because %v\n", err))
 			logger.Error().
@@ -88,6 +89,7 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 			if anonKey != "" {
 				ancestorMap[anonKey] = file
 			}
+			fmt.Printf("[%s] %s\n", anonKey, file)
 		}
 
 	}
@@ -226,6 +228,7 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 
 			if ap, ok := ancestorMap[key]; ok {
 				ancestorPath = ap
+				fmt.Printf("FOUND: %s->%s\n", key, ap)
 			} else {
 				msg := fmt.Sprintf("Error: Can't find ancestor for %s using key %s in this map:", inPath, key)
 				fmt.Println(msg)

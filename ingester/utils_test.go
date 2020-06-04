@@ -8,6 +8,7 @@ import (
 
 func TestGetAnonymousFromPath(t *testing.T) {
 	assert.Equal(t, "B999999", GetAnonymousFromPath("Practice-B999999-maTDD-marked-comments.pdf"))
+	assert.Equal(t, "B999999", GetAnonymousFromPath("Some- Really Long PDF NAme thing Practice-B999999.pdf"))
 }
 
 func TestShortenBaseFileName(t *testing.T) {
