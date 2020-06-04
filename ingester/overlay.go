@@ -82,7 +82,6 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 				Msg(fmt.Sprintf("Stopping early; couldn't get ancestor files because %v\n", err))
 			return err
 		}
-		fmt.Println(ancestorPaths)
 
 		for _, file := range ancestorPaths {
 			anonKey := GetAnonymousFromPath(file)
