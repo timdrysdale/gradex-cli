@@ -83,8 +83,15 @@ func UnMarshalAllFromFile(inputPath string) (map[int]PageData, error) {
 			found := false
 			for _, pd := range pds {
 				if pd.Current.UUID != "" {
-					pdMap[page] = pd
-					found = true
+					//check if higher revision than currently selected pd
+					if currentPD, ok := pdMap[page]; ok {
+						if pd.Revision > currentPD.Revision {
+							pdMap[page] = pd
+						}
+					} else { //no pd currently selected
+						pdMap[page] = pd
+						found = true
+					}
 				}
 			}
 			if !found {
