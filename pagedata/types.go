@@ -28,6 +28,7 @@ type Summary struct {
 type PageData struct {
 	Current  PageDetail   `json:"current"`
 	Previous []PageDetail `json:"previous"`
+	Revision int          `json:"revision"`
 }
 
 // use custom data for group authorship, if individual authorship must be tracked here
