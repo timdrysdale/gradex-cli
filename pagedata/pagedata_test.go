@@ -11,6 +11,7 @@ import (
 
 	"github.com/mattetti/filebuffer"
 	"github.com/stretchr/testify/assert"
+	"github.com/timdrysdale/gradex-cli/image"
 	"github.com/timdrysdale/gradex-cli/merge"
 	"github.com/timdrysdale/unipdf/v3/annotator"
 	"github.com/timdrysdale/unipdf/v3/creator"
@@ -141,6 +142,133 @@ func TestSelectHighestRevision(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(pdMap))
 	assert.Equal(t, pdrev1, pdMap[1])
+
+}
+
+func TestUpdatePageData(t *testing.T) {
+
+	// start with existing file with image, sidebar textfields, and pagedata
+	// load, add pagedata, save
+	// read pagedata and check updated
+	// do visual difference check
+	// do textfield check
+
+	textFieldValue := "It's a test field!"
+	originalPDF := "./test/test-update.pdf"
+	imagePath := "./img/test.jpg"
+	updatedPDF := "./test/test-update-rev1.pdf"
+
+	c := creator.New()
+	c.SetPageMargins(0, 0, 0, 0) // we're not printing so use the whole page
+	c.SetPageSize(creator.PageSizeA4)
+
+	page := c.NewPage()
+
+	img, err := c.NewImageFromFile(imagePath)
+	assert.NoError(t, err)
+
+	img.SetPos(150, 50)
+	img.SetWidth(300)
+	img.SetHeight(300)
+	c.Draw(img)
+
+	p := c.NewParagraph("Test update page for github.com/timdrysdale/gradex-cli/pdfpagedata")
+	p.SetFontSize(12)
+	p.SetPos(100, 10)
+	c.Draw(p)
+
+	pd := PageData{
+		Current: PageDetail{
+			Is:   IsPage,
+			UUID: "69197384-fd15-42ac-ac16-82dbe4d52dd0",
+		},
+		Previous: []PageDetail{
+			PageDetail{
+				Is:   IsPage,
+				UUID: "69197384-fd15-42ac-ac16-82dbe4d52dd0",
+				Data: []Field{
+					Field{
+						Key:   "key",
+						Value: "value",
+					},
+				},
+			},
+		},
+	}
+
+	MarshalOneToCreator(c, &pd)
+
+	form := pdf.NewPdfAcroForm()
+
+	tfopt := annotator.TextFieldOptions{Value: textFieldValue}
+	name := fmt.Sprintf("viewer")
+
+	textf, err := annotator.NewTextField(page, name, []float64{100, 200, 150, 250}, tfopt)
+	assert.NoError(t, err)
+
+	*form.Fields = append(*form.Fields, textf.PdfField)
+	page.AddAnnotation(textf.Annotations[0].PdfAnnotation)
+
+	err = c.SetForms(form)
+	assert.NoError(t, err)
+
+	of, err := os.Create(originalPDF)
+	assert.NoError(t, err)
+
+	defer of.Close()
+
+	c.SetOptimizer(optimize.New(optimize.Options{
+		CombineDuplicateDirectObjects:   true,
+		CombineIdenticalIndirectObjects: true,
+		CombineDuplicateStreams:         true,
+		CompressStreams:                 true,
+		UseObjectStreams:                true,
+		ImageQuality:                    90,
+		ImageUpperPPI:                   150,
+	}))
+
+	c.Write(of)
+
+	pdMap := make(map[int]PageData)
+
+	pdMap[1] = PageData{
+		Revision: 1,
+		Current: PageDetail{
+			Is: IsPage,
+			Item: ItemDetail{
+				What: "Short name",
+			},
+			UUID: "69197384-fd15-42ac-ac16-82dbe4d52dd0",
+		},
+		Previous: []PageDetail{
+			PageDetail{
+				Is:   IsPage,
+				UUID: "69197384-fd15-42ac-ac16-82dbe4d52dd0",
+				Data: []Field{
+					Field{
+						Key:   "key",
+						Value: "value",
+					},
+				},
+			},
+		},
+	}
+
+	err = AddPageDataToPDF(originalPDF, updatedPDF, pdMap)
+
+	result, err := image.VisuallyIdenticalMultiPagePDFByConvert(originalPDF, updatedPDF)
+	assert.NoError(t, err)
+	assert.Equal(t, true, result)
+
+	pdMapUpdated, err := UnMarshalAllFromFile(updatedPDF)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(pdMapUpdated))
+	assert.Equal(t, pdMap[1], pdMapUpdated[1])
+
+	field, err := getPdfFieldData(updatedPDF, "viewer")
+
+	assert.NoError(t, err)
+	assert.Equal(t, field, textFieldValue)
 
 }
 
