@@ -271,7 +271,7 @@ func (g *Ingester) AddModerateInActiveBar(exam string) error {
 }
 
 func (g *Ingester) AddEnterActiveBar(exam string, enterer string) error {
-	logger := g.logger.With().Str("process", "add-check-bar").Logger()
+	logger := g.logger.With().Str("process", "add-enter-active-bar").Logger()
 	mc := chmsg.MessagerConf{
 		ExamName:     exam,
 		FunctionName: "overlay",
