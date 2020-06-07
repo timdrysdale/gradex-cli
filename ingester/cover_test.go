@@ -64,7 +64,7 @@ func TestSelectPageDetailsWithMarks(t *testing.T) {
 
 	winnerA := pagedata.PageDetail{
 		Process: pagedata.ProcessDetail{
-			Name: "enter-active-bar",
+			Name: "merge-entered",
 			For:  "A",
 		},
 	}
@@ -85,7 +85,7 @@ func TestSelectPageDetailsWithMarks(t *testing.T) {
 			},
 			pagedata.PageDetail{
 				Process: pagedata.ProcessDetail{
-					Name: "enter-inactive-bar",
+					Name: "enter-active-bar",
 					For:  "C",
 				},
 			},
