@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
@@ -64,7 +65,7 @@ func TestSelectPageDetailsWithMarks(t *testing.T) {
 
 	winnerA := pagedata.PageDetail{
 		Process: pagedata.ProcessDetail{
-			Name: "enter-active-bar",
+			Name: "merge-entered",
 			For:  "A",
 		},
 	}
@@ -85,7 +86,7 @@ func TestSelectPageDetailsWithMarks(t *testing.T) {
 			},
 			pagedata.PageDetail{
 				Process: pagedata.ProcessDetail{
-					Name: "enter-inactive-bar",
+					Name: "enter-active-bar",
 					For:  "C",
 				},
 			},
@@ -326,4 +327,32 @@ func TestCoverPage(t *testing.T) {
 	err = g.CoverPage(cp, &logger)
 
 	assert.NoError(t, err)
+}
+
+func TestQuestionSubstitutions(t *testing.T) {
+
+	foo, err := strconv.ParseFloat("3", 64)
+	assert.NoError(t, err)
+	assert.Equal(t, 3.0, foo)
+
+	QMap := map[string]string{
+		"A1":   "12",
+		"A14":  "-", //4.5
+		"A115": "-", //3
+	}
+
+	MarkSubMap, err := getMarkSubMap("test-cover", "B000000")
+
+	assert.NoError(t, err)
+
+	QMap = applyMarkSubMap(QMap, MarkSubMap)
+
+	QSubMap, err := getQSubMap("test-cover")
+
+	assert.NoError(t, err)
+
+	QMap = applyQSubMap(QMap, QSubMap)
+
+	assert.Equal(t, "19.5", QMap["A1"])
+
 }

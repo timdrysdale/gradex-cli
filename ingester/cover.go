@@ -3,6 +3,7 @@ package ingester
 import (
 	"fmt"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"sort"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
+	"github.com/timdrysdale/gradex-cli/util"
 	"github.com/timdrysdale/pool"
 	"vbom.ml/util/sortorder"
 )
@@ -134,13 +136,68 @@ func DoOneCoverPage(ct CoverPageTask, logger *zerolog.Logger) error {
 
 	pageDetails := selectPageDetailsWithMarks(pdMap)
 
-	Qmap := getQMap(pageDetails)
+	QMap := getQMap(pageDetails)
+
+	originalQMap := QMap
 
 	for _, k := range cp.Questions {
 		k = strings.TrimSpace(strings.ToUpper(k))
-		if _, ok := Qmap[k]; !ok {
-			Qmap[k] = "-"
+		if _, ok := QMap[k]; !ok {
+			QMap[k] = "-"
 		}
+	}
+
+	// put missing marks back into weird named questions that
+	// are missing marks because the mark is in the name section
+	MarkSubMap, err := getMarkSubMap(cp.ConfigPath, pageDetails[0].Item.Who)
+	if err == nil {
+		fmt.Printf("Applying Mark substitutions for %s\n", pageDetails[0].Item.Who)
+		QMap = applyMarkSubMap(QMap, MarkSubMap)
+		logger.Info().
+			Str("file", path).
+			Str("path", cp.ConfigPath).
+			Str("who", pageDetails[0].Item.Who).
+			Msg("Found mark-substitutions-<who>.csv")
+	} else {
+		logger.Error().
+			Str("file", path).
+			Str("error", err.Error()).
+			Str("path", cp.ConfigPath).
+			Str("who", pageDetails[0].Item.Who).
+			Msg("No mark-substitutions-<who>.csv available")
+	}
+
+	// figure out which "proper" questions to add these marks to
+	QSubMap, err := getQSubMap(cp.ConfigPath)
+
+	if err == nil {
+		fmt.Printf("Applying Question substitutions for %s\n", pageDetails[0].Item.Who)
+		QMap = applyQSubMap(QMap, QSubMap)
+		logger.Info().
+			Str("file", path).
+			Str("path", cp.ConfigPath).
+			Msg("Found question-substitutions.csv")
+	} else {
+		logger.Error().
+			Str("file", path).
+			Str("error", err.Error()).
+			Str("path", cp.ConfigPath).
+			Msg("No question-substitutions.csv available")
+	}
+
+	if !reflect.DeepEqual(originalQMap, QMap) {
+
+		fmt.Printf("Question substitutions made for %s\nWas:\n", pageDetails[0].Item.Who)
+		util.PrettyPrintStruct(originalQMap)
+		fmt.Println("Now:")
+		util.PrettyPrintStruct(QMap)
+
+		logger.Info().
+			Str("original", fmt.Sprintf("%v", originalQMap)).
+			Str("updated", fmt.Sprintf("%v", QMap)).
+			Str("path", cp.ConfigPath).
+			Str("who", pageDetails[0].Item.Who).
+			Msg("Qmap update")
 	}
 
 	pageNumber := 0 //starts at zero
@@ -160,7 +217,7 @@ func DoOneCoverPage(ct CoverPageTask, logger *zerolog.Logger) error {
 
 	fields := []pagedata.Field{}
 
-	for k, v := range Qmap {
+	for k, v := range QMap {
 		fields = append(fields, pagedata.Field{
 			Key:   "pf-q-" + k,
 			Value: v,
@@ -178,7 +235,7 @@ func DoOneCoverPage(ct CoverPageTask, logger *zerolog.Logger) error {
 	Prefills[pageNumber]["for"] = thisPageData.Current.Process.For
 
 	var qkeys []string
-	for k := range Qmap {
+	for k := range QMap {
 		qkeys = append(qkeys, k)
 	}
 
@@ -188,7 +245,7 @@ func DoOneCoverPage(ct CoverPageTask, logger *zerolog.Logger) error {
 		question := fmt.Sprintf("question-%02d", idx)
 		mark := fmt.Sprintf("mark-awarded-%02d", idx)
 		Prefills[pageNumber][question] = qk
-		Prefills[pageNumber][mark] = Qmap[qk]
+		Prefills[pageNumber][mark] = QMap[qk]
 
 	}
 

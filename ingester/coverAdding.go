@@ -2,10 +2,13 @@ package ingester
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/gocarina/gocsv"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
@@ -78,9 +81,11 @@ func getNum(mark string) (float64, error) {
 
 func selectPageDetailsWithMarks(pdMap map[int]pagedata.PageData) []pagedata.PageDetail {
 
-	option1 := "enter-active-bar"
-	option2 := "merge-marked"
-	option3 := "flatten-marked"
+	//TODO select option based on whether enter active or inactive ....
+	activeOption0 := "merge-entered"
+	activeOption1 := "flatten-entered"
+	inactiveOption0 := "merge-marked"
+	inactiveOption1 := "flatten-marked"
 
 	// get the custom data fields for each process
 	// page -> process -> PageDetail
@@ -98,45 +103,182 @@ func selectPageDetailsWithMarks(pdMap map[int]pagedata.PageData) []pagedata.Page
 
 	}
 
-	// chose the most appropriate process (enter-active-bar is more recent than merge-marked.)
-	// enter-active-bar won'y be present if the paper was marked with the keyboard
+	// chose the most appropriate process (merge-entered is more recent than merge-marked.)
+	// enter-active-bar won't be present if the paper was marked with the keyboard
 	pageDetails := []pagedata.PageDetail{}
 
 	for _, pm := range processMap {
 
-		if pd, ok := pm[option1]; ok {
+		// check all processes in this page, and look for enter-active-bar
 
-			pageDetails = append(pageDetails, pd)
+		active := false
 
-			//logger.Info().
-			//	Str("file", path).
-			//	Int("page", pageNumber).
-			//	Msg("Using enter-active-bar for add-cover question data")
+		for key, _ := range pm {
 
-		} else if pd, ok := pm[option2]; ok {
+			if key == "enter-active-bar" {
+				active = true
+			}
 
-			pageDetails = append(pageDetails, pd)
-			//logger.Info().
-			//	Str("file", path).
-			//	Int("page", pageNumber).
-			//	Msg("Using merge-marked for add-cover question data")
+		}
 
-		} else if pd, ok := pm[option3]; ok {
+		switch active {
 
-			pageDetails = append(pageDetails, pd)
+		case true:
 
-		} else {
+			if pd, ok := pm[activeOption0]; ok {
 
-			//logger.Error().
-			//	Str("file", path).
-			//	Int("page", pageNumber).
-			//	Msg("Error no recognised source of marks - skipping page marks")
-			//fmt.Printf("WARN: cover-page for %s: page %d: no recognised source of marks; skipping\n", path, pageNumber)
+				pageDetails = append(pageDetails, pd)
+
+				//logger.Info().
+				//	Str("file", path).
+				//	Int("page", pageNumber).
+				//	Msg("Using enter-active-bar for add-cover question data")
+
+			} else if pd, ok := pm[activeOption1]; ok {
+
+				pageDetails = append(pageDetails, pd)
+				//logger.Info().
+				//	Str("file", path).
+				//	Int("page", pageNumber).
+				//	Msg("Using merge-marked for add-cover question data")
+
+			}
+		case false:
+
+			if pd, ok := pm[inactiveOption0]; ok {
+
+				pageDetails = append(pageDetails, pd)
+
+				//logger.Info().
+				//	Str("file", path).
+				//	Int("page", pageNumber).
+				//	Msg("Using enter-active-bar for add-cover question data")
+
+			} else if pd, ok := pm[inactiveOption1]; ok {
+
+				pageDetails = append(pageDetails, pd)
+				//logger.Info().
+				//	Str("file", path).
+				//	Int("page", pageNumber).
+				//	Msg("Using merge-marked for add-cover question data")
+
+			}
 
 		}
 
 	}
 	return pageDetails
+}
+
+type QuestionSub struct {
+	OldQ string `csv:"oldQ"`
+	NewQ string `csv:"newQ"`
+}
+
+type MarkSub struct {
+	Q    string `csv:"Q"`
+	Mark string `csv:"mark"`
+}
+
+func applyQSubMap(Qmap map[string]string, QSubMap map[string]string) map[string]string {
+
+	for Q, mark := range Qmap {
+
+		if newQ, ok := QSubMap[Q]; ok {
+			if currentMark, ok := Qmap[newQ]; ok {
+
+				// asssume denominators have gone!
+
+				var currentVal float64
+
+				currentVal, err := getNum(currentMark)
+
+				if err != nil {
+					//fmt.Printf("Error applying QSubMap, %s is not a float64\n", currentMark)
+					currentVal = 0
+				}
+
+				var markVal float64
+
+				markVal, err = getNum(mark)
+				if err != nil {
+					//fmt.Printf("Error applying QSubMap, %s is not a float64\n", mark)
+					markVal = 0
+				}
+
+				if currentMark == "-" && mark == "-" {
+					Qmap[newQ] = "-"
+				} else {
+
+					Qmap[newQ] = fmt.Sprintf("%g", currentVal+markVal) //add to an existing mark if present
+				}
+
+			} else {
+				Qmap[newQ] = mark
+			}
+			delete(Qmap, Q)
+		}
+
+	}
+
+	return Qmap
+
+}
+func applyMarkSubMap(Qmap map[string]string, MarkSubMap map[string]string) map[string]string {
+
+	for Q, _ := range Qmap {
+
+		if newMark, ok := MarkSubMap[Q]; ok {
+			Qmap[Q] = newMark
+		}
+
+	}
+
+	return Qmap
+
+}
+
+func getQSubMap(configPath string) (map[string]string, error) {
+
+	subs := []QuestionSub{}
+
+	subMap := make(map[string]string)
+
+	subPath := filepath.Join(configPath, "question-substitutions.csv")
+
+	subFile, err := os.Open(subPath)
+	if err != nil {
+		return subMap, err
+	}
+
+	err = gocsv.UnmarshalFile(subFile, &subs)
+
+	for _, line := range subs {
+		subMap[line.OldQ] = line.NewQ
+	}
+
+	return subMap, err
+}
+
+func getMarkSubMap(configPath, who string) (map[string]string, error) {
+
+	subs := []MarkSub{}
+	subMap := make(map[string]string)
+
+	subPath := filepath.Join(configPath, "mark-substitutions-"+who+".csv")
+
+	subFile, err := os.Open(subPath)
+	if err != nil {
+		return subMap, err
+	}
+
+	err = gocsv.UnmarshalFile(subFile, &subs)
+
+	for _, line := range subs {
+		subMap[line.Q] = line.Mark
+	}
+
+	return subMap, err
 }
 
 func getQMap(pageDetails []pagedata.PageDetail) map[string]string {
