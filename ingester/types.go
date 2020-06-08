@@ -64,6 +64,7 @@ type CoverPageCommand struct {
 	Questions      []string
 	FromPath       string
 	ToPath         string
+	ConfigPath     string
 	ExamName       string
 	TemplatePath   string
 	SpreadName     string

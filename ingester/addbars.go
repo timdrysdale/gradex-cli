@@ -474,6 +474,7 @@ func (g *Ingester) AddCheckCoverBar(exam string, checker string) error {
 		Questions:      questions,
 		FromPath:       g.GetExamDir(exam, enterProcessed),
 		ToPath:         g.GetExamDir(exam, checkerCover),
+		ConfigPath:     g.GetExamDir(exam, config),
 		ExamName:       exam,
 		TemplatePath:   g.OverlayLayoutSVG(),
 		SpreadName:     "addition",
