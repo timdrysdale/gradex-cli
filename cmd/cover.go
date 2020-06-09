@@ -31,6 +31,7 @@ import (
 // coverCmd represents the cover command
 var coverCmd = &cobra.Command{
 	Use:   "cover [exam]",
+	Args:  cobra.ExactArgs(1),
 	Short: "Add final marks cover to exam",
 	Long: `This merges the existing file, and flattened addition check cover, with a new "final" mark cover.
 
@@ -43,7 +44,7 @@ is needed - there's no one to keep track of now!
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		checker := "X"
-		exam := os.Args[3]
+		exam := os.Args[2]
 
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>

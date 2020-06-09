@@ -50,7 +50,11 @@ func isMarkSubRule(cq coverQ) (string, string, bool) {
 
 	if len(tokens) == 3 {
 		//fmt.Printf("MQ:%s: %d,%v\n", cq.Rule, len(tokens), tokens)
-		return tokens[1], tokens[2], true
+		num, err := getNumStr(tokens[2])
+		if err != nil {
+			return "", "", false
+		}
+		return cq.Q, num, true
 	}
 
 	if len(tokens) == 0 { // not a double rule
@@ -59,7 +63,11 @@ func isMarkSubRule(cq coverQ) (string, string, bool) {
 		//fmt.Printf("M:%s: %d,%v\n", cq.Rule, len(tokens), tokens)
 
 		if len(tokens) == 2 {
-			return cq.Q, tokens[0], true
+			num, err := getNumStr(tokens[0])
+			if err != nil {
+				return "", "", false
+			}
+			return cq.Q, num, true
 		}
 
 	}
@@ -211,6 +219,34 @@ func getNum(mark string) (float64, error) {
 		return strconv.ParseFloat(tokens[1], 64)
 	} else {
 		return 0, fmt.Errorf("Mark %s not recognised as a number or fraction", mark)
+	}
+}
+
+func getNumStr(mark string) (string, error) {
+
+	re := regexp.MustCompile("^([0-9]*\\.?[0-9]*)")
+
+	/*
+				    ^(\d*\.?\d*)\/?\\?-?\d*
+
+				     This regexp finds the numerator in fractions marked
+					with forward slash, backward slash or hypen
+					the denominator is ignored
+						^ beginning of line
+						\d* any number of digits
+						\.? optional dot
+						\d* any number of digits
+
+		             e.g. .5/23 -> .5 (half a mark!)
+
+	*/
+
+	tokens := re.FindStringSubmatch(strings.TrimSpace(mark))
+
+	if len(tokens) == 2 {
+		return tokens[1], nil
+	} else {
+		return "", fmt.Errorf("Mark %s not recognised as a number or fraction", mark)
 	}
 }
 
@@ -565,7 +601,7 @@ func getCoverQMap(pd pagedata.PageDetail) map[int]coverQ {
 
 }
 
-func finalMarksMap(pd pagedata.PageData, questions []string) map[string]string {
+func finalMarksMap(pd pagedata.PageData, questions []string) (map[string]string, map[string]bool) {
 
 	// we KNOW (we hope!) that the marks are on the front page, in a
 	// combination of pagedata and textfields (textfields only if
@@ -656,12 +692,17 @@ func finalMarksMap(pd pagedata.PageData, questions []string) map[string]string {
 			if is {
 				MarkSubMap[Q] = newValue
 			}
-			oldQ, newQ, is := isMarkSubRule(cq)
+			oldQ, newQ, is := isQSubRule(cq)
 			if is {
 				QSubMap[oldQ] = newQ
 			}
 		}
 	}
+
+	//fmt.Println("Mark sub")
+	//util.PrettyPrintStruct(MarkSubMap)
+	//fmt.Println("Q sub")
+	//util.PrettyPrintStruct(QSubMap)
 
 	QMap := make(map[string]string)
 
@@ -682,5 +723,11 @@ func finalMarksMap(pd pagedata.PageData, questions []string) map[string]string {
 		}
 	}
 
-	return QMap
+	skipMap := make(map[string]bool)
+
+	for _, cq := range coverQMap {
+		skipMap[cq.Q] = (!cq.OK) && (!cq.Fix)
+	}
+
+	return QMap, skipMap
 }

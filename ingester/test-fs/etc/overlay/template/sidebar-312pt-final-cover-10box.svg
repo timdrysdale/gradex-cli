@@ -16,7 +16,7 @@
    id="svg8"
    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
    sodipodi:docname="sidebar-312pt-final-cover-10box.svg"
-   inkscape:export-filename="/home/tim/03-DEV-CLI/ingester/test-fs/etc/overlay/template/sidebar-312pt-front-cover-10box.png"
+   inkscape:export-filename="/home/tim/03-DEV-CLI/ingester/test-fs/etc/overlay/template/sidebar-312pt-final-cover-10box.png"
    inkscape:export-xdpi="299.96201"
    inkscape:export-ydpi="299.96201">
   <defs
@@ -87,11 +87,11 @@
      pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
-     inkscape:pageopacity="0.0"
+     inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
      inkscape:cx="402.85614"
-     inkscape:cy="834.87655"
+     inkscape:cy="713.65825"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -414,7 +414,7 @@
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="textprefills"
-     style="display:inline">
+     style="display:none">
     <rect
        style="display:inline;opacity:1;fill:#f66aff;fill-opacity:1;stroke:none;stroke-width:0.23587966;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
        id="rect10548-tab00"

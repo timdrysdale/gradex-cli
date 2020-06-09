@@ -131,7 +131,13 @@ func DoOneFinalCoverPage(ct CoverPageTask, logger *zerolog.Logger) error {
 	if _, ok := pdMap[1]; !ok {
 		return errors.New("No pagedata at page one; needed for cover")
 	}
-	QMap := finalMarksMap(pdMap[1], cp.Questions)
+	QMap, skipMap := finalMarksMap(pdMap[1], cp.Questions)
+
+	for q, skip := range skipMap {
+		if skip {
+			fmt.Printf("%s: %s not addition checked\n", filepath.Base(path), q)
+		}
+	}
 
 	pageNumber := 0 //starts at zero
 
