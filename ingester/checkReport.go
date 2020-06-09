@@ -18,6 +18,61 @@ type Mark struct {
 	V string
 }
 
+func (g *Ingester) FinalReport(exam string) error {
+
+	s := csv.New()
+
+	s.SetFixedHeader([]string{"what", "who", "when"})
+
+	qfile := filepath.Join(g.GetExamDir(exam, config), "questions.csv")
+
+	reqdQ, err := GetRequiredQuestions(qfile)
+	if err != nil {
+		fmt.Println(err)
+	}
+	s.SetRequiredHeader(reqdQ)
+
+	files, err := g.GetFileList(g.GetExamDir(exam, finalCover))
+	fmt.Println(g.GetExamDir(exam, finalCover))
+	for _, file := range files {
+
+		fmt.Println(file)
+
+		if !IsPDF(file) {
+			continue
+		}
+
+		marks, item, err := GetMarksFromCoverPage(file)
+
+		if err != nil {
+			return fmt.Errorf("ERROR getting marks from %s", file)
+		}
+
+		line := s.Add()
+
+		line.Add("what", item.What)
+		line.Add("who", item.Who)
+		line.Add("when", item.When)
+
+		for _, mark := range marks {
+			line.Add(mark.Q, mark.V)
+		}
+
+	}
+
+	reportBase := fmt.Sprintf("FinalMarks-%s-%d.csv", shortenAssignment(exam), time.Now().Unix())
+	reportPath := filepath.Join(g.GetExamDir(exam, reports), reportBase)
+
+	f, err := os.OpenFile(reportPath, os.O_RDWR|os.O_CREATE, os.ModePerm)
+
+	defer f.Close()
+
+	_, err = s.WriteCSV(f)
+
+	return err
+
+}
+
 func (g *Ingester) CheckReport(exam string) error {
 
 	s := csv.New()

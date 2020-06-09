@@ -101,6 +101,13 @@ marks-provisional (csv format marks from cover sheets in 49-checker-cover)
 				fmt.Println(err)
 				os.Exit(1)
 			}
+		case "marks-final":
+			err = g.FinalReport(exam)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+
 		}
 	},
 }

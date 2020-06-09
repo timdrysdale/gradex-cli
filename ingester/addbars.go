@@ -613,42 +613,46 @@ func (g *Ingester) AddFinalCover(exam string, checker string) error {
 			Msg("Error add-final-cover")
 	}
 
-	procDetail = pagedata.ProcessDetail{
-		UUID:     safeUUID(),
-		UnixTime: time.Now().UnixNano(),
-		Name:     "final-cover",
-		By:       "gradex-cli",
-		ToDo:     "finishing",
-		For:      checker,
-	}
+	// Merge cover page with flattened file, rather than add bars
 
-	oc := OverlayCommand{
-		CoverPath:      g.GetExamDir(exam, finalCover),
-		FromPath:       g.GetExamDir(exam, checkerFlattened),
-		ToPath:         g.GetExamDir(exam, finalPapers),
-		ExamName:       exam,
-		TemplatePath:   g.OverlayLayoutSVG(),
-		SpreadName:     "check",
-		ProcessDetail:  procDetail,
-		Msg:            cm,
-		PathDecoration: "",
-	}
+	/*
+		procDetail = pagedata.ProcessDetail{
+			UUID:     safeUUID(),
+			UnixTime: time.Now().UnixNano(),
+			Name:     "final-cover",
+			By:       "gradex-cli",
+			ToDo:     "finishing",
+			For:      checker,
+		}
 
-	err = g.OverlayPapers(oc, &logger)
+		oc := OverlayCommand{
+			CoverPath:      g.GetExamDir(exam, finalCover),
+			FromPath:       g.GetExamDir(exam, checkerFlattened),
+			ToPath:         g.GetExamDir(exam, finalPapers),
+			ExamName:       exam,
+			TemplatePath:   g.OverlayLayoutSVG(),
+			SpreadName:     "check",
+			ProcessDetail:  procDetail,
+			Msg:            cm,
+			PathDecoration: "",
+		}
 
-	if err == nil {
-		cm.Send(fmt.Sprintf("Finished Processing add-final-cover UUID=%s\n", procDetail.UUID))
-		logger.Info().
-			Str("UUID", procDetail.UUID).
-			Str("exam", exam).
-			Msg("Finished add-final-cover")
-	} else {
-		logger.Error().
-			Str("UUID", procDetail.UUID).
-			Str("exam", exam).
-			Str("error", err.Error()).
-			Msg("Error add-final-cover")
-	}
+		err = g.OverlayPapers(oc, &logger)
+
+		if err == nil {
+			cm.Send(fmt.Sprintf("Finished Processing add-final-cover UUID=%s\n", procDetail.UUID))
+			logger.Info().
+				Str("UUID", procDetail.UUID).
+				Str("exam", exam).
+				Msg("Finished add-final-cover")
+		} else {
+			logger.Error().
+				Str("UUID", procDetail.UUID).
+				Str("exam", exam).
+				Str("error", err.Error()).
+				Msg("Error add-final-cover")
+		}
+	*/
 	return err
 
 }
