@@ -257,4 +257,7 @@ const (
 	MarkerProcessed   = markerProcessed
 	ModeratorActive   = moderatorActive
 	ModeratorInactive = moderatorInactive
+
+	//External stages
+	Checked = checked
 )

@@ -588,7 +588,7 @@ func (g *Ingester) AddFinalCover(exam string, checker string) error {
 
 	cp := CoverPageCommand{
 		Questions:      questions,
-		FromPath:       g.GetExamDir(exam, checkerFlattened),
+		FromPath:       g.GetExamDir(exam, checkerProcessed),
 		ToPath:         g.GetExamDir(exam, finalCover),
 		ConfigPath:     g.GetExamDir(exam, config),
 		ExamName:       exam,

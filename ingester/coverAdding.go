@@ -33,6 +33,10 @@ type coverQ struct {
 //q, newValue, is := isMarkSubRule(cq.Rule)
 func isMarkSubRule(cq coverQ) (string, string, bool) {
 
+	if cq.Rule == "-" { // substitute for no attempt
+		return cq.Q, "-", true
+	}
+
 	// first look for a double rule, and extract the mark sub bit
 	// then look for a single rule, and extract the mark sub bit
 
@@ -78,7 +82,9 @@ func isMarkSubRule(cq coverQ) (string, string, bool) {
 
 //oldQ, newQ, is := isQSubRule(cq.Rule)
 func isQSubRule(cq coverQ) (string, string, bool) {
-
+	if cq.Rule == "-" {
+		return "", "", false //this is only a mark subst rule
+	}
 	// first look for a double rule, and extract the Q sub bit
 	// then look for a single rule, and extract the Q sub bit
 

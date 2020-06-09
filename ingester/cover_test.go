@@ -194,7 +194,7 @@ func TestIsMarkSubRule(t *testing.T) {
 	}
 	Q, mark, is := isMarkSubRule(cq)
 	assert.True(t, is)
-	assert.Equal(t, "A2", Q)
+	assert.Equal(t, "A1", Q) //we change the original mark
 	assert.Equal(t, "15", mark)
 
 	cq = coverQ{
