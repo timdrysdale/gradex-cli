@@ -540,3 +540,115 @@ func (g *Ingester) AddCheckCoverBar(exam string, checker string) error {
 	return err
 
 }
+
+// Add a cover page summarising the finalised marking summary
+func (g *Ingester) AddFinalCover(exam string, checker string) error {
+	logger := g.logger.With().Str("process", "add-final-cover").Logger()
+	mc := chmsg.MessagerConf{
+		ExamName:     exam,
+		FunctionName: "overlay",
+		TaskName:     "add-final-cover",
+	}
+
+	cm := chmsg.New(mc, g.msgCh, g.timeout)
+
+	procDetail := pagedata.ProcessDetail{
+		UUID:     safeUUID(),
+		UnixTime: time.Now().UnixNano(),
+		Name:     "final-cover",
+		By:       "gradex-cli",
+		ToDo:     "finishing",
+		For:      checker,
+	}
+
+	questions := []string{}
+	if !g.SkipQuestionFile {
+		qfile := filepath.Join(g.GetExamDir(exam, config), "questions.csv")
+		qbytes, err := ioutil.ReadFile(qfile)
+		if err == nil {
+			questions = strings.Split(string(qbytes), ",")
+			logger.Info().
+				Str("UUID", procDetail.UUID).
+				Str("exam", exam).
+				Str("file", qfile).
+				Str("questions", string(qbytes)).
+				Msg("Got questions for final cover page")
+		} else {
+			logger.Info().
+				Str("UUID", procDetail.UUID).
+				Str("exam", exam).
+				Str("file", qfile).
+				Str("questions", string(qbytes)).
+				Msg("Error opening questions file for final cover page")
+			return fmt.Errorf("Error opening questions file %s for cover page", qfile)
+		}
+	}
+
+	fmt.Printf("Questions: %s\n", strings.Join(questions, ","))
+
+	cp := CoverPageCommand{
+		Questions:      questions,
+		FromPath:       g.GetExamDir(exam, checkerFlattened),
+		ToPath:         g.GetExamDir(exam, finalCover),
+		ConfigPath:     g.GetExamDir(exam, config),
+		ExamName:       exam,
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "final",
+		ProcessDetail:  procDetail,
+		PathDecoration: "-final",
+	}
+
+	err := g.FinalCoverPage(cp, &logger)
+	if err == nil {
+		cm.Send(fmt.Sprintf("Finished check-cover UUID=%s\n", procDetail.UUID))
+		logger.Info().
+			Str("UUID", procDetail.UUID).
+			Str("exam", exam).
+			Msg("Finished add-final-cover")
+	} else {
+		logger.Error().
+			Str("UUID", procDetail.UUID).
+			Str("exam", exam).
+			Str("error", err.Error()).
+			Msg("Error add-final-cover")
+	}
+
+	procDetail = pagedata.ProcessDetail{
+		UUID:     safeUUID(),
+		UnixTime: time.Now().UnixNano(),
+		Name:     "final-cover",
+		By:       "gradex-cli",
+		ToDo:     "finishing",
+		For:      checker,
+	}
+
+	oc := OverlayCommand{
+		CoverPath:      g.GetExamDir(exam, finalCover),
+		FromPath:       g.GetExamDir(exam, checkerFlattened),
+		ToPath:         g.GetExamDir(exam, finalPapers),
+		ExamName:       exam,
+		TemplatePath:   g.OverlayLayoutSVG(),
+		SpreadName:     "check",
+		ProcessDetail:  procDetail,
+		Msg:            cm,
+		PathDecoration: "",
+	}
+
+	err = g.OverlayPapers(oc, &logger)
+
+	if err == nil {
+		cm.Send(fmt.Sprintf("Finished Processing add-final-cover UUID=%s\n", procDetail.UUID))
+		logger.Info().
+			Str("UUID", procDetail.UUID).
+			Str("exam", exam).
+			Msg("Finished add-final-cover")
+	} else {
+		logger.Error().
+			Str("UUID", procDetail.UUID).
+			Str("exam", exam).
+			Str("error", err.Error()).
+			Msg("Error add-final-cover")
+	}
+	return err
+
+}

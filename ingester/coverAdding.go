@@ -5,17 +5,104 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/gocarina/gocsv"
 	"github.com/timdrysdale/gradex-cli/pagedata"
+	"vbom.ml/util/sortorder"
 )
 
 type Q struct {
 	Number  string
 	Section string
 	Mark    string
+}
+
+type coverQ struct {
+	Line int    //line number on cover, starting at top/zero
+	Q    string //question
+	OK   bool   //it is ok
+	Fix  bool   //needs fixing
+	Rule string //how to fix it
+	Mark string //mark value
+}
+
+//([0-9]*\\.?[0-9]*)
+//q, newValue, is := isMarkSubRule(cq.Rule)
+func isMarkSubRule(cq coverQ) (string, string, bool) {
+
+	// first look for a double rule, and extract the mark sub bit
+	// then look for a single rule, and extract the mark sub bit
+
+	// double rule: contains <question>-<mark>[/<outof>] (we throw away the <outof>)
+	// applies to the new question included in the rule
+	reMQsub := regexp.MustCompile("([a-zA-Z0-9]*)-([0-9]*\\.?[0-9]*)[\\/]?[0-9]*")
+
+	// single rule: contains only an int or floating point number, no letter, and we ditch the <outof>
+	// applies to the original question number on this line
+	// unless we demand a digit at the start of the string, this returns
+	// false positive on Qsub rule being found
+	reMSub := regexp.MustCompile("^([0-9][0-9]*\\.?[0-9]*)[\\/]?[0-9]*")
+
+	tokens := reMQsub.FindStringSubmatch(cq.Rule)
+
+	if len(tokens) == 3 {
+		//fmt.Printf("MQ:%s: %d,%v\n", cq.Rule, len(tokens), tokens)
+		return tokens[1], tokens[2], true
+	}
+
+	if len(tokens) == 0 { // not a double rule
+
+		tokens = reMSub.FindStringSubmatch(cq.Rule)
+		//fmt.Printf("M:%s: %d,%v\n", cq.Rule, len(tokens), tokens)
+
+		if len(tokens) == 2 {
+			return cq.Q, tokens[0], true
+		}
+
+	}
+
+	return "", "", false
+
+}
+
+//oldQ, newQ, is := isQSubRule(cq.Rule)
+func isQSubRule(cq coverQ) (string, string, bool) {
+
+	// first look for a double rule, and extract the Q sub bit
+	// then look for a single rule, and extract the Q sub bit
+
+	// double rule: contains <question>-<mark>[/<outof>] (we throw away the <outof>)
+	// applies to the new question included in the rule
+	reMQsub := regexp.MustCompile("([a-zA-Z0-9]*)-([0-9]*\\.?[0-9]*)[\\/]?[0-9]*")
+
+	// single rule: contains only the new question label
+	// applies to the original question number on this line
+	reQSub := regexp.MustCompile("[a-zA-Z][0-9][0-9]*")
+
+	tokens := reMQsub.FindStringSubmatch(cq.Rule)
+
+	// we don't use the second sub token tokens[2], but detecting three parts helps
+	// identify we have a double rule
+
+	if len(tokens) == 3 {
+		return cq.Q, tokens[1], true
+	}
+
+	if len(tokens) == 0 { //not a double rule
+
+		tokens = reQSub.FindStringSubmatch(cq.Rule)
+
+		if len(tokens) == 1 {
+			return cq.Q, tokens[0], true
+		}
+
+	}
+
+	return "", "", false
+
 }
 
 func isQ(key string) (string, string, bool) {
@@ -34,6 +121,54 @@ func isQ(key string) (string, string, bool) {
 	} else {
 
 		return "", "", false
+	}
+}
+
+// for getting ok/dofix/fixrule info from textfields on cover page
+func isCoverInfo(key string) (string, int, bool) {
+
+	if strings.Contains(key, "optical") {
+		return "", -1, false
+	}
+
+	re := regexp.MustCompile("tf-mark-(\\w*)-([0-9]*)")
+
+	tokens := re.FindStringSubmatch(key)
+
+	if len(tokens) == 3 {
+		// type, line,
+
+		line, err := strconv.ParseInt(strings.TrimSpace(tokens[2]), 10, 64)
+
+		if err != nil {
+			return "", -1, false
+		}
+
+		return tokens[1], int(line), true
+
+	} else {
+
+		return "", -1, false
+	}
+}
+
+// for getting values from textprefill
+func isCoverQ(key string) (string, bool) {
+
+	if strings.Contains(key, "optical") {
+		return "", false
+	}
+
+	re := regexp.MustCompile("pf-q-(\\w*)")
+
+	tokens := re.FindStringSubmatch(key)
+
+	if len(tokens) == 2 {
+		// questionNumber, type,
+		return tokens[1], true
+	} else {
+
+		return "", false
 	}
 }
 
@@ -377,4 +512,175 @@ func getQMap(pageDetails []pagedata.PageDetail) map[string]string {
 
 	return finalQmap
 
+}
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>> COVER QMAP >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+// get info from textfields, we'll figure out Question later on from prefills....
+// pass in the pagedata from the cover page only
+func getCoverQMap(pd pagedata.PageDetail) map[int]coverQ {
+
+	coverQMap := make(map[int]coverQ)
+
+	for _, item := range pd.Data {
+
+		// piece together the elements in a Q struct
+		// one by one as we find the textfields
+		// in the pagedata
+
+		if item.Value != "" {
+			what, line, is := isCoverInfo(item.Key)
+
+			if is {
+
+				if _, ok := coverQMap[line]; !ok {
+					coverQMap[line] = coverQ{
+						Line: line,
+					}
+				}
+
+				//get struct, update, and put back later
+				cq := coverQMap[line]
+
+				switch what {
+				case "ok":
+					cq.OK = !(item.Value == "") // true if non-empty
+				case "fix":
+					cq.Fix = !(item.Value == "")
+				case "new":
+					cq.Rule = strings.ToUpper(item.Value)
+				}
+
+				coverQMap[line] = cq
+
+			}
+
+		}
+	}
+
+	// we've no adding to do in this map
+	// because these lines _should_ be unique
+	// we will handle any adding/changes using the rules
+	return coverQMap
+
+}
+
+func finalMarksMap(pd pagedata.PageData, questions []string) map[string]string {
+
+	// we KNOW (we hope!) that the marks are on the front page, in a
+	// combination of pagedata and textfields (textfields only if
+	// there are corrections).
+	// Silly old self forgot to link explicitly the rows in the prefills
+	// the explicitly labelled text fields, BUT, that was probably because
+	// deep down we knew we could just do the same natural order key soring
+	// and end up where we need to be .... whilst keeping the page data
+	// all clean and tidy *cough*
+
+	// regexp to get Question label
+	// map the questions and values
+	// order the keys to make a list
+	// get the text field values
+	// act on any that are marked fix
+	// do regexp on fix.
+	// this is a strict-match scenario.
+	// IFF there is - with at least one word char either side, THEN it is a mark sub then Q sub
+	// if there is a - with info missing on one side then we throw an error, probably - too
+	// hard to be sure we know that the checker knew how we'd interpret it!
+	// we can always check with them, and reprocess it with it corrected.
+	// better that than getting a mark wrong through miscommunication
+	// even if this will be way slower for the process.
+	// If there are two hyphens, then we assume the required mark is a hyphen.
+	// If there is just a floating or integer number, we assume it is a new mark
+	// if it is not a number, we assume it is a label.
+	// if we have a question file, and it is not in the map, throw an error?
+	// maybe punt the error onto the console and carry on, just in case someone
+	// went for a tea break....
+
+	// we want the text fields from the current pagedata
+	coverQMap := getCoverQMap(pd.Current) //map of textfield info by line number
+
+	// find the pagedata.PageDetail with the front cover question labels and marks
+	var mergeEnteredPd pagedata.PageDetail
+	for _, previousPd := range pd.Previous {
+
+		if previousPd.Process.Name == "merge-entered" {
+			mergeEnteredPd = previousPd
+
+		}
+	}
+
+	// get the labels and marks into a map by question label
+	prefillMap := make(map[string]string)
+	for _, prefill := range mergeEnteredPd.Data {
+		q, is := isCoverQ(prefill.Key)
+		if is {
+			prefillMap[q] = prefill.Value
+		}
+	}
+
+	// recreate the order of the questions on the cover
+	// using the same sort algorithm
+
+	var pkeys []string
+	for k := range prefillMap {
+		pkeys = append(pkeys, k)
+	}
+
+	sort.Sort(sortorder.Natural(pkeys))
+
+	// Add the question label and marks to our coverQMap
+
+	// note we will have prefills in strict contiguous sequence
+	// but textfield lines may have been skipped....i.e. OK = Fix = false
+	for n, key := range pkeys {
+		if _, ok := coverQMap[n]; !ok {
+			coverQMap[n] = coverQ{
+				Line: n,
+			}
+		}
+		cq := coverQMap[n]
+		cq.Q = key
+		cq.Mark = prefillMap[key]
+		coverQMap[n] = cq
+	}
+
+	// Find any substitution rules
+
+	MarkSubMap := make(map[string]string)
+
+	QSubMap := make(map[string]string)
+
+	for _, cq := range coverQMap {
+		if cq.Fix {
+			Q, newValue, is := isMarkSubRule(cq)
+			if is {
+				MarkSubMap[Q] = newValue
+			}
+			oldQ, newQ, is := isMarkSubRule(cq)
+			if is {
+				QSubMap[oldQ] = newQ
+			}
+		}
+	}
+
+	QMap := make(map[string]string)
+
+	for _, cq := range coverQMap {
+
+		QMap[cq.Q] = cq.Mark
+	}
+
+	// the order matters here, because we add subparts
+	QMap = applyMarkSubMap(QMap, MarkSubMap)
+	QMap = applyQSubMap(QMap, QSubMap)
+
+	// put in "-" for any standard Q we are missing in this map
+	for _, k := range questions {
+		k = strings.TrimSpace(strings.ToUpper(k))
+		if _, ok := QMap[k]; !ok {
+			QMap[k] = "-"
+		}
+	}
+
+	return QMap
 }
