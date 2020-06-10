@@ -34,7 +34,7 @@ func (g *Ingester) FinalReport(exam string) error {
 
 	s := csv.New()
 
-	s.SetFixedHeader([]string{"what", "when", "who", "comment", "draft-total", "final-total"})
+	s.SetFixedHeader([]string{"what", "when", "who", "comment", "total", "total-draft"})
 
 	qfile := filepath.Join(g.GetExamDir(exam, config), "questions.csv")
 
@@ -47,8 +47,8 @@ func (g *Ingester) FinalReport(exam string) error {
 
 	for _, q := range reqdQ {
 
-		combinedReqdQ = append(combinedReqdQ, "draft-"+q)
-		combinedReqdQ = append(combinedReqdQ, "final-"+q)
+		combinedReqdQ = append(combinedReqdQ, q+"-draft")
+		combinedReqdQ = append(combinedReqdQ, q)
 	}
 
 	s.SetRequiredHeader(combinedReqdQ)
@@ -143,12 +143,12 @@ func (g *Ingester) FinalReport(exam string) error {
 			}
 
 			thisTotal = thisTotal + thisVal
-			line.Add("draft-"+mark.Q, mark.V)
+			line.Add(mark.Q+"-draft", mark.V)
 
 		}
 
 		thisTotalStr := fmt.Sprintf("%g", thisTotal)
-		line.Add("draft-total", thisTotalStr)
+		line.Add("total-draft", thisTotalStr)
 		m.DraftTotal = thisTotal
 
 		thisTotal = 0.0
@@ -162,12 +162,12 @@ func (g *Ingester) FinalReport(exam string) error {
 				}
 			}
 			thisTotal = thisTotal + thisVal
-			line.Add("final-"+mark.Q, mark.V)
+			line.Add(mark.Q, mark.V)
 
 		}
 
 		thisTotalStr = fmt.Sprintf("%g", thisTotal)
-		line.Add("final-total", thisTotalStr)
+		line.Add("total", thisTotalStr)
 
 		m.FinalTotal = thisTotal
 
