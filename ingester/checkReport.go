@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,6 +17,200 @@ import (
 type Mark struct {
 	Q string
 	V string
+}
+
+type MarkCompare struct {
+	Who        string
+	What       string
+	When       string
+	Final      []Mark
+	Draft      []Mark
+	DraftTotal float64
+	FinalTotal float64
+	Comment    string
+}
+
+func (g *Ingester) FinalReport(exam string) error {
+
+	s := csv.New()
+
+	s.SetFixedHeader([]string{"what", "when", "who", "comment", "total", "total-draft"})
+
+	qfile := filepath.Join(g.GetExamDir(exam, config), "questions.csv")
+
+	reqdQ, err := GetRequiredQuestions(qfile)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	combinedReqdQ := []string{}
+
+	for _, q := range reqdQ {
+
+		combinedReqdQ = append(combinedReqdQ, q+"-draft")
+		combinedReqdQ = append(combinedReqdQ, q)
+	}
+
+	s.SetRequiredHeader(combinedReqdQ)
+
+	markMap := make(map[string]MarkCompare)
+
+	files, err := g.GetFileList(g.GetExamDir(exam, finalCover))
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(g.GetExamDir(exam, finalCover))
+
+	for _, file := range files {
+
+		fmt.Println(file)
+
+		if !IsPDF(file) {
+			continue
+		}
+
+		marks, item, err := GetMarksFromCoverPage(file)
+
+		if err != nil {
+			return fmt.Errorf("ERROR getting marks from %s", file)
+		}
+
+		who := item.Who
+
+		markMap[who] = MarkCompare{
+			Who:   who,
+			When:  item.When,
+			What:  item.What,
+			Final: marks,
+		}
+
+	}
+
+	files, err = g.GetFileList(g.GetExamDir(exam, checkerCover))
+	if err != nil {
+		return err
+	}
+	fmt.Println(g.GetExamDir(exam, finalCover))
+
+	for _, file := range files {
+
+		fmt.Println(file)
+
+		if !IsPDF(file) {
+			continue
+		}
+
+		marks, item, err := GetMarksFromCoverPage(file)
+
+		if err != nil {
+			return fmt.Errorf("ERROR getting marks from %s", file)
+		}
+
+		who := item.Who
+
+		if _, ok := markMap[who]; !ok {
+			markMap[who] = MarkCompare{
+				Who:   who,
+				When:  item.When,
+				What:  item.What,
+				Draft: marks,
+			}
+		} else {
+			mm := markMap[who]
+			mm.Draft = marks
+			markMap[who] = mm
+		}
+	}
+
+	for _, m := range markMap {
+
+		line := s.Add()
+
+		line.Add("what", m.What)
+		line.Add("who", m.Who)
+		line.Add("when", m.When)
+
+		thisTotal := 0.0
+
+		for _, mark := range m.Draft {
+			thisVal := 0.0
+			if !(mark.V == "-" || mark.V == "") {
+				thisVal, err = strconv.ParseFloat(mark.V, 64)
+				if err != nil {
+					return err
+				}
+			}
+
+			thisTotal = thisTotal + thisVal
+			line.Add(mark.Q+"-draft", mark.V)
+
+		}
+
+		thisTotalStr := fmt.Sprintf("%g", thisTotal)
+		line.Add("total-draft", thisTotalStr)
+		m.DraftTotal = thisTotal
+
+		thisTotal = 0.0
+
+		for _, mark := range m.Final {
+			thisVal := 0.0
+			if !(mark.V == "-" || mark.V == "") {
+				thisVal, err = strconv.ParseFloat(mark.V, 64)
+				if err != nil {
+					return err
+				}
+			}
+			thisTotal = thisTotal + thisVal
+			line.Add(mark.Q, mark.V)
+
+		}
+
+		thisTotalStr = fmt.Sprintf("%g", thisTotal)
+		line.Add("total", thisTotalStr)
+
+		m.FinalTotal = thisTotal
+
+		totalChanged := m.DraftTotal != m.FinalTotal
+
+		if totalChanged {
+			line.Add("comment", "TOTAL-CHANGED")
+		} else {
+
+			splitChanged := false
+
+			for _, mark := range m.Final {
+
+				for _, oldMark := range m.Draft {
+					if oldMark.Q == mark.Q {
+						if oldMark.V != mark.V {
+							splitChanged = true
+						}
+					}
+				}
+			}
+
+			if splitChanged {
+				line.Add("comment", "SPLIT-CHANGED")
+			} else {
+
+				line.Add("comment", "")
+			}
+		}
+
+	}
+
+	reportBase := fmt.Sprintf("FinalMarks-%s-%d.csv", shortenAssignment(exam), time.Now().Unix())
+	reportPath := filepath.Join(g.GetExamDir(exam, reports), reportBase)
+
+	f, err := os.OpenFile(reportPath, os.O_RDWR|os.O_CREATE, os.ModePerm)
+
+	defer f.Close()
+
+	_, err = s.WriteCSV(f)
+
+	return err
+
 }
 
 func (g *Ingester) CheckReport(exam string) error {

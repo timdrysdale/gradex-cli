@@ -116,6 +116,7 @@ var (
 		checkerBack,
 		checkerFlattened,
 		checkerProcessed,
+		finalCover,
 		reMarkerInactive,
 		reMarkerActive,
 		reMarkerReady,
@@ -197,6 +198,7 @@ const (
 	checkerBack          = "52-checker-back"
 	checkerFlattened     = "53-checker-flattened"
 	checkerProcessed     = "54-checker-processed"
+	finalCover           = "55-final-cover"
 	reMarkerInactive     = "58-remarker-inactive"
 	reMarkerActive       = "59-remarker-active"
 	reMarkerReady        = "60-remarker-ready"
@@ -255,4 +257,7 @@ const (
 	MarkerProcessed   = markerProcessed
 	ModeratorActive   = moderatorActive
 	ModeratorInactive = moderatorInactive
+
+	//External stages
+	Checked = checked
 )

@@ -14,6 +14,207 @@ import (
 	"github.com/timdrysdale/gradex-cli/pagedata"
 )
 
+func TestGetCoverQMap(t *testing.T) {
+
+	pd := pagedata.PageData{
+		Current: pagedata.PageDetail{
+			Data: []pagedata.Field{
+				pagedata.Field{
+					Key:   "tf-mark-ok-00",
+					Value: "x",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-fix-00",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-new-00",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-ok-01",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-fix-01",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-new-01",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-ok-02",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-fix-02",
+					Value: "x",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-new-02",
+					Value: "A1",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-ok-03",
+					Value: "x",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-fix-03",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-new-03",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-ok-04",
+					Value: "x",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-fix-04",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-new-04",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-ok-05",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-fix-05",
+					Value: "x",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-new-05",
+					Value: "18.5/22",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-ok-06",
+					Value: "",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-fix-06",
+					Value: "x",
+				},
+				pagedata.Field{
+					Key:   "tf-mark-new-06",
+					Value: "B2-3/18",
+				},
+			},
+		},
+		Previous: []pagedata.PageDetail{
+			pagedata.PageDetail{
+				Process: pagedata.ProcessDetail{
+					Name: "merge-entered",
+				},
+				Data: []pagedata.Field{
+					pagedata.Field{
+						Key:   "pf-q-B1",
+						Value: "-",
+					},
+					pagedata.Field{
+						Key:   "pf-q-B3",
+						Value: "14",
+					},
+					pagedata.Field{
+						Key:   "pf-q-B2",
+						Value: "7",
+					},
+					pagedata.Field{
+						Key:   "pf-q-A1",
+						Value: "9",
+					},
+					pagedata.Field{
+						Key:   "pf-q-AF",
+						Value: "2",
+					},
+					pagedata.Field{
+						Key:   "pf-q-BB",
+						Value: "2",
+					},
+					pagedata.Field{
+						Key:   "pf-q-A2",
+						Value: "5",
+					},
+				},
+			},
+		},
+	}
+
+	// this is called by finalMarksMap, but we spot check it separately here
+	coverQMap := getCoverQMap(pd.Current)
+
+	assert.Equal(t, "B2-3/18", coverQMap[6].Rule)
+	assert.Equal(t, true, coverQMap[2].Fix)
+
+	questions := []string{"A1", "A2", "B1", "B2", "B3"}
+
+	Qmap, skipMap := finalMarksMap(pd, questions)
+
+	assert.Equal(t, 5, len(Qmap))
+	assert.Equal(t, "11", Qmap["A1"])
+	assert.Equal(t, "5", Qmap["A2"])
+	assert.Equal(t, "-", Qmap["B1"])
+	assert.Equal(t, "10", Qmap["B2"])
+	assert.Equal(t, "18.5", Qmap["B3"])
+	assert.Equal(t, false, skipMap["A1"])
+	assert.Equal(t, true, skipMap["A2"])
+	assert.Equal(t, false, skipMap["B1"])
+	assert.Equal(t, false, skipMap["B2"])
+	assert.Equal(t, false, skipMap["B3"])
+
+}
+
+func TestIsQSubRule(t *testing.T) {
+
+	cq := coverQ{
+		Q:    "A1",
+		Rule: "A2",
+	}
+	oldQ, newQ, is := isQSubRule(cq)
+	assert.True(t, is)
+	assert.Equal(t, "A1", oldQ)
+	assert.Equal(t, "A2", newQ)
+
+	cq = coverQ{
+		Q:    "A1",
+		Rule: "15",
+	}
+	_, _, is = isQSubRule(cq)
+	assert.False(t, is)
+}
+
+func TestIsMarkSubRule(t *testing.T) {
+	cq := coverQ{
+		Q:    "A1",
+		Rule: "A2-15",
+	}
+	Q, mark, is := isMarkSubRule(cq)
+	assert.True(t, is)
+	assert.Equal(t, "A1", Q) //we change the original mark
+	assert.Equal(t, "15", mark)
+
+	cq = coverQ{
+		Q:    "A1",
+		Rule: "15",
+	}
+	Q, mark, is = isMarkSubRule(cq)
+	assert.True(t, is)
+	assert.Equal(t, "A1", Q)
+	assert.Equal(t, "15", mark)
+
+	cq = coverQ{
+		Q:    "A1",
+		Rule: "A2",
+	}
+	_, _, is = isMarkSubRule(cq)
+	assert.False(t, is)
+
+}
+
 func TestQNumber(t *testing.T) {
 
 	n, what, is := isQ("tf-q1-mark")
@@ -31,6 +232,33 @@ func TestQNumber(t *testing.T) {
 	assert.Equal(t, "", n)
 	assert.Equal(t, "", what)
 
+}
+
+func TestCoverQNumber(t *testing.T) {
+
+	q, is := isCoverQ("pf-q-A1")
+	assert.True(t, is)
+	assert.Equal(t, "A1", q)
+
+	q, is = isCoverQ("pf-q-Q3")
+	assert.True(t, is)
+	assert.Equal(t, "Q3", q)
+
+	q, is = isCoverQ("pf-q-B2")
+	assert.True(t, is)
+	assert.Equal(t, "B2", q)
+
+	q, is = isCoverQ("pf-q-Q20")
+	assert.True(t, is)
+	assert.Equal(t, "Q20", q)
+
+	q, is = isCoverQ("pf-q-Q99")
+	assert.True(t, is)
+	assert.Equal(t, "Q99", q)
+
+	q, is = isCoverQ("tf-q1-mark")
+	assert.False(t, is)
+	assert.Equal(t, "", q)
 }
 
 func TestGetNum(t *testing.T) {

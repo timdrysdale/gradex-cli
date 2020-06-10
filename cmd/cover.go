@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
@@ -29,18 +28,23 @@ import (
 	"github.com/timdrysdale/gradex-cli/ingester"
 )
 
-// reportCmd represents the report command
-var reportCmd = &cobra.Command{
-	Use:   "report [what] [exam]",
-	Short: "produce a report of type [what]",
-	Args:  cobra.ExactArgs(2),
-	Long: `Produce a report and put in the 99-reports folder. 
-Types of report currently implemented:
-marks-provisional (csv format marks from cover sheets in 49-checker-cover)
+// coverCmd represents the cover command
+var coverCmd = &cobra.Command{
+	Use:   "cover [exam]",
+	Args:  cobra.ExactArgs(1),
+	Short: "Add final marks cover to exam",
+	Long: `This merges the existing file, and flattened addition check cover, with a new "final" mark cover.
+
+If you do not have a question file installed, you will get an error. You can proceed without a question by using the flag as follows
+
+gradex-cli cover demo-exam --ignore-question-file
+
+There is no "actor" specified for this stage because there is no meaning to having multiple actors at this stage when no further processing
+is needed - there's no one to keep track of now!
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		what := strings.ToLower(os.Args[2])
-		exam := os.Args[3]
+		checker := "X"
+		exam := os.Args[2]
 
 		var s Specification
 		// load configuration from environment variables GRADEX_CLI_<var>
@@ -75,53 +79,38 @@ marks-provisional (csv format marks from cover sheets in 49-checker-cover)
 			os.Exit(1)
 		}
 		defer f.Close()
-
-		logger := zerolog.
-			New(f).
-			With().
-			Timestamp().
-			Str("command", "report").
-			Str("what", what).
-			Str("exam", exam).
-			Logger()
-
+		logger := zerolog.New(f).With().Timestamp().Logger()
 		g, err := ingester.New(s.Root, mch, &logger)
 		if err != nil {
 			fmt.Printf("Failed getting New Ingester %v", err)
 			os.Exit(1)
 		}
 
-		// setup dirs for later when writing report
 		g.EnsureDirectoryStructure()
 
-		switch what {
-		case "marks-provisional":
-			err = g.CheckReport(exam)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-		case "marks-final":
-			err = g.FinalReport(exam)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
+		g.SetSkipQuestionFile(SkipQuestionFile)
 
+		err = g.AddFinalCover(exam, checker)
+
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
 		}
+
+		os.Exit(0)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(reportCmd)
+	rootCmd.AddCommand(coverCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// reportCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// coverCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// reportCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// coverCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

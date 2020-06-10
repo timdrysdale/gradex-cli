@@ -90,9 +90,22 @@ func getPageAndKey(pagekey string) (int, string) {
 	// we're looking for the prefix code page-nnn-
 	// which may be prepended by prefix docn.
 
+	//get doc number; no doc number -> page 1
+	doc := regexp.MustCompile("^doc([0-9]*)\\.page-\\d{3}-(.*)")
+	tokens := doc.FindStringSubmatch(pagekey)
+
+	if len(tokens) >= 2 {
+		pageStr := tokens[1]
+		pageNum, err := strconv.ParseInt(pageStr, 10, 64)
+		key := tokens[2]
+		if err == nil {
+			return int(pageNum), key
+		}
+	}
+
 	r := regexp.MustCompile("(?:page-)(\\d{3})-(.*)")
 
-	tokens := r.FindStringSubmatch(pagekey)
+	tokens = r.FindStringSubmatch(pagekey)
 
 	if len(tokens) >= 3 {
 		pageStr := tokens[1]

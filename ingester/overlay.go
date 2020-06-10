@@ -441,14 +441,13 @@ OUTER:
 
 		if len(ancestorPageDataMap) != numPages {
 			msg := fmt.Sprintf("Wrong number of pages in ancestor pagedata, got %d, want %d\n", len(ancestorPageDataMap), numPages)
-			logger.Error().
+			logger.Warn().
 				Str("file", ot.InputPath).
 				Str("ancestor", ot.AncestorPath).
-				Str("error", err.Error()).
 				Msg(msg)
 			ot.Msg.Send(msg)
 			fmt.Println(msg)
-			return 0, err
+			// might be a covered doc, so let processor decide
 		}
 
 		ancestorPageSummaryMap, err = GetPageSummaryMap(ancestorPageDataMap)
@@ -552,10 +551,12 @@ OUTER:
 			//change item
 			ancestorPage, ok := ancestorPageDataMap[imgIdx]
 			if !ok {
-				logger.Error().
+				logger.Warn().
 					Str("file", ot.InputPath).
-					Msg("No ancestor pagedata in file")
-				return 0, err
+					Int("page", imgIdx).
+					Msg("No ancestor pagedata on this page")
+				//might be a cover page
+
 			}
 
 			oldItem := newThisPageDataCurrent.Item

@@ -4061,11 +4061,11 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="4.4281629"
-     inkscape:cx="61.749312"
-     inkscape:cy="1143.0562"
+     inkscape:zoom="0.782796"
+     inkscape:cx="435.48851"
+     inkscape:cy="695.73282"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer3"
+     inkscape:current-layer="layer6"
      showgrid="false"
      inkscape:window-width="1850"
      inkscape:window-height="1136"
@@ -4093,7 +4093,7 @@
      inkscape:groupmode="layer"
      id="layer6"
      inkscape:label="pages"
-     style="display:none">
+     style="display:inline">
     <rect
        style="opacity:1;fill:#abf9ff;fill-opacity:0.3802817;stroke:none;stroke-width:0.51035035;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
        id="rect3923"
@@ -4214,6 +4214,18 @@
        ry="0.61828327">
       <title
          id="title15775">page-static-addition</title>
+    </rect>
+    <rect
+       ry="0.61828327"
+       rx="1.1752077"
+       y="-2.9802266e-08"
+       x="0"
+       height="312"
+       width="210"
+       id="rect6864"
+       style="opacity:1;fill:#008613;fill-opacity:0.58685446;stroke:none;stroke-width:0.4718149;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1">
+      <title
+         id="title6862">page-static-final</title>
     </rect>
   </g>
   <g
@@ -4340,7 +4352,7 @@
      inkscape:groupmode="layer"
      id="layer3"
      inkscape:label="anchors"
-     style="display:inline">
+     style="display:none">
     <path
        style="display:inline;opacity:1;fill:#14e1ff;fill-opacity:1;stroke:none;stroke-width:0.05;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
        id="path2708"
@@ -4615,6 +4627,40 @@
          id="desc15769">flatten-header</desc>
       <title
          id="title15771">svg-addition-header</title>
+    </path>
+    <path
+       style="display:inline;opacity:0.53800001;fill:#ed1ad8;fill-opacity:1;stroke:none;stroke-width:0.08863757;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1"
+       id="path6854"
+       sodipodi:type="arc"
+       sodipodi:cx="0"
+       sodipodi:cy="15.059467"
+       sodipodi:rx="0.69908607"
+       sodipodi:ry="0.69908607"
+       sodipodi:start="4.7394094"
+       sodipodi:end="4.7046179"
+       d="m 0.0188873,14.360636 a 0.69908607,0.69908607 0 0 1 0.68008143,0.71164 0.69908607,0.69908607 0 0 1 -0.7056971,0.686245 0.69908607,0.69908607 0 0 1 -0.6923574,-0.699702 0.69908607,0.69908607 0 0 1 0.69365317,-0.698417"
+       sodipodi:open="true">
+      <desc
+         id="desc6850">sidebar-312pt-final-cover-10box</desc>
+      <title
+         id="title6852">svg-final-boxes</title>
+    </path>
+    <path
+       sodipodi:open="true"
+       d="M 0.0188873,-0.69897185 A 0.69908607,0.69908607 0 0 1 0.69896873,0.01266735 0.69908607,0.69908607 0 0 1 -0.00672837,0.69891272 0.69908607,0.69908607 0 0 1 -0.69908577,-7.8887842e-4 0.69908607,0.69908607 0 0 1 -0.0054326,-0.69920593"
+       sodipodi:end="4.7046179"
+       sodipodi:start="4.7394094"
+       sodipodi:ry="0.69908607"
+       sodipodi:rx="0.69908607"
+       sodipodi:cy="-0.00014096931"
+       sodipodi:cx="0"
+       sodipodi:type="arc"
+       id="path6860"
+       style="display:inline;opacity:0.53800001;fill:#deed1a;fill-opacity:1;stroke:none;stroke-width:0.08863757;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:9.44881821;stroke-opacity:1">
+      <desc
+         id="desc6856">flatten-header</desc>
+      <title
+         id="title6858">svg-final-header</title>
     </path>
   </g>
 </svg>

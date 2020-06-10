@@ -69,6 +69,46 @@ func checkPageData(t *testing.T, path string) {
 	assert.Equal(t, 1, pageBadOpticalCount)
 }
 
+func checkNoMergePageData(t *testing.T, path string) {
+
+	pdMap, err := pagedata.UnMarshalAllFromFile(path)
+
+	assert.NoError(t, err)
+
+	dataFields := pdMap[1].Current.Data
+
+	mergeMessageCount := 0
+	pageOKCount := 0
+	pageBadCount := 0
+	pageOKOpticalCount := 0
+	pageBadOpticalCount := 0
+
+	for _, item := range dataFields {
+		if item.Key == "merge-message" {
+			mergeMessageCount++
+		}
+		if item.Key == "tf-page-bad" {
+			pageBadCount++
+		}
+		if item.Key == "tf-page-ok" {
+			pageOKCount++
+		}
+		if item.Key == "tf-page-bad-optical" {
+			pageBadOpticalCount++
+		}
+		if item.Key == "tf-page-ok-optical" {
+			pageOKOpticalCount++
+		}
+
+	}
+
+	assert.Equal(t, 0, mergeMessageCount)
+	assert.Equal(t, 1, pageOKCount)
+	assert.Equal(t, 1, pageBadCount)
+	assert.Equal(t, 1, pageOKOpticalCount)
+	assert.Equal(t, 1, pageBadOpticalCount)
+}
+
 func TestAddBars(t *testing.T) {
 
 	if testing.Short() {
@@ -621,14 +661,11 @@ func TestAddBars(t *testing.T) {
 	err = g.FlattenProcessedPapers(exam, stage)
 	assert.NoError(t, err)
 
-	err = g.MergeProcessedPapers(exam, stage) //cmd combines this with flatten
-	assert.NoError(t, err)
-
 	expectedCheckerProcessed := []string{ //note the d is missing for convenience here
-		"Practice-B999995-merge.pdf",
-		"Practice-B999997-merge.pdf",
-		"Practice-B999998-merge.pdf",
-		"Practice-B999999-merge.pdf",
+		"Practice-B999995-merge-chLD.pdf",
+		"Practice-B999997-merge-chLD.pdf",
+		"Practice-B999998-merge-chLD.pdf",
+		"Practice-B999999-merge-chLD.pdf",
 	}
 
 	checkerProcessedPdf, err := g.GetFileList(g.GetExamDir(exam, checkerProcessed))
@@ -637,11 +674,10 @@ func TestAddBars(t *testing.T) {
 	assert.Equal(t, len(expectedCheckerProcessed), len(checkerProcessedPdf))
 
 	assert.True(t, CopyIsComplete(expectedCheckerProcessed, checkerProcessedPdf))
-	CollectFilesFrom(g.GetExamDir(exam, checkerProcessed))
-	assert.NoError(t, err)
+	// we don't collect because have same name, since not merging, so throw errors
 
 	//>>>>>>>>>>> Check for one merge message >>>>>>>>>>>>>>
-	checkPageData(t, checkerProcessedPdf[0])
+	checkNoMergePageData(t, checkerProcessedPdf[0])
 
 	// Now do visual checks
 
@@ -654,8 +690,8 @@ func TestAddBars(t *testing.T) {
 		"./tmp-delete-me/usr/exam/Practice/42-enter-back/inactive/Practice-B999999-merge-enX.pdf",
 		"./tmp-delete-me/usr/exam/Practice/51-checker-sent/LD/Practice-B999995-merge-chLD.pdf",
 		"./tmp-delete-me/usr/exam/Practice/51-checker-sent/LD/Practice-B999999-merge-chLD.pdf",
-		"./tmp-delete-me/usr/exam/Practice/54-checker-processed/Practice-B999995-merge.pdf",
-		"./tmp-delete-me/usr/exam/Practice/54-checker-processed/Practice-B999999-merge.pdf",
+		"./tmp-delete-me/usr/exam/Practice/54-checker-processed/Practice-B999995-merge-chLD.pdf",
+		"./tmp-delete-me/usr/exam/Practice/54-checker-processed/Practice-B999999-merge-chLD.pdf",
 	}
 
 	expectedPdfs := []string{
