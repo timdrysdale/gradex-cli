@@ -121,7 +121,9 @@ rechecked`,
 				os.Exit(1)
 			}
 
-			err = g.MergeProcessedPapers(exam, stage)
+			if stage != ingester.Checked {
+				err = g.MergeProcessedPapers(exam, stage)
+			}
 
 		default:
 

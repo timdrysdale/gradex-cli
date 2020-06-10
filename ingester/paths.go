@@ -121,7 +121,7 @@ func (g *Ingester) FlattenProcessedPapersToDir(exam, stage string) (string, erro
 		dir = reEnterFlattened
 
 	case "checked":
-		dir = checkerFlattened
+		dir = checkerProcessed //we skip merging
 
 	case "rechecked":
 		dir = reCheckerFlattened
