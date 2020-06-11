@@ -98,7 +98,13 @@ gradex-cli checker x demo-exam --ignore-question-file
 		}
 
 		g.EnsureDirectoryStructure()
-
+		if Template != "" {
+			err := g.SetOverlayTemplatePath(Template)
+			if err != nil {
+				fmt.Printf("Overlay not usable because %s\n", err.Error())
+				os.Exit(1)
+			}
+		}
 		g.SetSkipQuestionFile(SkipQuestionFile)
 
 		err = g.AddCheckCoverBar(exam, checker)

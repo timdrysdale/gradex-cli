@@ -100,6 +100,14 @@ rechecked`,
 		g.EnsureDirectoryStructure()
 		g.SetupExamDirs(exam)
 
+		if Template != "" {
+			err := g.SetOverlayTemplatePath(Template)
+			if err != nil {
+				fmt.Printf("Overlay not usable because %s\n", err.Error())
+				os.Exit(1)
+			}
+		}
+
 		g.Redo = redo
 
 		switch {

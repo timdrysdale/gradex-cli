@@ -92,7 +92,13 @@ Note that the exam argument is the relative path to the exam in $GRADEX_CLI_ROOT
 
 		g.EnsureDirectoryStructure()
 		g.SetupExamDirs(exam)
-
+		if Template != "" {
+			err := g.SetOverlayTemplatePath(Template)
+			if err != nil {
+				fmt.Printf("Overlay not usable because %s\n", err.Error())
+				os.Exit(1)
+			}
+		}
 		g.Redo = redo
 
 		err = g.AddLabelBar(exam, labeller)

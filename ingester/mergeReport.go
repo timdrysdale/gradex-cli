@@ -153,7 +153,7 @@ func (g *Ingester) ReportOnProcessedDir(exam, dir string, showOK bool, reconcile
 		fmt.Printf("(This may not be an issue, because files may have been merged into batches or split)\n")
 	}
 	if len(destPages) != len(srcPages) {
-		fmt.Printf("ERROR: number of uniqe pages differs in each location (%d != %d) ", len(destPages), len(srcPages))
+		fmt.Printf("ERROR: number of unique pages differs in each location (%d != %d) ", len(destPages), len(srcPages))
 		fmt.Printf("(This is a problem because it means actual pages have been lost or found!)\n")
 	}
 
@@ -182,9 +182,9 @@ func (g *Ingester) ReportOnProcessedDir(exam, dir string, showOK bool, reconcile
 
 	if noLinkError {
 		errorPageReports = append(errorPageReports, PageReport{
-			Error: fmt.Sprintf("SUCCESS: %d unique original and processed pages are all correctly linked betwen %s and %s", len(srcPages), srcDir, dir),
+			Error: fmt.Sprintf("SUCCESS: %d unique original and processed pages are all correctly linked between %s and %s", len(srcPages), srcDir, dir),
 		})
-		fmt.Printf("SUCCESS: %d unique original and processed pages are all correctly linked betwen %s and %s\n", len(srcPages), srcDir, dir)
+		fmt.Printf("SUCCESS: %d unique original and processed pages are all correctly linked between %s and %s\n", len(srcPages), srcDir, dir)
 	}
 
 	//write to reports folder

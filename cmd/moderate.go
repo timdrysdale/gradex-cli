@@ -98,7 +98,13 @@ active/inactive directory according to whether they are to be moderated or not
 		// these functions MUST not delete anything!
 		g.EnsureDirectoryStructure()
 		g.SetupExamDirs(exam)
-
+		if Template != "" {
+			err := g.SetOverlayTemplatePath(Template)
+			if err != nil {
+				fmt.Printf("Overlay not usable because %s\n", err.Error())
+				os.Exit(1)
+			}
+		}
 		splitDonePath := filepath.Join(g.GetExamDir(exam, ingester.MarkerProcessed), "split")
 
 		if !ingester.GetDone(splitDonePath) {
