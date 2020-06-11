@@ -34,6 +34,7 @@ var (
 	refreshAnon bool
 	showOK      bool
 	reconcile   bool
+	badskipOnly bool
 )
 
 // traceCmd represents the trace command
@@ -107,8 +108,14 @@ var traceCmd = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-
-		tokens, err := g.ReportOnProcessedDir(exam, dir, showOK, reconcile)
+		// we show the Bad, skip and QBox pages by default, but opt in to reduce
+		// to to bad skip only with --bad-skip-only, or
+		// increase to show all pages with --verbose
+		if showOK && badskipOnly {
+			fmt.Println("Please specify either --bad-skip-only OR --verbose, not both")
+			os.Exit(1)
+		}
+		tokens, err := g.ReportOnProcessedDir(exam, dir, showOK, !badskipOnly, reconcile)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -126,6 +133,7 @@ func init() {
 	traceCmd.Flags().StringVarP(&traceWho, "who", "w", "", "Name of actor to which to confine the check [default is to read all files at that stage]")
 	traceCmd.Flags().BoolVarP(&refreshAnon, "refresh-anon", "r", false, "Reread the pagedata from the first stage (normally only needed after new un-seen submission added) [default false]")
 	traceCmd.Flags().BoolVarP(&showOK, "verbose", "v", false, "Show the OK files as well [default false]")
+	traceCmd.Flags().BoolVar(&badskipOnly, "bad-skip-only", false, "Only report BAD or SKIP pages (ie don't show QBOX pages) [default false]")
 	traceCmd.Flags().BoolVar(&reconcile, "cross-ref", false, "cross-ref all source pages link to a page in specified dir [default false]")
 	// Here you will define your flags and configuration settings.
 

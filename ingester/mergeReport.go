@@ -41,7 +41,7 @@ func (p *PageReport) String() string {
 
 }
 
-func (g *Ingester) ReportOnProcessedDir(exam, dir string, showOK bool, reconcile bool) ([]string, error) {
+func (g *Ingester) ReportOnProcessedDir(exam, dir string, showOK bool, showMark bool, reconcile bool) ([]string, error) {
 
 	tokens := []string{}
 
@@ -91,11 +91,18 @@ func (g *Ingester) ReportOnProcessedDir(exam, dir string, showOK bool, reconcile
 				pr.Error = "SKIPPED"
 				errorPageReports = append(errorPageReports, pr)
 
+			} else if showMark && pr.Status == statusMarked {
+
+				tokens = append(tokens, "QBOX: "+pr.String())
+				pr.Error = "QBOX"
+				errorPageReports = append(errorPageReports, pr)
+
 			} else if showOK {
 				tokens = append(tokens, "OK  : "+pr.String())
 				pr.Error = "OK"
 				errorPageReports = append(errorPageReports, pr)
 			}
+
 		}
 
 	}
