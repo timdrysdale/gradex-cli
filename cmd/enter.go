@@ -106,6 +106,14 @@ this will produce a bunch of files in the enterReady directory, which can be exp
 		g.SetBackgroundIsVanilla(OpticalVanilla)
 		g.SetOpticalShrink(OpticalShrink)
 
+		if Template != "" {
+			err := g.SetOverlayTemplatePath(Template)
+			if err != nil {
+				fmt.Printf("Overlay not usable because %s\n", err.Error())
+				os.Exit(1)
+			}
+		}
+
 		err = g.AddEnterActiveBar(exam, enterer)
 
 		if err != nil {

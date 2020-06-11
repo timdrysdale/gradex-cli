@@ -88,6 +88,14 @@ is needed - there's no one to keep track of now!
 
 		g.EnsureDirectoryStructure()
 
+		if Template != "" {
+			err := g.SetOverlayTemplatePath(Template)
+			if err != nil {
+				fmt.Printf("Overlay not usable because %s\n", err.Error())
+				os.Exit(1)
+			}
+		}
+
 		g.SetSkipQuestionFile(SkipQuestionFile)
 
 		err = g.AddFinalCover(exam, checker)

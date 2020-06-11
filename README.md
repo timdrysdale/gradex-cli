@@ -297,20 +297,164 @@ Note that flags need to come after the exam (one of the positional arguments)
 
 For detailed information on how to customise the templates using Inkscape, [see here](https://github.com/timdrysdale/gradex-cli/blob/master/parsesvg/README.md).
  
+### Template information
+
+The template information is readily found by inspecting the template information in the raw svg text - this is easier than sorting through all the anchors that are stacked on each other.
+For example, for pages, search for ```inkscape:label="pages"``` to get to the pages layer, ```inkscape:label="images"``` for images and so on for the other layers.
+
+#### Spreadnames
+
+These are the search strings that ```ingester.Overlay()``` feeds  to ```parsesvg.Render()``` so it can find the elements in the layout file it needs for a given task
+
+- addition
+- check
+- enter-[active/inactive]
+- final
+- flatten
+- label
+- mark
+- merge
+- moderate-[active/inactive]
+
+#### Anchors
+
+Note that ```svg-``` prefix causes BOTH and image (<name>.jpg) AND svg (<name>.svg) elements to be included and it is an error not to provide them
+The ```img``` prefix causes only a static image to be used, although if labelled ```previous``` it is a "special" image for legacy reasons, and
+it was not factored out for convenience. The previous image labels don't seem fully consistent ... 
+
+- ref-anchor
+- img-previous-check
+- img-previous-enter-active
+- img-previous-entry-inactive
+- img-previous-flatten-processed
+- img-previous-label
+- img-previous-moderate-active
+- svg-addition-boxes ➡ sidebar-312pt-addition-10box
+- svg-addition-header ➡ flatten-header
+- svg-check ➡ sidebar-312pt-check-flow
+- svg-enter-active ➡ sidebar-312pt-enter-flow
+- svg-enter-inactive ➡ sidebar-312pt-enter-flow-inactive
+- svg-final-boxes ➡ sidebar-312pt-final-cover-10box
+- svg-final-header ➡ flatten-header
+- svg-label ➡ sidebar-312pt-label
+- svg-mark-ladder ➡ sidebar-312pt-mark-ladder-flow-comment
+- svg-merge-sidebar ➡ merge-sidebar
+- svg-moderate-active ➡ sidebar-312pt-moderate-flow-comment-active
+- svg-moderate-inactive ➡ sidebar-312pt-moderate-inactive
+
+#### Pages
+
+
+- page-dynamic-check
+- page-dynamic-enter-active
+- page-dynamic-enter-inactive
+- page-dynamic-flatten-processed
+- page-dynamic-mark
+- page-dynamic-merge-sidebar
+- page-dynamic-moderate-active
+- page-dynamic-moderate-inactive
+- page-static-addition
+- page-static-final
+- page-static-label
+
+#### Images
+Note there are some inconsistencies here, e.g. use of width, and inconsistent inclusion of active/inactive state for enter
+
+- image-dynamic-width-previous-enter
+- image-dynamic-previous-enter-inactive
+- image-dynamic-previous-flatten-processed
+- image-dynamic-previous-label
+- image-dynamic-previous-merge-sidebar
+- image-dynamic-previous-moderate-inactive
+- image-dynamic-previous-moderate-active
+- image-dynamic-width-previous-check
+- image-static-previous-mark
+
+
+### Q5 layout
+
+This is an alternative layout with 5 Qs, so it needs different size pages, and different svg names to match up with its design files
+
+#### Anchors
+
+- img-previous-merge-sidebar
+- img-previous-enter
+- img-previous-flatten-processed
+- img-previous-moderate-inactive
+- img-previous-check
+- img-previous-moderate-active
+- img-previous-moderate-active
+- img-previous-mark
+- img-previous-label
+- ref-anchor
+- svg-mark-ladder ➡ sidebar-312pt-mark-ladder-flow-comment-q5
+- svg-enter➡  sidebar-312pt-enter-q5
+- svg-label ➡ sidebar-312pt-label
+- svg-moderate-active ➡ sidebar-312pt-moderate-active-q5
+- svg-moderate-inactive ➡ sidebar-312pt-moderate-inactive
+- svg-check ➡ sidebar-312pt-check-q5
+
+###### TODO
+
+- svg-addition-boxes ➡ sidebar-312pt-addition-10box
+- svg-addition-header ➡ flatten-header
+- svg-enter-active ➡ sidebar-312pt-enter-flow
+- svg-enter-inactive ➡ sidebar-312pt-enter-flow-inactive
+- svg-final-boxes ➡ sidebar-312pt-final-cover-10box
+- svg-final-header ➡ flatten-header
+
+- svg-mark-ladder ➡ sidebar-312pt-mark-ladder-flow-comment
+- svg-merge-sidebar ➡ merge-sidebar
+- svg-moderate-active ➡ sidebar-312pt-moderate-flow-comment-active
+- svg-moderate-inactive ➡ sidebar-312pt-moderate-inactive
+
+- page-static-addition
+- page-static-final
+
+- svg-label ➡ sidebar-312pt-label
+
+
+#### Pages
+
+- page-dynamic-check<
+- page-dynamic-enter
+- page-dynamic-moderate-active
+- page-static-label
+- page-dynamic-mark
+- page-dynamic-moderate-inactive
+- page-dynamic-flatten-processed
+- page-dynamic-merge-sidebar
+
+#### Images
+
+- image-dynamic-previous-moderate-inactive
+- image-dynamic-previous-moderate-active
+- image-static-previous-mark
+- image-dynamic-width-previous-check
+- image-dynamic-previous-label
+- image-dynamic-previous-flatten-processed
+- image-dynamic-previous-merge-sidebar
+ 
+
+
 
 ## TODO
 
+A number of major items are now ticked off the list, and our first diet of exam processing is coming to an end, so now concentrating on the features needed to finish off the Boards of Examiners' paperwork
+
+- Report on audit (graphviz?)
+
+
+### Done
+
+- integrate [optical check box](https://github.com/timdrysdale/opticalcheckbox)
+- integrate tree view [from here](https://github.com/timdrysdale/dt)
 - handle incoming marked/moderated/checked work
     - merge pages
 	- report bad pages detected by markers
 	- report results into csv, similar to [this](https://github.com/timdrysdale/gradex-extract)
 
 - report results into csv, similar to [this](https://github.com/timdrysdale/gradex-extract)
-
-### Done
-
-- integrate [optical check box](https://github.com/timdrysdale/opticalcheckbox)
-- integrate tree view [from here](https://github.com/timdrysdale/dt)
 
 ### Deferred
 
@@ -331,27 +475,23 @@ tree        coverage: 63.4% of statements
 
 ## Codebase
 
-Now over 12 KLOC ....
+Now ~16 KLOC ....
 
 ```
 --------------------------------------------------------------------------------
  Language             Files        Lines        Blank      Comment         Code
 --------------------------------------------------------------------------------
- Go                      88        18040         3945         1229        12866
- Markdown                 9          790          254            0          536
+ Go                     100        22524         4939         1592        15993
+ Markdown                 9          817          263            0          554
  Plain Text              18          291           72            0          219
+ Bourne Shell             3           18            5            6            7
  JSON                     1            1            0            0            1
- Bourne Shell             1            5            2            2            1
 --------------------------------------------------------------------------------
- Total                  117        19127         4273         1231        13623
+ Total                  131        23651         5279         1598        16774
 --------------------------------------------------------------------------------
+
 ```
 
-Most of the libraries are sub 1K, but the largest are:
-```
-ingester 6111
-parsesvg  2753
-```
 
 
 [identity]: ./img/identity.png "csv file with anoynmous identity"
