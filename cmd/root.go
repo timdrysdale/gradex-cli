@@ -54,7 +54,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&redo, "redo", false, "Force redo of already processed files")
 	rootCmd.PersistentFlags().BoolVarP(&OpticalVanilla, "background-vanilla", "b", true, "Assume vanilla background for optical checkboxes? [default true]")
 	rootCmd.PersistentFlags().IntVarP(&OpticalShrink, "box-shrink", "s", 15, "Number of pixels to shrink optical boxes to avoid false positives from boundaries [default 15]")
-	rootCmd.PersistentFlags().StringVarP(&Template, "layout", "l", "layout.svg", "Use this layout [default layout.svg]")
+	rootCmd.PersistentFlags().StringVar(&Template, "layout", "layout.svg", "Use this layout [default layout.svg]")
 	rootCmd.PersistentFlags().BoolVar(&noversion, "noversion", false, "don't show version")
 }
 
