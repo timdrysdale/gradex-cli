@@ -590,7 +590,7 @@ func TestFlattenProcessedMarkedAncestor(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 3, numPages)
 
-	_, err = g.ReportOnProcessedDir(exam, g.GetExamDir(exam, markerFlattened), true, false)
+	_, err = g.ReportOnProcessedDir(exam, g.GetExamDir(exam, markerFlattened), true, false, false)
 	assert.NoError(t, err)
 
 	pdA, err := pagedata.UnMarshalAllFromFile(ancestorPath)
