@@ -251,6 +251,13 @@ func DoOneCoverPage(ct CoverPageTask, logger *zerolog.Logger) error {
 
 	pageFilename := filepath.Join(cp.ToPath, strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))+"-cover.pdf")
 
+	current := thisPageData.Current
+
+	current.Original.Number = 0 //fix cover pagenumber in reports
+	current.Own.Number = 0
+
+	thisPageData.Current = current
+
 	contents := parsesvg.SpreadContents{
 		SvgLayoutPath:         cp.TemplatePath,
 		SpreadName:            cp.SpreadName,
