@@ -359,7 +359,13 @@ func RenderSpreadExtra(contents SpreadContents) error {
 
 	for _, tf := range spread.TextFields {
 
-		tfopt := annotator.TextFieldOptions{Value: tf.Prefill} //TODO - MaxLen?!
+		tfText := tf.Prefill
+
+		if val, ok := contents.TextFieldValues[pageNumber][tf.ID]; ok {
+			tfText = val
+		}
+
+		tfopt := annotator.TextFieldOptions{Value: tfText} //TODO - MaxLen?!
 		// TODO consider allowing a more templated mangling of the ID number
 		// For multi-student entries (although, OTH, there will be per-page ID data etc embedded too
 		// which may be more useful in this regard, rather than overloading the textfield id)

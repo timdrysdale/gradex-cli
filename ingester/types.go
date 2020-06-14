@@ -22,22 +22,23 @@ type FlattenTask struct {
 }
 
 type OverlayTask struct {
-	InputPath            string
-	CoverPath            string //no cover page if empty ""
-	AncestorPath         string //no redo of ancestry if empty
-	Msg                  *chmsg.Messager
-	NewFieldMap          map[int][]pagedata.Field
-	OldPageDataMap       map[int]pagedata.PageData //this has the individual bits filled in?
-	OutputPath           string
-	PageCount            int
-	ProcessDetail        pagedata.ProcessDetail
-	SpreadName           string
-	Template             string
-	Who                  string
-	OpticalBoxSpread     string
-	ReadOpticalBoxes     bool
-	TextFields           map[int]map[string]extract.TextField
-	OmitPreviousComments bool //this is for the checked stage, where we don't want earlier comments
+	InputPath                string
+	CoverPath                string //no cover page if empty ""
+	AncestorPath             string //no redo of ancestry if empty
+	Msg                      *chmsg.Messager
+	NewFieldMap              map[int][]pagedata.Field
+	OldPageDataMap           map[int]pagedata.PageData //this has the individual bits filled in?
+	OutputPath               string
+	PageCount                int
+	ProcessDetail            pagedata.ProcessDetail
+	SpreadName               string
+	Template                 string
+	Who                      string
+	OpticalBoxSpread         string
+	ReadOpticalBoxes         bool
+	TextFields               map[int]map[string]extract.TextField
+	OmitPreviousComments     bool //this is for the checked stage, where we don't want earlier comments
+	PropagateTextFieldValues bool // this is for enter active - copy textfield values out of pagedata into enter bar
 }
 
 // Overlay command struct - for backwards compatability
@@ -47,19 +48,20 @@ type OverlayTask struct {
 //exactly match our internal representation
 
 type OverlayCommand struct {
-	CoverPath            string //get a cover page from here if it exists, and if cover page exists
-	FromPath             string
-	ToPath               string
-	ExamName             string
-	TemplatePath         string
-	SpreadName           string
-	ProcessDetail        pagedata.ProcessDetail
-	Msg                  *chmsg.Messager
-	PathDecoration       string //this is the "-ma1" for marker1, "mo2" for moderator 2, "d" for done etc
-	OpticalBoxSpread     string
-	ReadOpticalBoxes     bool
-	AncestorPath         string
-	OmitPreviousComments bool //this is for the checked stage, where we don't want earlier comments
+	CoverPath                string //get a cover page from here if it exists, and if cover page exists
+	FromPath                 string
+	ToPath                   string
+	ExamName                 string
+	TemplatePath             string
+	SpreadName               string
+	ProcessDetail            pagedata.ProcessDetail
+	Msg                      *chmsg.Messager
+	PathDecoration           string //this is the "-ma1" for marker1, "mo2" for moderator 2, "d" for done etc
+	OpticalBoxSpread         string
+	ReadOpticalBoxes         bool
+	AncestorPath             string
+	OmitPreviousComments     bool //this is for the checked stage, where we don't want earlier comments
+	PropagateTextFieldValues bool // this is for enter active - copy textfield values out of pagedata into enter bar
 }
 
 type CoverPageCommand struct {
