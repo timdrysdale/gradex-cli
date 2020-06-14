@@ -288,7 +288,7 @@ func RenderSpreadExtra(contents SpreadContents) error {
 	// expect our calling function to have pre-loaded any old comments
 	// into the pagedata.Comment array, so we know to print our new
 	// comments above them.
-	numOldComments := len(contents.PageData.Current.Comments)
+	numOldComments := len(contents.PageData.Current.Comments) + contents.PageData.Current.OmittedCommentCount
 
 	// Draw in our flattened comments
 	rowHeight := 12.0

@@ -240,21 +240,22 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 		// this is a file-level task, so we we will sort per-page updates
 		// to pageData at the child step
 		overlayTasks = append(overlayTasks, OverlayTask{
-			InputPath:        inPath,
-			CoverPath:        coverPath,
-			AncestorPath:     ancestorPath,
-			PageCount:        count,
-			ProcessDetail:    oc.ProcessDetail,
-			NewFieldMap:      newFieldMap,
-			OldPageDataMap:   pageDataMap,
-			OutputPath:       g.OutputPath(oc.ToPath, inPath, oc.PathDecoration),
-			SpreadName:       oc.SpreadName,
-			Template:         oc.TemplatePath,
-			Msg:              oc.Msg,
-			Who:              oc.PathDecoration,
-			ReadOpticalBoxes: oc.ReadOpticalBoxes,
-			OpticalBoxSpread: oc.OpticalBoxSpread,
-			TextFields:       fieldsMapByPage,
+			InputPath:            inPath,
+			CoverPath:            coverPath,
+			AncestorPath:         ancestorPath,
+			PageCount:            count,
+			ProcessDetail:        oc.ProcessDetail,
+			NewFieldMap:          newFieldMap,
+			OldPageDataMap:       pageDataMap,
+			OutputPath:           g.OutputPath(oc.ToPath, inPath, oc.PathDecoration),
+			SpreadName:           oc.SpreadName,
+			Template:             oc.TemplatePath,
+			Msg:                  oc.Msg,
+			Who:                  oc.PathDecoration,
+			ReadOpticalBoxes:     oc.ReadOpticalBoxes,
+			OpticalBoxSpread:     oc.OpticalBoxSpread,
+			TextFields:           fieldsMapByPage,
+			OmitPreviousComments: oc.OmitPreviousComments,
 		})
 		logger.Info().
 			Str("file", inPath).
@@ -759,6 +760,17 @@ OUTER:
 		headerPrefills[pageNumber]["title"] = thisPageData.Current.Item.What
 
 		headerPrefills[pageNumber]["for"] = thisPageData.Current.Process.For
+
+		if ot.OmitPreviousComments {
+			// keep track of how many comments are already on the page either by the comment list
+			// or if we want them removed from pagedata (e.g. for trace checked reports) then
+			// just record the number of comments (they dont line wrap so this is safe)
+			numOldComments := len(thisPageData.Current.Comments)
+			current := thisPageData.Current
+			current.Comments = []comment.Comment{}
+			current.OmittedCommentCount = current.OmittedCommentCount + numOldComments
+			thisPageData.Current = current
+		}
 
 		contents := parsesvg.SpreadContents{
 			SvgLayoutPath:         ot.Template,

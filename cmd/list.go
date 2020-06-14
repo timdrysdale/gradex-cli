@@ -31,6 +31,8 @@ import (
 	"github.com/timdrysdale/gradex-cli/util"
 )
 
+var currentOnly bool
+
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list [what] [exam/file]",
@@ -167,7 +169,18 @@ gradex-cli list badpages 'PGEE00000 A B D Exam'
 				os.Exit(1)
 			}
 
+			if currentOnly {
+				for page, pd := range pageDataMap {
+
+					pd.Previous = []pagedata.PageDetail{}
+
+					pageDataMap[page] = pd
+
+				}
+			}
+
 			util.PrettyPrintStruct(pageDataMap)
+
 		default:
 			fmt.Printf("Unknown list type: %s\n", what)
 		} // switch
@@ -176,6 +189,7 @@ gradex-cli list badpages 'PGEE00000 A B D Exam'
 
 func init() {
 	rootCmd.AddCommand(listCmd)
+	listCmd.Flags().BoolVar(&currentOnly, "current-only", false, "only show current page data")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
