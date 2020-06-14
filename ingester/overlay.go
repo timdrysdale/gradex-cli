@@ -240,22 +240,23 @@ func (g *Ingester) OverlayPapers(oc OverlayCommand, logger *zerolog.Logger) erro
 		// this is a file-level task, so we we will sort per-page updates
 		// to pageData at the child step
 		overlayTasks = append(overlayTasks, OverlayTask{
-			InputPath:            inPath,
-			CoverPath:            coverPath,
-			AncestorPath:         ancestorPath,
-			PageCount:            count,
-			ProcessDetail:        oc.ProcessDetail,
-			NewFieldMap:          newFieldMap,
-			OldPageDataMap:       pageDataMap,
-			OutputPath:           g.OutputPath(oc.ToPath, inPath, oc.PathDecoration),
-			SpreadName:           oc.SpreadName,
-			Template:             oc.TemplatePath,
-			Msg:                  oc.Msg,
-			Who:                  oc.PathDecoration,
-			ReadOpticalBoxes:     oc.ReadOpticalBoxes,
-			OpticalBoxSpread:     oc.OpticalBoxSpread,
-			TextFields:           fieldsMapByPage,
-			OmitPreviousComments: oc.OmitPreviousComments,
+			InputPath:                inPath,
+			CoverPath:                coverPath,
+			AncestorPath:             ancestorPath,
+			PageCount:                count,
+			ProcessDetail:            oc.ProcessDetail,
+			NewFieldMap:              newFieldMap,
+			OldPageDataMap:           pageDataMap,
+			OutputPath:               g.OutputPath(oc.ToPath, inPath, oc.PathDecoration),
+			SpreadName:               oc.SpreadName,
+			Template:                 oc.TemplatePath,
+			Msg:                      oc.Msg,
+			Who:                      oc.PathDecoration,
+			ReadOpticalBoxes:         oc.ReadOpticalBoxes,
+			OpticalBoxSpread:         oc.OpticalBoxSpread,
+			TextFields:               fieldsMapByPage,
+			OmitPreviousComments:     oc.OmitPreviousComments,
+			PropagateTextFieldValues: oc.PropagateTextFieldValues,
 		})
 		logger.Info().
 			Str("file", inPath).
@@ -535,6 +536,28 @@ OUTER:
 				Msg("No pagedata in file")
 		}
 
+		// get textfields out of NewFieldMap and put into textfieldValues
+
+		textfieldValues := parsesvg.DocPrefills{}
+
+		textfieldValues[pageNumber] = make(map[string]string)
+
+		//check if has prefix ... and not optical suffix ...
+		for _, item := range thisPageData.Current.Data {
+
+			if !strings.Contains(item.Key, textFieldPrefix) {
+				continue //just in case something else snuck in
+			}
+			if strings.Contains(item.Key, opticalSuffix) {
+				continue //can't prefill from optical data as only says if ticked or not
+			}
+
+			key := strings.TrimPrefix(item.Key, textFieldPrefix)
+
+			textfieldValues[pageNumber][key] = item.Value
+
+		}
+
 		oldThisPageDataCurrent := thisPageData.Current
 
 		previousPageData := thisPageData.Previous
@@ -654,7 +677,7 @@ OUTER:
 
 		//data = thisPageData.Current.Data don't carry forward old data
 
-		for _, item := range ot.NewFieldMap[imgIdx] { //CHECK IF PAGENUMER INSTEAD!
+		for _, item := range ot.NewFieldMap[imgIdx] {
 
 			data = append(data, item)
 
@@ -782,6 +805,7 @@ OUTER:
 			PageData:              thisPageData,
 			TemplatePathsRelative: true,
 			Prefills:              headerPrefills,
+			TextFieldValues:       textfieldValues,
 		}
 
 		err = parsesvg.RenderSpreadExtra(contents)

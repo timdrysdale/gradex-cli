@@ -28,6 +28,67 @@ func visuallyIdenticalPDF(pdf1, pdf2, diff string) (bool, error) {
 	return image.VisuallyIdenticalMultiPagePDF(pdf1, pdf2)
 }
 
+func TestRenderSpreadTextFieldPrefill(t *testing.T) {
+
+	svgLayoutPath := "./test/layout-a4-prefill.svg"
+
+	pdfOutputPath := "./test/render-mark-spread-textfield-prefill.pdf"
+	expectedPdf := "./expected/render-mark-spread-textfield-prefill.pdf"
+	diffPdf := "./test/render-mark-spread-textfield-prefill-diff.pdf"
+
+	previousImagePath := "./test/a4-three-square.jpg"
+
+	spreadName := "mark"
+
+	pageNumber := int(0)
+
+	svgBytes, err := ioutil.ReadFile(svgLayoutPath)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	layout, err := DefineLayoutFromSVG(svgBytes)
+	if err != nil {
+		t.Errorf("Error defining layout %v", err)
+	}
+
+	if false {
+		PrettyPrintStruct(layout)
+	}
+
+	textprefills := DocPrefills{}
+
+	textprefills[0] = make(map[string]string)
+
+	textprefills[0]["top-box"] = "THERE"
+	textprefills[0]["top-box-00"] = "HELLO"
+
+	textfieldvalues := DocPrefills{}
+	textfieldvalues[0] = make(map[string]string)
+	textfieldvalues[0]["bottom-box"] = "IPSUM"
+	textfieldvalues[0]["bottom-box-00"] = "LOREM"
+
+	contents := SpreadContents{
+		SvgLayoutPath:     svgLayoutPath,
+		SpreadName:        spreadName,
+		PreviousImagePath: previousImagePath,
+		PageNumber:        pageNumber,
+		PdfOutputPath:     pdfOutputPath,
+		Prefills:          textprefills,
+		TextFieldValues:   textfieldvalues,
+	}
+
+	err = RenderSpreadExtra(contents)
+
+	if err != nil {
+		t.Error(err)
+	}
+	result, err := visuallyIdenticalPDF(pdfOutputPath, expectedPdf, diffPdf)
+	assert.NoError(t, err)
+	assert.True(t, result)
+}
+
 func TestRenderComboBox(t *testing.T) {
 
 	svgLayoutPath := "./test/layout-a4-combo.svg"
