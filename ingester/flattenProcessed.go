@@ -88,16 +88,17 @@ func (g *Ingester) FlattenProcessedPapers(exam, stage string) error {
 	}
 
 	oc := OverlayCommand{
-		FromPath:         fromDir,
-		ToPath:           toDir,
-		AncestorPath:     g.GetExamDir(exam, anonPapers),
-		ExamName:         exam,
-		TemplatePath:     g.OverlayLayoutSVG(),
-		SpreadName:       "flatten-processed",
-		ProcessDetail:    procDetail,
-		Msg:              cm,
-		OpticalBoxSpread: getSpreadForBoxes(stage),
-		ReadOpticalBoxes: true,
+		FromPath:             fromDir,
+		ToPath:               toDir,
+		AncestorPath:         g.GetExamDir(exam, anonPapers),
+		ExamName:             exam,
+		TemplatePath:         g.OverlayLayoutSVG(),
+		SpreadName:           "flatten-processed",
+		ProcessDetail:        procDetail,
+		Msg:                  cm,
+		OpticalBoxSpread:     getSpreadForBoxes(stage),
+		ReadOpticalBoxes:     true,
+		OmitPreviousComments: true, //avoid QBOX line in report checked from previous stage's comments
 	}
 
 	err = g.OverlayPapers(oc, &logger)
