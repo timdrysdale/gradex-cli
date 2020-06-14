@@ -18,6 +18,7 @@ type SpreadContents struct {
 	Candidate                 string
 	PageData                  pagedata.PageData
 	Prefills                  DocPrefills
+	TextFieldValues           DocPrefills
 	ComboBoxes                DocComboBoxes
 	TemplatePathsRelative     bool
 	PrefillImagePathsRelative bool
