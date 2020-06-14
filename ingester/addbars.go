@@ -290,14 +290,15 @@ func (g *Ingester) AddEnterActiveBar(exam string, enterer string) error {
 	}
 
 	oc := OverlayCommand{
-		FromPath:       g.GetExamDir(exam, enterActive),
-		ToPath:         g.GetExamDirNamed(exam, enterReady, enterer),
-		ExamName:       exam,
-		TemplatePath:   g.OverlayLayoutSVG(),
-		SpreadName:     "enter-active",
-		ProcessDetail:  procDetail,
-		Msg:            cm,
-		PathDecoration: g.GetNamedTaskDecoration(entering, enterer),
+		FromPath:                 g.GetExamDir(exam, enterActive),
+		ToPath:                   g.GetExamDirNamed(exam, enterReady, enterer),
+		ExamName:                 exam,
+		TemplatePath:             g.OverlayLayoutSVG(),
+		SpreadName:               "enter-active",
+		ProcessDetail:            procDetail,
+		Msg:                      cm,
+		PathDecoration:           g.GetNamedTaskDecoration(entering, enterer),
+		PropagateTextFieldValues: true, //add textfield values from previous stage to the enter boxes
 	}
 
 	err := g.OverlayPapers(oc, &logger)
