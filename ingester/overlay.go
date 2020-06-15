@@ -537,24 +537,26 @@ OUTER:
 		}
 
 		// get textfields out of NewFieldMap and put into textfieldValues
-
 		textfieldValues := parsesvg.DocPrefills{}
+		if ot.PropagateTextFieldValues {
 
-		textfieldValues[pageNumber] = make(map[string]string)
+			textfieldValues[pageNumber] = make(map[string]string)
 
-		//check if has prefix ... and not optical suffix ...
-		for _, item := range thisPageData.Current.Data {
+			//check if has prefix ... and not optical suffix ...
+			for _, item := range thisPageData.Current.Data {
 
-			if !strings.Contains(item.Key, textFieldPrefix) {
-				continue //just in case something else snuck in
+				if !strings.Contains(item.Key, textFieldPrefix) {
+					continue //just in case something else snuck in
+				}
+				if strings.Contains(item.Key, opticalSuffix) {
+					continue //can't prefill from optical data as only says if ticked or not
+				}
+
+				key := strings.TrimPrefix(item.Key, textFieldPrefix)
+
+				textfieldValues[pageNumber][key] = item.Value
+
 			}
-			if strings.Contains(item.Key, opticalSuffix) {
-				continue //can't prefill from optical data as only says if ticked or not
-			}
-
-			key := strings.TrimPrefix(item.Key, textFieldPrefix)
-
-			textfieldValues[pageNumber][key] = item.Value
 
 		}
 
