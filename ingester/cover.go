@@ -8,12 +8,12 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/fvbommel/sortorder"
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
 	"github.com/timdrysdale/gradex-cli/util"
 	"github.com/timdrysdale/pool"
-	"vbom.ml/util/sortorder"
 )
 
 type CoverPageTask struct {

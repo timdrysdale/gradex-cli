@@ -8,11 +8,11 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/fvbommel/sortorder"
 	"github.com/rs/zerolog"
 	"github.com/timdrysdale/gradex-cli/pagedata"
 	"github.com/timdrysdale/gradex-cli/parsesvg"
 	"github.com/timdrysdale/pool"
-	"vbom.ml/util/sortorder"
 )
 
 func (g *Ingester) FinalCoverPage(cp CoverPageCommand, logger *zerolog.Logger) error {
