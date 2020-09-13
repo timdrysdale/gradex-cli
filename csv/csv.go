@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"vbom.ml/util/sortorder"
+	"github.com/fvbommel/sortorder"
 )
 
 var (

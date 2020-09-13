@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/fvbommel/sortorder"
 	"github.com/gocarina/gocsv"
 	"github.com/timdrysdale/gradex-cli/pagedata"
-	"vbom.ml/util/sortorder"
 )
 
 type Q struct {
